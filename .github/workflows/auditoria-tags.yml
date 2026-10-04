@@ -48,7 +48,7 @@ jobs:
           ENVIRONMENT: ${{ matrix.env }}
         run: |
           title="Auditoria de tags: recursos sem a tag Project em $ENVIRONMENT"
-          existing="$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number')"
+          existing="$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')"
           if [ -n "$existing" ]; then
             gh issue comment "$existing" --body-file report.md
           else
@@ -61,7 +61,7 @@ jobs:
           ENVIRONMENT: ${{ matrix.env }}
         run: |
           title="Auditoria de tags: recursos sem a tag Project em $ENVIRONMENT"
-          existing="$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number')"
+          existing="$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')"
           if [ -n "$existing" ]; then
             gh issue comment "$existing" --body "Auditoria sem pendências: nenhum recurso sem a tag Project."
             gh issue close "$existing"

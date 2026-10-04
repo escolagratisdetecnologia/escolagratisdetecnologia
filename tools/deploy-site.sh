@@ -19,9 +19,9 @@ SITE_URL="$site_url" SITE_ENV="$environment" pnpm --filter @egt/web build
 bucket="$(terraform -chdir="$root/infra/live" output -raw site_bucket_name)"
 distribution="$(terraform -chdir="$root/infra/live" output -raw distribution_id)"
 
-# Hashed assets (_astro/*) are never deleted: clients holding older HTML may still request
-# them, so old files stay until a lifecycle rule expires them. The remaining files (HTML etc.)
-# are synced with --delete, and the invalidation is awaited so the success message is true.
+# Old hashed assets are kept so clients holding previous HTML keep working; they are small
+# and cleaned up manually if ever needed. The remaining files (HTML etc.) are synced with
+# --delete, and the invalidation is awaited so the success message is true.
 aws s3 sync "$dist" "s3://$bucket" --exclude '*' --include '_astro/*' \
   --cache-control 'public,max-age=31536000,immutable'
 aws s3 sync "$dist" "s3://$bucket" --delete --exclude '_astro/*' \

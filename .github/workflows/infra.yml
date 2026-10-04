@@ -87,7 +87,7 @@ jobs:
       - name: terraform plan
         run: infra/tf live ${{ matrix.env }} plan -input=false -lock-timeout=5m -out=tfplan
         env:
-          TF_VAR_alert_emails: ${{ vars.ALERT_EMAILS }}
+          TF_VAR_alert_emails: ${{ secrets.ALERT_EMAILS }}
       - run: terraform -chdir=infra/live show -json tfplan > plan.json
       - name: check-tags
         run: node tools/check-tags/src/cli.ts plan.json

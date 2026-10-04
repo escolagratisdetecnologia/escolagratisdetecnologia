@@ -16,6 +16,10 @@ on:
         required: false
         type: boolean
         default: false
+    secrets:
+      ALERT_EMAILS:
+        description: Lista JSON de e-mails de alerta de orçamento
+        required: false
 
 permissions:
   contents: read
@@ -51,7 +55,7 @@ jobs:
       - name: terraform apply
         run: infra/tf live "$ENVIRONMENT" apply -input=false -auto-approve -lock-timeout=5m
         env:
-          TF_VAR_alert_emails: ${{ vars.ALERT_EMAILS }}
+          TF_VAR_alert_emails: ${{ secrets.ALERT_EMAILS }}
       - run: tools/deploy-site.sh "$ENVIRONMENT"
       - run: tools/smoke.sh "$SITE_URL"
       - name: www redireciona para o domínio

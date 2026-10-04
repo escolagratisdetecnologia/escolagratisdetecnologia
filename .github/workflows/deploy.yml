@@ -28,6 +28,8 @@ jobs:
     with:
       environment: dev
       site_url: https://dev.escolagratisdetecnologia.com
+    secrets:
+      ALERT_EMAILS: ${{ secrets.ALERT_EMAILS }}
 
   prod:
     needs: dev
@@ -36,3 +38,5 @@ jobs:
       environment: prod
       site_url: https://escolagratisdetecnologia.com
       check_www_redirect: true
+    secrets:
+      ALERT_EMAILS: ${{ secrets.ALERT_EMAILS }}
