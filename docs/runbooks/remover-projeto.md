@@ -18,7 +18,10 @@ Antes de apagar as zonas, volte os servidores de nomes do GoDaddy para os padrõ
 
 ## 2. Aplicação (prod, depois dev)
 
+Após esperar o ciclo de cobrança, a sessão SSO expirou. Um login serve aos três perfis:
+
 ```bash
+aws sso login --profile egt-management
 export AWS_PROFILE=egt-prod
 infra/tf live prod destroy
 export AWS_PROFILE=egt-dev
@@ -36,11 +39,7 @@ export AWS_PROFILE=egt-prod
 infra/tf bootstrap/account prod state pull > bootstrap-prod.tfstate   # cópia de segurança; não commitar
 ```
 
-1. Remova **localmente, sem commitar**, os blocos `lifecycle { prevent_destroy = true }` da zona (`aws_route53_zone.this`, em `infra/bootstrap/account/main.tf`) e do bucket (`infra/modules/state-bucket/main.tf`). Ao final, descarte só esses dois arquivos:
-
-   ```bash
-   git checkout -- infra/modules/state-bucket/main.tf infra/bootstrap/account/main.tf
-   ```
+1. Remova **localmente, sem commitar**, os blocos `lifecycle { prevent_destroy = true }` da zona (`aws_route53_zone.this`, em `infra/bootstrap/account/main.tf`) e do bucket (`infra/modules/state-bucket/main.tf`).
 
 2. Destrua:
 
@@ -60,18 +59,27 @@ infra/tf bootstrap/account prod state pull > bootstrap-prod.tfstate   # cópia d
 3. Esvazie e apague o bucket de estado. Use o nome que estiver em `infra/live/env/<env>.backend.hcl` (pode ter sufixo, se o fallback do bootstrap foi usado). Opção simples: console S3 → bucket → **Esvaziar** (trata todas as versões). Pela CLI, o laço abaixo apaga em lotes de até 1000 (o `use_lockfile` gera muitas versões e delete markers):
 
    ```bash
-   bucket=escolagratis-tfstate-prod
-   while true; do
-     lote="$(aws s3api list-object-versions --bucket "$bucket" --max-items 1000 \
-       --query '{Objects: [Versions,DeleteMarkers][][].{Key: Key, VersionId: VersionId}}' --output json)"
-     n="$(printf '%s' "$lote" | python3 -c 'import json,sys; print(len(json.load(sys.stdin)["Objects"] or []))')"
+   bucket=escolagratis-tfstate-prod   # use o nome do env/*.backend.hcl
+   lote="$(mktemp)"
+   while :; do
+     aws s3api list-object-versions --bucket "$bucket" --no-paginate --output json \
+       --query '{Objects: [Versions,DeleteMarkers][][].{Key: Key, VersionId: VersionId} | [:1000], Quiet: `true`}' > "$lote" || break
+     n="$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))["Objects"] or []))' "$lote")" || break
      [ "$n" = 0 ] && break
-     aws s3api delete-objects --bucket "$bucket" --delete "$lote" > /dev/null
+     erros="$(aws s3api delete-objects --bucket "$bucket" --delete "file://$lote" --query 'length(Errors || `[]`)' --output text)" || break
+     [ "$erros" = 0 ] || { echo "delete-objects: $erros erro(s); confira antes de repetir" >&2; break; }
    done
-   aws s3api delete-bucket --bucket "$bucket"
+   rm -f "$lote"
+   aws s3api delete-bucket --bucket "$bucket"   # falha com BucketNotEmpty se algo sobrou: seguro
    ```
 
-Repita com `AWS_PROFILE=egt-dev`, `dev` e o bucket de dev.
+   O `--no-paginate` faz uma única chamada (o S3 devolve no máximo 1000 entradas), o `[:1000]` garante o limite do `delete-objects`, o `file://` evita o limite de tamanho de argumento e o laço para em qualquer erro.
+
+Repita com `AWS_PROFILE=egt-dev`, `dev` e o bucket de dev. Só depois de destruir as duas contas, descarte as alterações locais (restaura o `prevent_destroy`):
+
+```bash
+git checkout -- infra/modules/state-bucket/main.tf infra/bootstrap/account/main.tf
+```
 
 ## 4. Conta de gerenciamento
 
@@ -88,7 +96,7 @@ infra/tf bootstrap/management shared destroy \
   -target=aws_organizations_policy.tags
 ```
 
-Depois esvazie e apague o bucket de estado da gerenciamento (nome em `infra/bootstrap/management/env/shared.backend.hcl`) como no passo 3.3. Usa-se `-target` pelo mesmo motivo: o estado mora nesse bucket. O bloco `prevent_destroy` do bucket só atrapalharia um destroy completo.
+Depois esvazie e apague o bucket de estado da gerenciamento (nome em `infra/bootstrap/management/env/shared.backend.hcl`) como no passo 3.3: console S3 → **Esvaziar**, ou o mesmo laço com `bucket=escolagratis-tfstate-management` (ou o nome do arquivo). Usa-se `-target` pelo mesmo motivo: o estado mora nesse bucket. O bloco `prevent_destroy` do bucket só atrapalharia um destroy completo.
 
 ## 5. Conferir sobras pela tag
 
@@ -111,12 +119,17 @@ Obtenha cada ID pelo nome, para não fechar a conta errada, e feche com o perfil
 export AWS_PROFILE=egt-management
 dev_id="$(aws organizations list-accounts --query "Accounts[?Name=='egt-dev'].Id" --output text)"
 prod_id="$(aws organizations list-accounts --query "Accounts[?Name=='egt-prod'].Id" --output text)"
-echo "$dev_id $prod_id"   # confira antes de seguir
+echo "$dev_id $prod_id"
+```
+
+Confira os dois IDs. Só então feche as contas:
+
+```bash
 aws organizations close-account --account-id "$dev_id"
 aws organizations close-account --account-id "$prod_id"
 ```
 
-Opcional: desabilite a política de tags (`root_id` como no bootstrap) e remova os perfis SSO `egt-dev` e `egt-prod` do `~/.aws/config`:
+Opcional: remova os perfis SSO `egt-dev` e `egt-prod` do `~/.aws/config`. Desabilite o tipo de política de tags (`root_id` como no bootstrap) só se você o habilitou para este projeto e não há outras tag policies na organização (desabilitar desanexa todas):
 
 ```bash
 root_id="$(aws organizations list-roots --query 'Roots[0].Id' --output text)"

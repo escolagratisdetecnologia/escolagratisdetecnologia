@@ -2,7 +2,7 @@
 
 Executado uma única vez pelo mantenedor, com acesso administrativo. Ordem: organização → perfis → buckets de estado → gerenciamento → dev → prod → DNS no GoDaddy → GitHub → primeiro deploy → tags de custo.
 
-> **Quem executa o quê.** O `.claude/settings.json` do projeto **nega** ao Claude Code estes comandos: `infra/tf bootstrap/account prod apply|destroy`, `infra/tf bootstrap/management shared apply|destroy`, `infra/tf live prod apply|destroy` e `terraform -chdir=... apply|destroy`. Esses passos são seus: rode os blocos marcados "você executa" **no seu terminal do WSL** (com o PATH do mise). Não use o prefixo `!` do Claude Code com blocos que têm `export`: cada `!` roda num shell novo (o `export` não persiste) e o `yes` do Terraform pode ficar sem entrada. Se mesmo assim quiser rodar de dentro do Claude Code, use uma linha só, com as variáveis inline (ex.: `!AWS_PROFILE=egt-prod infra/tf bootstrap/account prod apply`). O bootstrap de **dev** pode ser feito pelo Claude, com aprovação explícita sua.
+> **Quem executa o quê.** O `.claude/settings.json` do projeto **nega** ao Claude Code estes comandos: `infra/tf bootstrap/account prod apply|destroy`, `infra/tf bootstrap/management shared apply|destroy`, `infra/tf live prod apply|destroy` e `terraform -chdir=... apply|destroy`. Esses passos são seus: rode os blocos marcados "você executa" **no seu terminal do WSL** (com o PATH do mise). Não use o prefixo `!` do Claude Code com blocos que têm `export`: cada `!` roda num shell novo (o `export` não persiste) e o `yes` do Terraform pode ficar sem entrada. O bootstrap de **dev** pode ser feito pelo Claude, com aprovação explícita sua.
 
 ## 0. Pré-requisitos
 
@@ -28,7 +28,7 @@ aws organizations list-accounts --query "Accounts[?starts_with(Name,'egt-')].[Na
 Use e-mails distintos que você controla (ex.: endereços com `+`). Anote os IDs — eles **não** vão para o repositório. A criação de conta é assíncrona; acompanhe e repita até as duas ficarem `SUCCEEDED` (se `FAILED`, a coluna final mostra o motivo):
 
 ```bash
-aws organizations list-create-account-status --query 'CreateAccountStatuses[].[AccountName,State,FailureReason]' --output table
+aws organizations list-create-account-status --query 'CreateAccountStatuses[].[AccountName,AccountId,State,FailureReason]' --output table
 ```
 
 ## 2. Perfis de acesso
@@ -60,7 +60,7 @@ done
 
 O Terraform importa esses buckets no primeiro `apply` (blocos `import` em cada raiz de bootstrap).
 
-Se algum nome já existir na AWS (`BucketAlreadyExists`), use um sufixo aleatório, nunca o ID da conta: gere com `openssl rand -hex 3` e use `escolagratis-tfstate-<env>-<sufixo>` (ex.: `escolagratis-tfstate-dev-a1b2c3`). Crie o bucket com esse nome e troque o nome nos arquivos abaixo, num PR:
+Se algum nome já existir na AWS (`BucketAlreadyExists`), use um sufixo aleatório, nunca o ID da conta: gere com `openssl rand -hex 3` e use `escolagratis-tfstate-<env>-<sufixo>` (ex.: `escolagratis-tfstate-dev-a1b2c3`). Rode o laço do passo 3 para esse ambiente com o novo nome (ele também aplica versionamento e bloqueio de acesso público) e troque o nome nos arquivos abaixo, num PR:
 
 - `state_bucket_name` em `infra/bootstrap/management/env/shared.tfvars`, `infra/bootstrap/account/env/dev.tfvars` e `infra/bootstrap/account/env/prod.tfvars`;
 - `bucket` em `infra/bootstrap/management/env/shared.backend.hcl`, `infra/bootstrap/account/env/{dev,prod}.backend.hcl` e `infra/live/env/{dev,prod}.backend.hcl`.
