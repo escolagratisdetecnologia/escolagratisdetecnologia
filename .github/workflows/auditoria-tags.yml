@@ -1,0 +1,44 @@
+name: auditoria-tags
+
+on:
+  schedule:
+    - cron: '0 11 * * 1' # Mondays 08:00 in Brasília (UTC-3)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [dev, prod]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::${{ matrix.env == 'prod' && vars.AWS_ACCOUNT_ID_PROD || vars.AWS_ACCOUNT_ID_DEV }}:role/egt-${{ matrix.env }}-github-audit
+          aws-region: sa-east-1
+      - id: audit
+        continue-on-error: true
+        run: |
+          aws resource-explorer-2 search --query-string "-tag.key:Project" --output json > resources.json
+          node tools/tag-audit/src/cli.ts ${{ matrix.env }} < resources.json > report.md
+      - if: steps.audit.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Auditoria de tags: recursos sem a tag Project em ${{ matrix.env }}"
+          existing="$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file report.md
+          else
+            gh issue create --title "$title" --body-file report.md
+          fi

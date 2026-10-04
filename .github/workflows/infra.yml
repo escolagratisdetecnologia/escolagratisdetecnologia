@@ -1,0 +1,115 @@
+name: infra
+
+on:
+  pull_request:
+    paths:
+      - 'infra/**'
+      - 'tools/check-tags/**'
+      - 'infracost.yml'
+      - '.github/workflows/infra.yml'
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: infra-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TF_IN_AUTOMATION: 'true'
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.16.5
+          terraform_wrapper: false
+      - run: terraform fmt -check -recursive infra
+      - name: terraform validate (todas as raízes)
+        run: |
+          # modules/edge uses a provider alias: it is validated via live and tested with mocks below.
+          for root in modules/tags modules/site modules/observability modules/state-bucket bootstrap/account bootstrap/management live; do
+            terraform -chdir=infra/$root init -backend=false -input=false >/dev/null
+            terraform -chdir=infra/$root validate
+          done
+      - name: terraform test
+        run: |
+          for root in modules/tags modules/edge bootstrap/management; do
+            terraform -chdir=infra/$root init -backend=false -input=false >/dev/null
+            terraform -chdir=infra/$root test
+          done
+      - uses: terraform-linters/setup-tflint@v6
+        with:
+          tflint_version: v0.64.0
+      - name: tflint
+        working-directory: infra
+        run: |
+          tflint --init --config "$PWD/.tflint.hcl"
+          tflint --recursive --config "$PWD/.tflint.hcl"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: config
+          scan-ref: infra
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+
+  plan:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    needs: static
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [dev, prod]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.16.5
+          terraform_wrapper: false
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::${{ matrix.env == 'prod' && vars.AWS_ACCOUNT_ID_PROD || vars.AWS_ACCOUNT_ID_DEV }}:role/egt-${{ matrix.env }}-github-plan
+          aws-region: sa-east-1
+      - name: terraform plan
+        run: infra/tf live ${{ matrix.env }} plan -input=false -lock-timeout=5m -out=tfplan
+        env:
+          TF_VAR_alert_emails: ${{ vars.ALERT_EMAILS }}
+      - run: terraform -chdir=infra/live show -json tfplan > plan.json
+      - name: check-tags
+        run: node tools/check-tags/src/cli.ts plan.json
+      - name: resumo do plano
+        run: |
+          {
+            echo "### Plano Terraform: ${{ matrix.env }}"
+            echo '```'
+            terraform -chdir=infra/live show -no-color tfplan | tail -n 200
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  infracost:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: head
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          path: base
+      - uses: infracost/actions/diff@v4
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+          base-path: base
+          head-path: head

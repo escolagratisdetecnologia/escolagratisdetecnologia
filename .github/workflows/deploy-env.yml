@@ -1,0 +1,59 @@
+name: deploy-env
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Ambiente de destino (dev ou prod)
+        required: true
+        type: string
+      site_url:
+        description: URL pública do ambiente
+        required: true
+        type: string
+      check_www_redirect:
+        description: Confere se www redireciona para o domínio
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      ENVIRONMENT: ${{ inputs.environment }}
+      SITE_URL: ${{ inputs.site_url }}
+      TF_IN_AUTOMATION: 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.16.5
+          terraform_wrapper: false
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/egt-${{ inputs.environment }}-github-apply
+          aws-region: sa-east-1
+      - name: terraform apply
+        run: infra/tf live "$ENVIRONMENT" apply -input=false -auto-approve -lock-timeout=5m
+        env:
+          TF_VAR_alert_emails: ${{ vars.ALERT_EMAILS }}
+      - run: tools/deploy-site.sh "$ENVIRONMENT"
+      - run: tools/smoke.sh "$SITE_URL"
+      - name: www redireciona para o domínio
+        if: inputs.check_www_redirect
+        run: |
+          host="${SITE_URL#https://}"
+          location="$(curl -s -o /dev/null -w '%{redirect_url}' "https://www.$host/")"
+          test "$location" = "$SITE_URL/" || { echo "Redirect inesperado: $location"; exit 1; }

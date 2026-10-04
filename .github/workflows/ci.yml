@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+        env:
+          SITE_ENV: prod
+          SITE_URL: https://escolagratisdetecnologia.com
+      - run: pnpm --filter @egt/web exec playwright install --with-deps chromium webkit
+      - run: pnpm --filter @egt/web test:e2e
+      - run: pnpm --filter @egt/web lighthouse
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: relatorios-web
+          path: |
+            apps/web/playwright-report
+            apps/web/.lighthouseci
+          if-no-files-found: ignore
