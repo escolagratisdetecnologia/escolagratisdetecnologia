@@ -21,7 +21,7 @@ Repositório: `escolagratisdetecnologia/escolagratisdetecnologia` (público), da
 | `dev`       | nenhum                                   | só `main` | `AWS_ACCOUNT_ID` = ID da conta egt-dev  |
 | `prod`      | `escolagratisdetecnologia` (obrigatório) | só `main` | `AWS_ACCOUNT_ID` = ID da conta egt-prod |
 
-**Restrinja `dev` e `prod` à `main`** (Deployment branches and tags → Selected branches → `main`). Motivo: a role de apply na AWS confia em qualquer job que declare o environment, então essa restrição é o que mantém branches de feature longe das credenciais de produção.
+**Restrinja `dev` e `prod` à `main`** (Deployment branches and tags → Selected branches and tags → Add deployment branch or tag rule → `main`). Em `prod`, deixe **Prevent self-review desligado**: o único revisor é quem faz o merge. Motivo: a role de apply na AWS confia em qualquer job que declare o environment, então essa restrição é o que mantém branches de feature longe das credenciais de produção.
 
 ## Variáveis e segredos (Settings → Secrets and variables → Actions)
 

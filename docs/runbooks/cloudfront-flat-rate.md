@@ -15,7 +15,15 @@ O plano Free permite 5 regras de WAF. O web ACL `egt-<env>-edge-waf` usa 4: 3 gr
 
 ## Depois de assinar
 
-Rode `infra/tf live <env> plan`. O esperado é "No changes". Se o Terraform quiser desfazer algo do plano, abra uma issue e proponha, por PR, um `lifecycle { ignore_changes = [...] }` no atributo afetado do módulo `edge`.
+Rode o plano de conferência (o `TF_VAR_alert_emails` é obrigatório: sem ele o plano remove as 3 notificações do orçamento e parece drift):
+
+```bash
+export AWS_PROFILE=egt-<env>
+export TF_VAR_alert_emails='["<seu-e-mail>"]'
+infra/tf live <env> plan
+```
+
+O esperado é "No changes". Se o Terraform quiser desfazer algo do plano, abra uma issue e proponha, por PR, um `lifecycle { ignore_changes = [...] }` no atributo afetado do módulo `edge`.
 
 ## Quando subir de plano
 

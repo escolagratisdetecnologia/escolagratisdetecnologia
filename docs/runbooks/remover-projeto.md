@@ -2,22 +2,32 @@
 
 Irreversível. Só com decisão explícita do mantenedor. A tag `Project=escola-gratis-de-tecnologia` é a referência para achar tudo (ADR 0015).
 
-> Todos os comandos `destroy` abaixo são **negados ao Claude Code**. Você os executa: no Claude Code com o prefixo `!`, ou no seu terminal.
+> **Quem executa.** Só os `destroy` de prod e da conta de gerenciamento (e `terraform -chdir=... destroy`) são bloqueados para o Claude Code. Mesmo assim, **todos os passos deste runbook são executados por você**, no seu terminal do WSL (com o PATH do mise). Não use o prefixo `!` do Claude Code: cada `!` roda num shell novo (o `export` não persiste) e o `yes` do Terraform pode ficar sem entrada.
 
-## 1. Aplicação (prod, depois dev)
+## 0. Preparação e plano flat-rate
 
-Cancele antes os planos flat-rate no console do CloudFront.
+A AWS exige cancelar o plano flat-rate primeiro e só **depois do ciclo de cobrança atual** permite apagar a distribuição. Portanto:
+
+1. No console do CloudFront de cada conta (dev e prod), cancele o plano da distribuição.
+2. No GitHub, desative os workflows `deploy` e `auditoria-tags` (Actions → workflow → **Disable workflow**), para que nenhum merge republique a aplicação durante a espera.
+3. Espere o próximo ciclo de cobrança. Só então siga para o passo 1.
+
+## 1. Reverter o DNS no GoDaddy
+
+Antes de apagar as zonas, volte os servidores de nomes do GoDaddy para os padrões (Meus produtos → `escolagratisdetecnologia.com` → DNS → Servidores de nomes → Alterar). Assim nenhuma delegação fica apontando para zonas do Route 53 que deixam de existir (risco de alguém recriar a zona e sequestrar o domínio).
+
+## 2. Aplicação (prod, depois dev)
 
 ```bash
 export AWS_PROFILE=egt-prod
-infra/tf live prod destroy   # você executa
+infra/tf live prod destroy
 export AWS_PROFILE=egt-dev
 infra/tf live dev destroy
 ```
 
 O bucket do site tem `force_destroy`, então é esvaziado automaticamente.
 
-## 2. Bootstrap das contas
+## 3. Bootstrap das contas
 
 O estado do bootstrap mora no bucket que será apagado, por isso o destroy é feito com `-target` e o bucket é removido à mão. Para cada conta (prod, depois dev):
 
@@ -26,30 +36,44 @@ export AWS_PROFILE=egt-prod
 infra/tf bootstrap/account prod state pull > bootstrap-prod.tfstate   # cópia de segurança; não commitar
 ```
 
-1. Remova **localmente, sem commitar**, os blocos `lifecycle { prevent_destroy = true }` da zona (`aws_route53_zone.this`, em `infra/bootstrap/account/main.tf`) e do bucket (`infra/modules/state-bucket/main.tf`). Ao final, descarte com `git checkout -- infra`.
+1. Remova **localmente, sem commitar**, os blocos `lifecycle { prevent_destroy = true }` da zona (`aws_route53_zone.this`, em `infra/bootstrap/account/main.tf`) e do bucket (`infra/modules/state-bucket/main.tf`). Ao final, descarte só esses dois arquivos:
+
+   ```bash
+   git checkout -- infra/modules/state-bucket/main.tf infra/bootstrap/account/main.tf
+   ```
+
 2. Destrua:
 
-```bash
-infra/tf bootstrap/account prod destroy \
-  -target=aws_route53_record.delegation \
-  -target=aws_route53_zone.this \
-  -target=aws_resourceexplorer2_view.all \
-  -target=aws_resourceexplorer2_index.aggregator \
-  -target=aws_resourceexplorer2_index.us_east_1 \
-  -target=aws_iam_role.github \
-  -target=aws_iam_openid_connect_provider.github
-```
+   ```bash
+   infra/tf bootstrap/account prod destroy \
+     -target=aws_route53_record.delegation \
+     -target=aws_route53_zone.this \
+     -target=aws_resourceexplorer2_view.all \
+     -target=aws_resourceexplorer2_index.aggregator \
+     -target=aws_resourceexplorer2_index.us_east_1 \
+     -target=aws_iam_role.github \
+     -target=aws_iam_openid_connect_provider.github
+   ```
 
-3. Esvazie e apague o bucket de estado:
+   Se a exclusão da zona falhar com `HostedZoneNotEmpty` (registros criados à mão), apague esses registros e repita.
 
-```bash
-aws s3api delete-objects --bucket escolagratis-tfstate-prod --delete "$(aws s3api list-object-versions --bucket escolagratis-tfstate-prod --query '{Objects: [Versions,DeleteMarkers][][].{Key: Key, VersionId: VersionId}}' --output json)"
-aws s3api delete-bucket --bucket escolagratis-tfstate-prod
-```
+3. Esvazie e apague o bucket de estado. Use o nome que estiver em `infra/live/env/<env>.backend.hcl` (pode ter sufixo, se o fallback do bootstrap foi usado). Opção simples: console S3 → bucket → **Esvaziar** (trata todas as versões). Pela CLI, o laço abaixo apaga em lotes de até 1000 (o `use_lockfile` gera muitas versões e delete markers):
 
-Repita com `AWS_PROFILE=egt-dev`, `dev` e `escolagratis-tfstate-dev`. Se o bucket tiver mais de 1000 versões, repita o `delete-objects` até esvaziar.
+   ```bash
+   bucket=escolagratis-tfstate-prod
+   while true; do
+     lote="$(aws s3api list-object-versions --bucket "$bucket" --max-items 1000 \
+       --query '{Objects: [Versions,DeleteMarkers][][].{Key: Key, VersionId: VersionId}}' --output json)"
+     n="$(printf '%s' "$lote" | python3 -c 'import json,sys; print(len(json.load(sys.stdin)["Objects"] or []))')"
+     [ "$n" = 0 ] && break
+     aws s3api delete-objects --bucket "$bucket" --delete "$lote" > /dev/null
+   done
+   aws s3api delete-bucket --bucket "$bucket"
+   ```
 
-## 3. Conta de gerenciamento
+Repita com `AWS_PROFILE=egt-dev`, `dev` e o bucket de dev.
+
+## 4. Conta de gerenciamento
 
 Os recursos têm nomes `egt-shared-bootstrap-*` (tag policy, monitor e assinatura de anomalias de custo).
 
@@ -64,11 +88,11 @@ infra/tf bootstrap/management shared destroy \
   -target=aws_organizations_policy.tags
 ```
 
-Depois esvazie e apague `escolagratis-tfstate-management` como no passo 2.3. (Usa-se `-target` pelo mesmo motivo: o estado mora nesse bucket. O bloco `prevent_destroy` do bucket só atrapalharia um destroy completo.)
+Depois esvazie e apague o bucket de estado da gerenciamento (nome em `infra/bootstrap/management/env/shared.backend.hcl`) como no passo 3.3. Usa-se `-target` pelo mesmo motivo: o estado mora nesse bucket. O bloco `prevent_destroy` do bucket só atrapalharia um destroy completo.
 
-## 4. Conferir sobras pela tag
+## 5. Conferir sobras pela tag
 
-Em cada conta e nas regiões `sa-east-1` e `us-east-1`:
+Em cada conta (troque `AWS_PROFILE`) e nas regiões `sa-east-1` e `us-east-1`:
 
 ```bash
 aws resourcegroupstaggingapi get-resources --region sa-east-1 \
@@ -79,7 +103,22 @@ aws resourcegroupstaggingapi get-resources --region us-east-1 \
 
 Apague o que aparecer. Confira também o Cost Explorer filtrado por `Project` no mês seguinte.
 
-## 5. Encerrar contas e DNS
+## 6. Encerrar contas
 
-- `aws organizations close-account --account-id <id>` para `egt-dev` e `egt-prod` (perfil `egt-management`).
-- No GoDaddy, volte os servidores de nomes para os padrões.
+Obtenha cada ID pelo nome, para não fechar a conta errada, e feche com o perfil `egt-management`:
+
+```bash
+export AWS_PROFILE=egt-management
+dev_id="$(aws organizations list-accounts --query "Accounts[?Name=='egt-dev'].Id" --output text)"
+prod_id="$(aws organizations list-accounts --query "Accounts[?Name=='egt-prod'].Id" --output text)"
+echo "$dev_id $prod_id"   # confira antes de seguir
+aws organizations close-account --account-id "$dev_id"
+aws organizations close-account --account-id "$prod_id"
+```
+
+Opcional: desabilite a política de tags (`root_id` como no bootstrap) e remova os perfis SSO `egt-dev` e `egt-prod` do `~/.aws/config`:
+
+```bash
+root_id="$(aws organizations list-roots --query 'Roots[0].Id' --output text)"
+aws organizations disable-policy-type --root-id "$root_id" --policy-type TAG_POLICY
+```
