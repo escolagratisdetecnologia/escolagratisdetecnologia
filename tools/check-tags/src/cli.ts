@@ -8,7 +8,14 @@ if (!planPath) {
   process.exit(2);
 }
 
-const plan = JSON.parse(readFileSync(planPath, 'utf8')) as TerraformPlan;
+let plan: TerraformPlan;
+try {
+  plan = JSON.parse(readFileSync(planPath, 'utf8')) as TerraformPlan;
+} catch (error) {
+  console.error(`Não consegui ler o plano em ${planPath}: ${(error as Error).message}`);
+  process.exit(2);
+}
+
 const violations = findTagViolations(plan);
 
 if (violations.length > 0) {

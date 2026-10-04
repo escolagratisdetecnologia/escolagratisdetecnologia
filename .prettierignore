@@ -5,3 +5,4 @@ docs/superpowers/
 **/dist/
 **/.astro/
 .superpowers/
+tools/check-tags/test/fixtures/plan-invalid.json

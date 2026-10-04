@@ -32,4 +32,18 @@ describe('check-tags CLI', () => {
     expect(result.status).toBe(2);
     expect(result.stderr).toContain('Uso: node tools/check-tags/src/cli.ts <plano.json>');
   });
+
+  it('exits 2 when the plan file does not exist', () => {
+    const result = run(fixture('nao-existe.json'));
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain('Não consegui ler o plano em');
+  });
+
+  it('exits 2 when the plan file is not valid JSON', () => {
+    const result = run(fixture('plan-invalid.json'));
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain('Não consegui ler o plano em');
+  });
 });
