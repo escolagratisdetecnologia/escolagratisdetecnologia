@@ -21,6 +21,10 @@ Os vídeos das aulas são produzidos com avatares e vozes do HeyGen, cujos termo
 
 Decisão: a titularidade depende do plano contratado e os termos são omissos sobre avatares de estoque; na dúvida, adotou-se o texto restritivo. Reavaliar se a Escola passar a usar plano pago e o HeyGen confirmar por escrito o direito de sublicenciar.
 
+O resumo dos termos do HeyGen acima foi produzido com uma ferramenta automática de resumo de páginas; o mantenedor deve reler os termos originais antes de publicar o primeiro vídeo.
+
+Imagens ou quadros extraídos dos vídeos seguem os mesmos termos dos vídeos (Texto B).
+
 ## O que não está coberto
 
 - Nome, logo e identidade visual: veja `TRADEMARK.md`.
