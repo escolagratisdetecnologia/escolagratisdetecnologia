@@ -1,3 +1,0 @@
-# Buckets use SSE-S3 (AES256): the data is either public (site) or Terraform state without secrets;
-# a CMK would cost US$1/month per key plus requests with no relevant security gain (ADR 0014).
-AWS-0132

@@ -6,6 +6,11 @@ variable "state_bucket_name" {
 variable "member_account_ids" {
   description = "Contas-membro do projeto, ex.: { dev = \"111...\", prod = \"222...\" }. Defina via TF_VAR_member_account_ids."
   type        = map(string)
+
+  validation {
+    condition     = length(var.member_account_ids) > 0 && alltrue([for id in values(var.member_account_ids) : can(regex("^[0-9]{12}$", id))])
+    error_message = "member_account_ids precisa listar ao menos uma conta, com IDs de 12 dígitos (nunca o root nem uma OU)."
+  }
 }
 
 variable "alert_emails" {

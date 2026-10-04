@@ -8,7 +8,10 @@ locals {
   tags   = { Component = "bootstrap" }
 
   github_subjects = {
-    plan  = "repo:${var.github_repository}:pull_request"
+    plan = "repo:${var.github_repository}:pull_request"
+    # The environment subject is issued to any job that declares the environment, so the GitHub
+    # Environments dev/prod MUST restrict deployments to main (docs/runbooks/configurar-github.md);
+    # that restriction is what keeps feature branches away from the apply role.
     apply = "repo:${var.github_repository}:environment:${var.environment}"
     audit = "repo:${var.github_repository}:ref:refs/heads/main"
   }
@@ -76,9 +79,10 @@ resource "aws_iam_role_policy_attachment" "plan_read_only" {
 
 data "aws_iam_policy_document" "plan_state_lock" {
   statement {
+    # PR plans only touch the live state, so the plan role can never delete the bootstrap lock.
     sid       = "TerraformLockFiles"
     actions   = ["s3:PutObject", "s3:DeleteObject"]
-    resources = ["${module.state_bucket.bucket_arn}/*.tflock"]
+    resources = ["${module.state_bucket.bucket_arn}/live/*.tflock"]
   }
 }
 
@@ -86,6 +90,50 @@ resource "aws_iam_role_policy" "plan_state_lock" {
   name   = "terraform-state-lock"
   role   = aws_iam_role.github["plan"].id
   policy = data.aws_iam_policy_document.plan_state_lock.json
+}
+
+# PR jobs run without approval, so the read-only plan role must not read content (personal data,
+# secrets, logs). kms:Decrypt also blocks SecureString parameter values; if a future module makes
+# Terraform refresh SecureString parameters, revisit this deny in that module's ADR.
+data "aws_iam_policy_document" "plan_deny_data_reads" {
+  statement {
+    sid           = "DenyObjectReadsOutsideState"
+    effect        = "Deny"
+    actions       = ["s3:GetObject", "s3:GetObjectVersion"]
+    not_resources = ["${module.state_bucket.bucket_arn}/*"]
+  }
+
+  statement {
+    sid    = "DenyDataPlaneReads"
+    effect = "Deny"
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:BatchGetItem",
+      "dynamodb:Query",
+      "dynamodb:Scan",
+      "dynamodb:GetRecords",
+      "dynamodb:PartiQLSelect",
+      "cognito-idp:ListUsers",
+      "cognito-idp:ListUsersInGroup",
+      "cognito-idp:AdminGetUser",
+      "logs:GetLogEvents",
+      "logs:FilterLogEvents",
+      "logs:StartQuery",
+      "logs:GetQueryResults",
+      "logs:StartLiveTail",
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:BatchGetSecretValue",
+      "kms:Decrypt",
+      "sqs:ReceiveMessage",
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "plan_deny_data_reads" {
+  name   = "deny-data-reads"
+  role   = aws_iam_role.github["plan"].id
+  policy = data.aws_iam_policy_document.plan_deny_data_reads.json
 }
 
 # Broad apply access, restricted to jobs in protected GitHub Environments (ADR 0014).

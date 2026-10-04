@@ -30,6 +30,8 @@ resource "aws_s3_bucket_public_access_block" "this" {
   restrict_public_buckets = true
 }
 
+# SSE-S3 is a deliberate choice: the data is public (site) or secret-free Terraform state; a CMK adds cost with no relevant gain (ADR 0014).
+#trivy:ignore:AWS-0132
 resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
   bucket = aws_s3_bucket.this.id
 

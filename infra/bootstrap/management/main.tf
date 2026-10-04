@@ -45,7 +45,7 @@ module "state_bucket" {
 # --- Tag policy: attached only to the project accounts, never to the organization root ---
 
 resource "aws_organizations_policy" "tags" {
-  name        = "egt-tag-policy"
+  name        = "${module.tags.name_prefix}-bootstrap-tag-policy"
   description = "Escola Gratis de Tecnologia tag standard (ADR 0015)"
   type        = "TAG_POLICY"
   content     = jsonencode(local.tag_policy)
@@ -63,7 +63,7 @@ resource "aws_organizations_policy_attachment" "tags" {
 
 resource "aws_ce_anomaly_monitor" "member_accounts" {
   provider     = aws.us_east_1
-  name         = "egt-contas-do-projeto"
+  name         = "${module.tags.name_prefix}-bootstrap-cost-anomaly-monitor"
   monitor_type = "CUSTOM"
   tags         = local.tags
 
@@ -85,7 +85,7 @@ resource "aws_ce_anomaly_subscription" "email" {
   count = length(var.alert_emails) > 0 ? 1 : 0
 
   provider         = aws.us_east_1
-  name             = "egt-anomalias-de-custo"
+  name             = "${module.tags.name_prefix}-bootstrap-cost-anomaly-alerts"
   frequency        = "DAILY"
   monitor_arn_list = [aws_ce_anomaly_monitor.member_accounts.arn]
   tags             = local.tags
