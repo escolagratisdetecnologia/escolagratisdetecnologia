@@ -17,3 +17,4 @@ plan.json
 crash.log
 .DS_Store
 .claude/settings.local.json
+infra/modules/**/.terraform.lock.hcl
