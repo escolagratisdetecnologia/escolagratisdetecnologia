@@ -54,7 +54,7 @@ run "trusts_immutable_subjects" {
   assert {
     condition = anytrue([
       for c in data.aws_iam_policy_document.github_trust["plan"].statement[0].condition :
-      c.variable == "token.actions.githubusercontent.com:sub" && toset(c.values) == toset(["repo:escolagratisdetecnologia@337714343/escolagratisdetecnologia@1404541572:pull_request"])
+      c.variable == "token.actions.githubusercontent.com:sub" && c.test == "StringEquals" && toset(c.values) == toset(["repo:escolagratisdetecnologia@337714343/escolagratisdetecnologia@1404541572:pull_request"])
     ])
     error_message = "A role plan deve confiar só no subject imutável de pull_request."
   }
@@ -62,7 +62,7 @@ run "trusts_immutable_subjects" {
   assert {
     condition = anytrue([
       for c in data.aws_iam_policy_document.github_trust["apply"].statement[0].condition :
-      c.variable == "token.actions.githubusercontent.com:sub" && toset(c.values) == toset(["repo:escolagratisdetecnologia@337714343/escolagratisdetecnologia@1404541572:environment:dev"])
+      c.variable == "token.actions.githubusercontent.com:sub" && c.test == "StringEquals" && toset(c.values) == toset(["repo:escolagratisdetecnologia@337714343/escolagratisdetecnologia@1404541572:environment:dev"])
     ])
     error_message = "A role apply deve confiar só no subject imutável do environment dev."
   }
@@ -70,7 +70,7 @@ run "trusts_immutable_subjects" {
   assert {
     condition = anytrue([
       for c in data.aws_iam_policy_document.github_trust["audit"].statement[0].condition :
-      c.variable == "token.actions.githubusercontent.com:sub" && toset(c.values) == toset(["repo:escolagratisdetecnologia@337714343/escolagratisdetecnologia@1404541572:ref:refs/heads/main"])
+      c.variable == "token.actions.githubusercontent.com:sub" && c.test == "StringEquals" && toset(c.values) == toset(["repo:escolagratisdetecnologia@337714343/escolagratisdetecnologia@1404541572:ref:refs/heads/main"])
     ])
     error_message = "A role audit deve confiar só no subject imutável da branch main."
   }
@@ -96,6 +96,16 @@ run "trusts_immutable_subjects" {
     condition     = aws_resourceexplorer2_view.all.name == "egt-dev-bootstrap-all-resources"
     error_message = "A view do Resource Explorer deve se chamar egt-dev-bootstrap-all-resources."
   }
+}
+
+run "rejects_subject_prefix_with_slash_in_repo" {
+  command = plan
+
+  variables {
+    github_subject_prefix = "repo:a@1/b/c@2"
+  }
+
+  expect_failures = [var.github_subject_prefix]
 }
 
 run "rejects_mutable_subject_prefix" {

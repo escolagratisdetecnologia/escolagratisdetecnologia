@@ -36,7 +36,7 @@ variable "github_subject_prefix" {
   default     = "repo:escolagratisdetecnologia@337714343/escolagratisdetecnologia@1404541572"
 
   validation {
-    condition     = can(regex("^repo:[^/@]+@[0-9]+/[^:@]+@[0-9]+$", var.github_subject_prefix))
+    condition     = can(regex("^repo:[^/@:]+@[0-9]+/[^/@:]+@[0-9]+$", var.github_subject_prefix))
     error_message = "github_subject_prefix deve seguir o formato imutável repo:<owner>@<owner_id>/<repo>@<repo_id> (ex.: repo:escolagratisdetecnologia@337714343/escolagratisdetecnologia@1404541572)."
   }
 }
