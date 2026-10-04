@@ -7,13 +7,16 @@ locals {
   prefix = module.tags.name_prefix
   tags   = { Component = "bootstrap" }
 
+  # Repositories created after 2026-07-15 get immutable OIDC subjects that embed the owner and
+  # repository IDs (repo:<owner>@<owner_id>/<repo>@<repo_id>:...). Renaming or transferring the
+  # repository changes the prefix, so update github_subject_prefix first (ADR 0014).
   github_subjects = {
-    plan = "repo:${var.github_repository}:pull_request"
+    plan = "${var.github_subject_prefix}:pull_request"
     # The environment subject is issued to any job that declares the environment, so the GitHub
     # Environments dev/prod MUST restrict deployments to main (docs/runbooks/configurar-github.md);
     # that restriction is what keeps feature branches away from the apply role.
-    apply = "repo:${var.github_repository}:environment:${var.environment}"
-    audit = "repo:${var.github_repository}:ref:refs/heads/main"
+    apply = "${var.github_subject_prefix}:environment:${var.environment}"
+    audit = "${var.github_subject_prefix}:ref:refs/heads/main"
   }
 }
 
@@ -65,7 +68,7 @@ data "aws_iam_policy_document" "github_trust" {
 resource "aws_iam_role" "github" {
   for_each = local.github_subjects
 
-  name                 = "${local.prefix}-github-${each.key}"
+  name                 = "${local.prefix}-bootstrap-github-${each.key}"
   description          = "GitHub Actions (${each.key}) for ${var.github_repository}"
   assume_role_policy   = data.aws_iam_policy_document.github_trust[each.key].json
   max_session_duration = 3600
@@ -175,7 +178,7 @@ resource "aws_resourceexplorer2_index" "us_east_1" {
 }
 
 resource "aws_resourceexplorer2_view" "all" {
-  name         = "${local.prefix}-all"
+  name         = "${local.prefix}-bootstrap-all-resources"
   default_view = true
   tags         = local.tags
 

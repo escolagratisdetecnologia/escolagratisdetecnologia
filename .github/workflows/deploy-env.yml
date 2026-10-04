@@ -50,7 +50,7 @@ jobs:
           terraform_wrapper: false
       - uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/egt-${{ inputs.environment }}-github-apply
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/egt-${{ inputs.environment }}-bootstrap-github-apply
           aws-region: sa-east-1
       - name: terraform apply
         run: infra/tf live "$ENVIRONMENT" apply -input=false -auto-approve -lock-timeout=5m

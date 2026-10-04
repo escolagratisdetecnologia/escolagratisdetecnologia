@@ -25,7 +25,18 @@ variable "subdomain_delegations" {
 }
 
 variable "github_repository" {
-  description = "Repositório autorizado a assumir as roles via OIDC (owner/nome)."
+  description = "Repositório autorizado a assumir as roles via OIDC (owner/nome); usado na descrição das roles."
   type        = string
   default     = "escolagratisdetecnologia/escolagratisdetecnologia"
+}
+
+variable "github_subject_prefix" {
+  description = "Prefixo do claim sub dos tokens OIDC do GitHub no formato imutável repo:<owner>@<owner_id>/<repo>@<repo_id>, usado por repositórios criados depois de 2026-07-15. Renomear ou transferir o repositório muda este prefixo: atualize-o antes (ADR 0014)."
+  type        = string
+  default     = "repo:escolagratisdetecnologia@337714343/escolagratisdetecnologia@1404541572"
+
+  validation {
+    condition     = can(regex("^repo:[^/@]+@[0-9]+/[^:@]+@[0-9]+$", var.github_subject_prefix))
+    error_message = "github_subject_prefix deve seguir o formato imutável repo:<owner>@<owner_id>/<repo>@<repo_id> (ex.: repo:escolagratisdetecnologia@337714343/escolagratisdetecnologia@1404541572)."
+  }
 }

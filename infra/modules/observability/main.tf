@@ -10,7 +10,7 @@ locals {
 # The account is dedicated to the project, so the budget covers the whole account (including
 # costs AWS does not allow tagging).
 resource "aws_budgets_budget" "monthly" {
-  name         = "${var.name_prefix}-monthly"
+  name         = "${var.name_prefix}-observability-monthly-budget"
   budget_type  = "COST"
   limit_amount = format("%.2f", var.monthly_budget_usd)
   limit_unit   = "USD"

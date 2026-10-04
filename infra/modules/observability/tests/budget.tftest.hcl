@@ -18,7 +18,7 @@ run "with_alert_emails" {
   }
 
   assert {
-    condition     = aws_budgets_budget.monthly.name == "egt-test-monthly"
+    condition     = aws_budgets_budget.monthly.name == "egt-test-observability-monthly-budget"
     error_message = "Nome do orçamento inesperado."
   }
 }
