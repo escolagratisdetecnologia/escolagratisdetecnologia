@@ -1,5 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
+
+const repositoryUrl = 'https://github.com/escolagratisdetecnologia/escolagratisdetecnologia';
 ---
 
 <Base
@@ -28,10 +30,7 @@ import Base from '../layouts/Base.astro';
   <footer class="footer">
     <p>
       Projeto beneficente e de código aberto.
-      <a href="https://github.com/escolagratisdetecnologia/escolagratisdetecnologia">
-        Veja o código no GitHub
-      </a>
-      .
+      <a href={repositoryUrl}>Veja o código no GitHub</a>.
     </p>
   </footer>
 </Base>

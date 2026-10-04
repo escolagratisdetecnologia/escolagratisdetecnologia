@@ -10,6 +10,7 @@ test('home introduces the school in pt-BR', async ({ page }) => {
     'Aprenda tecnologia de graça',
   );
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /grátis/i);
+  await expect(page.locator('footer')).toContainText('Veja o código no GitHub.');
 });
 
 test('home has no accessibility violations', async ({ page }) => {
@@ -23,15 +24,19 @@ test('home has no accessibility violations', async ({ page }) => {
 });
 
 test('home stays within the 30 KB JavaScript budget', async ({ page }) => {
-  let scriptBytes = 0;
-  page.on('response', async (response) => {
+  // Collect the body promises and await them all before summing, so late script responses
+  // (e.g. islands) are not missed.
+  const scriptBodies: Promise<Buffer>[] = [];
+  page.on('response', (response) => {
     if (response.request().resourceType() === 'script') {
-      scriptBytes += (await response.body()).length;
+      scriptBodies.push(response.body());
     }
   });
 
   await page.goto('/', { waitUntil: 'networkidle' });
 
+  const bodies = await Promise.all(scriptBodies);
+  const scriptBytes = bodies.reduce((total, body) => total + body.length, 0);
   expect(scriptBytes).toBeLessThanOrEqual(30 * 1024);
 });
 
@@ -44,6 +49,10 @@ test('unknown routes show the friendly 404 page', async ({ page }) => {
     'href',
     '/',
   );
+  // Even in prod, the 404 must stay out of search results and must not claim a canonical URL.
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+  await expect(page.locator('meta[property="og:url"]')).toHaveCount(0);
 });
 
 test('robots.txt is served as plain text', async ({ request }) => {

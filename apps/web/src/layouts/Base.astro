@@ -5,11 +5,13 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description: string;
+  /** Keeps the page out of search engines in every environment (e.g. the 404 page). */
+  noindex?: boolean;
 }
 
-const { title, description } = Astro.props;
+const { title, description, noindex = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
-const indexable = SITE_ENV === 'prod';
+const indexable = SITE_ENV === 'prod' && !noindex;
 ---
 
 <!doctype html>
@@ -19,7 +21,7 @@ const indexable = SITE_ENV === 'prod';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+    {!noindex && <link rel="canonical" href={canonical} />}
     {!indexable && <meta name="robots" content="noindex, nofollow" />}
     <meta name="theme-color" content="#5b21b6" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0b0b12" media="(prefers-color-scheme: dark)" />
@@ -29,7 +31,7 @@ const indexable = SITE_ENV === 'prod';
     <meta property="og:site_name" content="Escola Grátis de Tecnologia" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    {!noindex && <meta property="og:url" content={canonical} />}
   </head>
   <body>
     <slot />
