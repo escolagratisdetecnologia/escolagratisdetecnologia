@@ -1,0 +1,17 @@
+{
+  "resourceTypes": [
+    "ec2:vpc",
+    "ec2:subnet",
+    "ec2:security-group",
+    "ec2:security-group-rule",
+    "ec2:route-table",
+    "ec2:network-acl",
+    "ec2:dhcp-options",
+    "ec2:internet-gateway"
+  ],
+  "arnPatterns": [
+    ":role/aws-service-role/",
+    ":role/aws-reserved/",
+    ":role/OrganizationAccountAccessRole$"
+  ]
+}
