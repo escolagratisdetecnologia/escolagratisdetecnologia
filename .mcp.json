@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "heygen": {
+      "type": "http",
+      "url": "https://mcp.heygen.com/mcp/v1/"
+    },
+    "buffer": {
+      "type": "http",
+      "url": "https://mcp.buffer.com/mcp",
+      "headers": { "Authorization": "Bearer ${BUFFER_API_KEY:-}" }
+    },
+    "stripe": {
+      "type": "http",
+      "url": "https://mcp.stripe.com",
+      "headers": { "Authorization": "Bearer ${STRIPE_MCP_KEY:-}" }
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": { "Authorization": "Bearer ${GITHUB_MCP_PAT:-}" }
+    }
+  }
+}
