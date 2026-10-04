@@ -35,7 +35,7 @@ Repositório: `escolagratisdetecnologia/escolagratisdetecnologia` (público), da
 | Secret (repositório)       | `ALERT_EMAILS`        | lista JSON, ex.: `["voce@exemplo.com"]`          |
 | Secret (repositório)       | `INFRACOST_API_KEY`   | chave gratuita em https://dashboard.infracost.io |
 
-`ALERT_EMAILS` é Secret **do repositório** (não de environment), nunca Variable: Variables saem em texto puro nos logs públicos do Actions, e os workflows `infra` (plano, sem environment) e `deploy` (que repassa o valor aos jobs de dev e prod) só enxergam Secrets do repositório. Se ficar vazio, o Terraform recebe `[]` e o orçamento fica sem notificações por e-mail.
+`ALERT_EMAILS` é Secret **do repositório** (não de environment), nunca Variable: os jobs de deploy declaram `environment:`, então um Secret de environment com o mesmo nome `ALERT_EMAILS` sobrescreveria o do repositório e plano/apply poderiam divergir. Se ficar vazio, o Terraform recebe `[]` e o orçamento fica sem notificações por e-mail.
 
 ## Segurança (Settings → Advanced Security)
 
