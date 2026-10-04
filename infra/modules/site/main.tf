@@ -7,7 +7,7 @@ locals {
   }
 }
 
-# Conteúdo do site é reconstruído a cada deploy, então pode ser apagado junto com o bucket.
+# Site content is rebuilt on every deploy, so it can be deleted along with the bucket.
 resource "aws_s3_bucket" "site" {
   bucket        = "${var.name_prefix}-site-${data.aws_caller_identity.current.account_id}"
   force_destroy = true
@@ -59,6 +59,14 @@ resource "aws_s3_bucket_lifecycle_configuration" "site" {
 
     noncurrent_version_expiration {
       noncurrent_days = 30
+    }
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+
+    expiration {
+      expired_object_delete_marker = true
     }
   }
 

@@ -11,7 +11,7 @@ locals {
   }
 }
 
-# --- Certificado TLS (CloudFront exige us-east-1) ---
+# --- TLS certificate (CloudFront requires us-east-1) ---
 
 resource "aws_acm_certificate" "site" {
   provider                  = aws.us_east_1
@@ -25,7 +25,7 @@ resource "aws_acm_certificate" "site" {
   }
 }
 
-# Chaves estáticas (os domínios) para o for_each funcionar antes do certificado existir.
+# Static keys (the domains) so for_each works before the certificate exists.
 resource "aws_route53_record" "certificate_validation" {
   for_each = toset(local.aliases)
 
@@ -43,11 +43,11 @@ resource "aws_acm_certificate_validation" "site" {
   validation_record_fqdns = [for record in aws_route53_record.certificate_validation : record.fqdn]
 }
 
-# --- WAF (escopo CLOUDFRONT em us-east-1; obrigatório nos planos flat-rate) ---
+# --- WAF (CLOUDFRONT scope in us-east-1; required on the flat-rate plans) ---
 
 resource "aws_wafv2_web_acl" "edge" {
   provider = aws.us_east_1
-  name     = "${var.name_prefix}-edge"
+  name     = "${var.name_prefix}-edge-waf"
   scope    = "CLOUDFRONT"
   tags     = local.tags
 
@@ -93,6 +93,27 @@ resource "aws_wafv2_web_acl" "edge" {
       rate_based_statement {
         limit              = var.rate_limit_per_5min
         aggregate_key_type = "IP"
+
+        # Immutable hashed assets must not count toward the per-IP limit.
+        scope_down_statement {
+          not_statement {
+            statement {
+              byte_match_statement {
+                positional_constraint = "STARTS_WITH"
+                search_string         = "/_astro/"
+
+                field_to_match {
+                  uri_path {}
+                }
+
+                text_transformation {
+                  priority = 0
+                  type     = "NONE"
+                }
+              }
+            }
+          }
+        }
       }
     }
 
@@ -105,7 +126,7 @@ resource "aws_wafv2_web_acl" "edge" {
 
   visibility_config {
     cloudwatch_metrics_enabled = true
-    metric_name                = "${var.name_prefix}-edge"
+    metric_name                = "${var.name_prefix}-edge-waf"
     sampled_requests_enabled   = true
   }
 }
@@ -117,25 +138,25 @@ data "aws_cloudfront_cache_policy" "optimized" {
 }
 
 resource "aws_cloudfront_origin_access_control" "site" {
-  name                              = "${var.name_prefix}-site"
-  description                       = "Acesso do CloudFront ao bucket do site"
+  name                              = "${var.name_prefix}-edge-site-oac"
+  description                       = "CloudFront access to the site bucket"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
 }
 
 resource "aws_cloudfront_function" "viewer_request" {
-  name    = "${var.name_prefix}-viewer-request"
+  name    = "${var.name_prefix}-edge-viewer-request"
   runtime = "cloudfront-js-2.0"
-  comment = "Redireciona www e resolve index.html de diretórios"
+  comment = "Redirects www and resolves directory index.html"
   publish = true
   code    = replace(file("${path.module}/functions/viewer-request.js"), "__CANONICAL_HOST__", var.domain_name)
   tags    = local.tags
 }
 
 resource "aws_cloudfront_response_headers_policy" "security" {
-  name    = "${var.name_prefix}-security-headers"
-  comment = "Cabeçalhos de segurança da Escola"
+  name    = "${var.name_prefix}-edge-security-headers"
+  comment = "Security headers for the school site"
 
   security_headers_config {
     strict_transport_security {
@@ -160,7 +181,7 @@ resource "aws_cloudfront_response_headers_policy" "security" {
     }
 
     content_security_policy {
-      content_security_policy = "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'self'; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+      content_security_policy = "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'self'; media-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
       override                = true
     }
   }
@@ -168,7 +189,7 @@ resource "aws_cloudfront_response_headers_policy" "security" {
   custom_headers_config {
     items {
       header   = "Permissions-Policy"
-      value    = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+      value    = "camera=(), microphone=(), geolocation=()"
       override = true
     }
   }
@@ -178,7 +199,7 @@ resource "aws_cloudfront_distribution" "site" {
   enabled             = true
   is_ipv6_enabled     = true
   http_version        = "http2and3"
-  price_class         = "PriceClass_All" # inclui pontos de presença na América do Sul
+  price_class         = "PriceClass_All" # includes South America edge locations
   comment             = "${var.name_prefix} site"
   aliases             = local.aliases
   default_root_object = "index.html"
@@ -206,7 +227,7 @@ resource "aws_cloudfront_distribution" "site" {
     }
   }
 
-  # Sem s3:ListBucket, objeto inexistente responde 403; mostramos a página 404 do site.
+  # Without s3:ListBucket a missing object answers 403; show the site's 404 page.
   custom_error_response {
     error_code            = 403
     response_code         = 404
@@ -253,7 +274,7 @@ resource "aws_route53_record" "alias" {
   }
 }
 
-# --- Acesso do CloudFront ao bucket ---
+# --- CloudFront access to the bucket ---
 
 data "aws_iam_policy_document" "site_bucket" {
   statement {

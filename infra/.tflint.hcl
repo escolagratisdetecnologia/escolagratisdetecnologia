@@ -13,8 +13,8 @@ plugin "aws" {
   source  = "github.com/terraform-linters/tflint-ruleset-aws"
 }
 
-# Project, Environment, ManagedBy e Repository chegam via default_tags (checadas no plano pelo
-# tools/check-tags). Aqui garantimos que cada recurso tagueável declare seu Component.
+# Project, Environment, ManagedBy and Repository arrive via default_tags (checked in the plan by
+# tools/check-tags). Here we ensure every taggable resource declares its Component.
 rule "aws_resource_missing_tags" {
   enabled = true
   tags    = ["Component"]

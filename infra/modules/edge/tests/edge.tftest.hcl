@@ -102,4 +102,34 @@ run "dev_serves_only_its_domain" {
     condition     = aws_cloudfront_distribution.site.tags["Component"] == "edge"
     error_message = "Recursos do edge precisam da tag Component=edge."
   }
+
+  assert {
+    condition = (
+      aws_cloudfront_function.viewer_request.name == "egt-test-edge-viewer-request" &&
+      aws_wafv2_web_acl.edge.name == "egt-test-edge-waf" &&
+      aws_cloudfront_origin_access_control.site.name == "egt-test-edge-site-oac" &&
+      aws_cloudfront_response_headers_policy.security.name == "egt-test-edge-security-headers"
+    )
+    error_message = "Os nomes devem seguir egt-{env}-edge-{nome}."
+  }
+
+  assert {
+    condition     = one(aws_cloudfront_distribution.site.origin).origin_access_control_id == aws_cloudfront_origin_access_control.site.id
+    error_message = "A distribuição deveria usar o OAC."
+  }
+
+  assert {
+    condition     = aws_cloudfront_distribution.site.web_acl_id == aws_wafv2_web_acl.edge.arn
+    error_message = "A distribuição deveria usar o WAF."
+  }
+
+  assert {
+    condition     = one(one(aws_cloudfront_distribution.site.default_cache_behavior).function_association).function_arn == aws_cloudfront_function.viewer_request.arn
+    error_message = "A distribuição deveria usar a função de borda."
+  }
+
+  assert {
+    condition     = anytrue([for r in aws_wafv2_web_acl.edge.rule : r.name == "rate-limit-ip" && length(r.statement[0].rate_based_statement[0].scope_down_statement) == 1])
+    error_message = "O rate limit deveria ter scope-down para ignorar assets imutáveis."
+  }
 }

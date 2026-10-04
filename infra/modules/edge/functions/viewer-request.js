@@ -1,10 +1,10 @@
-// CloudFront Function (runtime cloudfront-js-2.0). __CANONICAL_HOST__ é substituído pelo
-// Terraform com o domínio do ambiente.
+// CloudFront Function (runtime cloudfront-js-2.0). __CANONICAL_HOST__ is replaced by
+// Terraform with the environment's domain.
 var CANONICAL_HOST = '__CANONICAL_HOST__';
 
 function handler(event) {
   var request = event.request;
-  var host = request.headers.host ? request.headers.host.value : '';
+  var host = request.headers.host ? request.headers.host.value.toLowerCase() : '';
 
   if (host === 'www.' + CANONICAL_HOST) {
     return {

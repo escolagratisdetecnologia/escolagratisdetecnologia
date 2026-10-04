@@ -21,6 +21,13 @@ function event(uri: string, host = 'escolagratisdetecnologia.com', querystring: 
 }
 
 describe('viewer-request', () => {
+  it('redirects www regardless of host case', () => {
+    expect(handler(event('/', 'WWW.EscolaGratisDeTecnologia.com'))).toMatchObject({
+      statusCode: 301,
+      headers: { location: { value: 'https://escolagratisdetecnologia.com/' } },
+    });
+  });
+
   it('serves index.html for the root path', () => {
     expect(handler(event('/'))).toMatchObject({ uri: '/index.html' });
   });
