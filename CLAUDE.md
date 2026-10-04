@@ -35,7 +35,7 @@ Escola online 100% gratuita e beneficente para brasileiros (maioria geração Z,
 - **Commits:** Conventional Commits em pt-BR (`feat(api): ...`, `fix(web): ...`, `docs: ...`).
 - **PRs:** toda mudança entra por PR na `main`. Preencha o template (delta de custo, pilares, ADR).
 - **Arquitetura:** decisão nova ou alterada exige ADR em `docs/adr/` e atualização de `docs/arquitetura/well-architected.md`.
-- **Infra:** PR com plano Terraform e delta de custo (Infracost). Nunca rode `apply` em prod fora do pipeline.
+- **Infra:** PR com plano Terraform e delta de custo (Infracost). Nunca rode `apply` em prod fora do pipeline. Exceção: o bootstrap e a remoção total, executados pelo mantenedor seguindo os runbooks (`docs/runbooks/bootstrap-aws.md` e `docs/runbooks/remover-projeto.md`).
 - **Tags AWS:** obrigatórias em todo recurso — veja `infra/CLAUDE.md`, seção Tags.
 - **Segredos:** nunca no repositório (nem e-mails pessoais ou IDs de conta). Use SSM Parameter Store, GitHub Secrets/Variables e `.env` local (ignorado pelo git).
 - **Produto:** pré-requisitos mínimos, mobile-first e acessibilidade são requisitos, não extras.

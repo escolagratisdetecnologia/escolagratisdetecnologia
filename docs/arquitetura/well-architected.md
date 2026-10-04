@@ -9,7 +9,7 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 | Toda infraestrutura em Terraform, mudanças por PR com plano e delta de custo                      | feito (Fase 0)        |
 | Decisões registradas em ADRs                                                                      | feito (Fase 0)        |
 | Deploy automatizado dev → aprovação → prod com smoke tests                                        | feito (Fase 0)        |
-| Runbooks de bootstrap, GitHub, flat-rate, remoção total e MCP                                     | feito (Fase 0)        |
+| Runbooks de bootstrap, GitHub, deploy e rollback, flat-rate, remoção total e MCP                  | feito (Fase 0)        |
 | Logs estruturados (Powertools) e alarmes de erro                                                  | planejado (Fase 1)    |
 | Operações (conteúdo, social, transparência) via skills do Claude Code terminando em PR            | planejado (Fases 3–5) |
 | Concorrência de deploy por ambiente e espera pela invalidação do CloudFront antes dos smoke tests | feito (Fase 0)        |
@@ -22,6 +22,7 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 | Prática                                                                                                                                    | Status                    |
 | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------- |
 | GitHub → AWS via OIDC, sem chaves de longa duração                                                                                         | feito (Fase 0)            |
+| Confiança OIDC no `sub` imutável do GitHub (IDs do dono e do repositório)                                                                  | feito (Fase 0)            |
 | Contas separadas por ambiente; role de apply só em environment protegido                                                                   | feito (Fase 0)            |
 | S3 privado com OAC, política só-TLS e criptografia em repouso                                                                              | feito (Fase 0)            |
 | WAF com regras gerenciadas e rate limit; CSP, HSTS e cabeçalhos de segurança                                                               | feito (Fase 0)            |

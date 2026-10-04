@@ -2,7 +2,7 @@
 
 ## Layout
 
-- `bootstrap/account` — por conta (dev, prod): bucket de estado, OIDC do GitHub, roles `egt-<env>-github-{plan,apply,audit}`, Resource Explorer, zona DNS.
+- `bootstrap/account` — por conta (dev, prod): bucket de estado, OIDC do GitHub, roles `egt-<env>-bootstrap-github-{plan,apply,audit}`, Resource Explorer (view `egt-<env>-bootstrap-all-resources`), zona DNS.
 - `bootstrap/management` — conta de gerenciamento: tag policy, anomalias de custo, cost allocation tags.
 - `modules/*` — blocos reutilizáveis (tags, site, edge, observability, state-bucket…).
 - `live/` — raiz única da aplicação; `env/<env>.tfvars` e `env/<env>.backend.hcl` por ambiente.
@@ -10,7 +10,7 @@
 
 ## Regiões
 
-`sa-east-1` para tudo que a AWS permite. `us-east-1` (alias `aws.us_east_1`) só para ACM e WAF do CloudFront e Cost Explorer.
+`sa-east-1` para tudo que a AWS permite. `us-east-1` (alias `aws.us_east_1`) só para ACM e WAF do CloudFront, Cost Explorer e o índice local do Resource Explorer (ADR 0013).
 
 ## Tags
 
@@ -39,6 +39,7 @@ Todo recurso AWS tagueável precisa de:
 
 - Menor privilégio; S3 sem acesso público e com política só-TLS; criptografia em repouso.
 - Nenhuma chave de longa duração: GitHub assume roles via OIDC.
+- As roles confiam no `sub` imutável do GitHub (`repo:<owner>@<owner_id>/<repo>@<repo_id>:...`, variável `github_subject_prefix`); renomear ou transferir o repositório exige atualizar a variável e reaplicar o bootstrap antes (ADR 0014).
 - Prefira serviços pagos por uso. Se o padrão de uso mudar, atualize `infra/infracost-usage.yml`.
 - Exceções do Trivy só inline, com `#trivy:ignore:<ID>` logo acima do recurso e uma linha de justificativa em inglês (não existe `.trivyignore` global).
 - A variável `alert_emails` é `sensitive` e chega aos workflows pelo Secret `ALERT_EMAILS` (nunca por Variable — Variables aparecem em texto puro nos logs públicos).
@@ -52,6 +53,6 @@ Lock files: as raízes (`live/`, `bootstrap/*`) commitam o `.terraform.lock.hcl`
 
 ## Proibido
 
-- `apply`/`destroy` local em prod (o pipeline faz isso com aprovação).
+- `apply`/`destroy` local em prod (o pipeline faz isso com aprovação). Exceção: o bootstrap e a remoção total, executados pelo mantenedor seguindo `docs/runbooks/bootstrap-aws.md` e `docs/runbooks/remover-projeto.md`.
 - Recursos criados à mão no console, exceto o que um runbook manda (ex.: plano flat-rate do CloudFront).
 - Mudar arquitetura sem ADR e sem atualizar `docs/arquitetura/well-architected.md`.

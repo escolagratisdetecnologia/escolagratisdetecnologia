@@ -67,6 +67,8 @@ Se algum nome já existir na AWS (`BucketAlreadyExists`), use um sufixo aleatór
 
 ## 4. Conta de gerenciamento
 
+Antes do apply, confira que o **Cost Explorer está habilitado** na conta de gerenciamento (console → Billing and Cost Management → Cost Explorer; se aparecer a opção de habilitar, habilite). A primeira ativação pode levar até 24 h. Se o apply falhar com erro de acesso ao Cost Explorer (no monitor ou na assinatura de anomalias de custo), habilite-o, espere a ativação e rode de novo.
+
 Exporte **sempre** as duas variáveis abaixo antes de `plan` ou `apply`. Sem `TF_VAR_member_account_ids` o plano falha (a variável exige IDs de 12 dígitos, não vazia); sem `TF_VAR_alert_emails` o apply remove a inscrição de e-mail do alerta de anomalia.
 
 ```bash
@@ -126,13 +128,17 @@ curl -s "https://dns.google/resolve?name=dev.escolagratisdetecnologia.com&type=N
 
 ## 8. GitHub
 
-Siga `docs/runbooks/configurar-github.md` (variáveis com os IDs das contas e o segredo `ALERT_EMAILS`). `ALERT_EMAILS` é **Secret**, nunca Variable: Variables aparecem em texto puro nos logs públicos do Actions.
+Siga `docs/runbooks/configurar-github.md` (variáveis com os IDs das contas e o segredo `ALERT_EMAILS`). `ALERT_EMAILS` é Secret **do repositório** (não de environment), nunca Variable: Variables aparecem em texto puro nos logs públicos do Actions.
 
 ## 9. Primeiro deploy
 
-Pelo pipeline (merge na `main` → job `dev` → aprovação → job `prod`). Depois, assine os planos flat-rate: `docs/runbooks/cloudfront-flat-rate.md`.
+Pelo pipeline (merge na `main` → job `dev` → aprovação → job `prod`; detalhes em `docs/runbooks/deploy.md`). Depois, assine os planos flat-rate: `docs/runbooks/cloudfront-flat-rate.md`.
 
 Contas novas às vezes recebem "Your account must be verified before you can add new CloudFront resources": abra um caso gratuito no AWS Support e, quando liberar, reexecute em GitHub → Actions → deploy → Run workflow.
+
+Se os jobs falharem com `Not authorized to perform sts:AssumeRoleWithWebIdentity`, confira o formato do claim `sub`. As roles esperam o formato imutável `repo:<owner>@<owner_id>/<repo>@<repo_id>:...` (ADR 0014), com o prefixo da variável `github_subject_prefix` em `infra/bootstrap/account/variables.tf`. Confira os IDs com `gh api repos/escolagratisdetecnologia/escolagratisdetecnologia --jq '"\(.owner.id) \(.id)"'`; o CloudTrail da conta (Event history, evento `AssumeRoleWithWebIdentity`) mostra o subject recebido. Se divergir (repositório renomeado, transferido ou com subject customizado), ajuste `github_subject_prefix` por PR e reaplique o bootstrap da conta (passos 5 e 6).
+
+Depois que o deploy passar nos dois ambientes, rode a auditoria de tags uma vez à mão (GitHub → Actions → auditoria-tags → Run workflow). Se a issue aberta listar recursos padrão que a própria AWS cria em toda conta (sem a tag `Project` e fora do nosso controle), acrescente o tipo ou o padrão de ARN em `tools/tag-audit/ignore.json` por PR, se ainda não estiver lá. Recursos do projeto sem a tag são bug: corrija o Terraform.
 
 ## 10. Tags de custo (24 h depois do primeiro deploy)
 

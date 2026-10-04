@@ -22,20 +22,26 @@ No Linux/WSL, o WebKit dos testes e2e pode exigir, uma única vez: `sudo env "PA
 
 ## Estrutura
 
-| Caminho    | O que é                                         |
-| ---------- | ----------------------------------------------- |
-| `apps/web` | Site (Astro, static-first)                      |
-| `apps/api` | API (Hono em AWS Lambda)                        |
-| `tools/`   | CLIs e scripts do repositório                   |
-| `infra/`   | Infraestrutura como código (Terraform, AWS)     |
-| `docs/`    | Design, decisões (ADRs), arquitetura e runbooks |
+| Caminho    | O que é                                                                  |
+| ---------- | ------------------------------------------------------------------------ |
+| `apps/web` | Site (Astro, static-first)                                               |
+| `apps/api` | API (Hono; roda localmente nesta fase, deploy na AWS a partir da Fase 1) |
+| `tools/`   | CLIs e scripts do repositório                                            |
+| `infra/`   | Infraestrutura como código (Terraform, AWS)                              |
+| `docs/`    | Design, decisões (ADRs), arquitetura e runbooks                          |
 
 ## Documentação
 
 - Design completo: `docs/superpowers/specs/2026-10-03-escola-gratis-de-tecnologia-design.md`
 - Decisões de arquitetura: `docs/adr/`
 - Revisão AWS Well-Architected: `docs/arquitetura/well-architected.md`
-- Runbooks de operação: `docs/runbooks/`
+- Runbooks de operação (`docs/runbooks/`):
+  - [Bootstrap da AWS](docs/runbooks/bootstrap-aws.md)
+  - [Configuração do GitHub](docs/runbooks/configurar-github.md)
+  - [Deploy, reexecução e rollback](docs/runbooks/deploy.md)
+  - [Plano flat-rate do CloudFront](docs/runbooks/cloudfront-flat-rate.md)
+  - [Servidores MCP](docs/runbooks/mcp.md)
+  - [Remover 100% do projeto da AWS](docs/runbooks/remover-projeto.md)
 
 ## Contribua
 

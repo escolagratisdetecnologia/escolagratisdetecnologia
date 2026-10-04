@@ -2,6 +2,8 @@
 
 Repositório: `escolagratisdetecnologia/escolagratisdetecnologia` (público), da conta pessoal `escolagratisdetecnologia`.
 
+> **Não renomeie nem transfira o repositório sem preparar a AWS.** As roles da AWS confiam no claim `sub` no formato imutável do GitHub, que inclui nome e ID do dono e do repositório (`repo:escolagratisdetecnologia@337714343/escolagratisdetecnologia@1404541572:...`). Renomear ou transferir muda esse valor e os workflows deixam de assumir as roles. Antes, atualize `github_subject_prefix` em `infra/bootstrap/account/variables.tf` por PR e reaplique o bootstrap das duas contas (`docs/runbooks/bootstrap-aws.md`, passos 5 e 6; ADR 0014).
+
 ## Geral
 
 - Settings → General → Pull Requests: permitir só **Squash merge**; marcar **Automatically delete head branches**.
@@ -30,10 +32,10 @@ Repositório: `escolagratisdetecnologia/escolagratisdetecnologia` (público), da
 | Variable (repositório)     | `AWS_ACCOUNT_ID_DEV`  | ID da conta egt-dev                              |
 | Variable (repositório)     | `AWS_ACCOUNT_ID_PROD` | ID da conta egt-prod                             |
 | Variable (por environment) | `AWS_ACCOUNT_ID`      | ID da conta do environment (ver tabela acima)    |
-| Secret                     | `ALERT_EMAILS`        | lista JSON, ex.: `["voce@exemplo.com"]`          |
-| Secret                     | `INFRACOST_API_KEY`   | chave gratuita em https://dashboard.infracost.io |
+| Secret (repositório)       | `ALERT_EMAILS`        | lista JSON, ex.: `["voce@exemplo.com"]`          |
+| Secret (repositório)       | `INFRACOST_API_KEY`   | chave gratuita em https://dashboard.infracost.io |
 
-`ALERT_EMAILS` é **Secret**, nunca Variable: Variables saem em texto puro nos logs públicos do Actions.
+`ALERT_EMAILS` é Secret **do repositório** (não de environment), nunca Variable: Variables saem em texto puro nos logs públicos do Actions, e os workflows `infra` (plano, sem environment) e `deploy` (que repassa o valor aos jobs de dev e prod) só enxergam Secrets do repositório. Se ficar vazio, o Terraform recebe `[]` e o orçamento fica sem notificações por e-mail.
 
 ## Segurança (Settings → Advanced Security)
 
