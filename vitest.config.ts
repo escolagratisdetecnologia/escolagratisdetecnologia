@@ -3,6 +3,11 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     passWithNoTests: true,
-    projects: ['apps/api', 'tools/check-tags', 'tools/tag-audit'],
+    projects: [
+      'apps/api',
+      'tools/check-tags',
+      'tools/tag-audit',
+      { test: { name: 'infra', include: ['infra/**/*.test.ts'] } },
+    ],
   },
 });
