@@ -21,12 +21,20 @@
     "deny": [
       "Bash(terraform apply:*)",
       "Bash(terraform destroy:*)",
+      "Bash(terraform -chdir=infra/live apply:*)",
+      "Bash(terraform -chdir=infra/live destroy:*)",
+      "Bash(terraform -chdir=infra/bootstrap/account apply:*)",
+      "Bash(terraform -chdir=infra/bootstrap/account destroy:*)",
+      "Bash(terraform -chdir=infra/bootstrap/management apply:*)",
+      "Bash(terraform -chdir=infra/bootstrap/management destroy:*)",
       "Bash(infra/tf live prod apply:*)",
       "Bash(infra/tf live prod destroy:*)",
+      "Bash(infra/tf bootstrap/account prod apply:*)",
       "Bash(infra/tf bootstrap/account prod destroy:*)",
+      "Bash(infra/tf bootstrap/management shared apply:*)",
       "Bash(infra/tf bootstrap/management shared destroy:*)",
-      "Read(./.env)",
-      "Read(./.env.*)"
+      "Read(**/.env)",
+      "Read(**/.env.*)"
     ]
   }
 }
