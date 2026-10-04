@@ -1,0 +1,7 @@
+[tools]
+node = "24.21.0"
+pnpm = "10.34.6"
+terraform = "1.16.5"
+tflint = "0.64.0"
+infracost = "0.10.46"
+trivy = "0.75.0"

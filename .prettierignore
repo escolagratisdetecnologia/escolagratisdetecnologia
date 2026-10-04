@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+LICENSE
+docs/superpowers/
+**/.terraform/
+**/dist/
+**/.astro/
