@@ -3,7 +3,7 @@
 - **Status:** aprovado em brainstorming (2026-10-03)
 - **Escopo:** arquitetura e decisões transversais de todas as fases (0–5). Cada fase terá seu próprio plano de implementação derivado deste documento.
 - **Domínio:** `escolagratisdetecnologia.com`
-- **Repositório:** `github.com/engelmannlabs/escolagratisdetecnologia` (monorepo público)
+- **Repositório:** `github.com/escolagratisdetecnologia/escolagratisdetecnologia` (monorepo público)
 
 ---
 
@@ -496,7 +496,7 @@ Toda infraestrutura criada pelo projeto na AWS carrega as tags abaixo. A **tag �
 | `Environment` | `dev` · `prod` · `shared` | Classifica desenvolvimento × produção; `shared` só para recursos da conta de gerenciamento (ex.: políticas da organização) |
 | `Component` | `edge` · `site` · `api` · `data` · `auth` · `media` · `jobs` · `certificates` · `observability` · `bootstrap` | Custo e responsabilidade por componente |
 | `ManagedBy` | `terraform` · `app` | `app` para recursos criados em tempo de execução (ex.: jobs do MediaConvert) |
-| `Repository` | `github.com/engelmannlabs/escolagratisdetecnologia` | Origem do recurso |
+| `Repository` | `github.com/escolagratisdetecnologia/escolagratisdetecnologia` | Origem do recurso |
 | `DataClassification` | `public` · `internal` · `personal` | Apenas em armazenamentos de dados (S3, DynamoDB, Cognito) — apoio à LGPD |
 
 **Como é garantido**

@@ -16,7 +16,7 @@
 - Região principal `sa-east-1`; `us-east-1` somente para ACM/WAF do CloudFront e Cost Explorer (alias `aws.us_east_1`).
 - Idioma: docs, ADRs, commits e PRs em pt-BR; identificadores, comentários técnicos, logs e mensagens de exceção em inglês; todo texto exibido a pessoas (UI, respostas de API, saída de CLIs do repo) em pt-BR.
 - Ambientes AWS: `dev` e `prod` (nunca "staging"); conta de gerenciamento usa `Environment=shared`.
-- Tags obrigatórias em todo recurso AWS tagueável: `Project=escola-gratis-de-tecnologia`, `Environment∈{dev,prod,shared}`, `Component∈{edge,site,api,data,auth,media,jobs,certificates,observability,bootstrap}`, `ManagedBy∈{terraform,app}`, `Repository=github.com/engelmannlabs/escolagratisdetecnologia`; `DataClassification∈{public,internal,personal}` só em armazenamento de dados.
+- Tags obrigatórias em todo recurso AWS tagueável: `Project=escola-gratis-de-tecnologia`, `Environment∈{dev,prod,shared}`, `Component∈{edge,site,api,data,auth,media,jobs,certificates,observability,bootstrap}`, `ManagedBy∈{terraform,app}`, `Repository=github.com/escolagratisdetecnologia/escolagratisdetecnologia`; `DataClassification∈{public,internal,personal}` só em armazenamento de dados.
 - Nomes de recursos: `egt-{env}-{component}-{nome}`.
 - Domínio: `escolagratisdetecnologia.com` (prod, com `www` redirecionando) e `dev.escolagratisdetecnologia.com` (dev).
 - ESM em tudo (`"type": "module"`); imports relativos com extensão `.ts`.
@@ -283,6 +283,7 @@ tfplan
 plan.json
 crash.log
 .DS_Store
+.claude/settings.local.json
 ```
 
 `.editorconfig`:
@@ -957,7 +958,7 @@ import Base from '../layouts/Base.astro';
   <footer class="footer">
     <p>
       Projeto beneficente e de código aberto.
-      <a href="https://github.com/engelmannlabs/escolagratisdetecnologia">Veja o código no GitHub</a>.
+      <a href="https://github.com/escolagratisdetecnologia/escolagratisdetecnologia">Veja o código no GitHub</a>.
     </p>
   </footer>
 </Base>
@@ -1130,7 +1131,7 @@ const VALID = {
   Environment: 'dev',
   Component: 'site',
   ManagedBy: 'terraform',
-  Repository: 'github.com/engelmannlabs/escolagratisdetecnologia',
+  Repository: 'github.com/escolagratisdetecnologia/escolagratisdetecnologia',
 };
 
 function change(
@@ -1261,7 +1262,7 @@ describe('formatViolations', () => {
             "Environment": "prod",
             "Component": "site",
             "ManagedBy": "terraform",
-            "Repository": "github.com/engelmannlabs/escolagratisdetecnologia",
+            "Repository": "github.com/escolagratisdetecnologia/escolagratisdetecnologia",
             "DataClassification": "public"
           }
         },
@@ -1287,7 +1288,7 @@ describe('formatViolations', () => {
             "Project": "escola-gratis-de-tecnologia",
             "Environment": "prod",
             "ManagedBy": "terraform",
-            "Repository": "github.com/engelmannlabs/escolagratisdetecnologia"
+            "Repository": "github.com/escolagratisdetecnologia/escolagratisdetecnologia"
           }
         },
         "after_unknown": {}
@@ -1363,7 +1364,7 @@ export const REQUIRED_TAGS: TagRules = {
     'bootstrap',
   ],
   ManagedBy: ['terraform', 'app'],
-  Repository: ['github.com/engelmannlabs/escolagratisdetecnologia'],
+  Repository: ['github.com/escolagratisdetecnologia/escolagratisdetecnologia'],
 };
 ```
 
@@ -1769,7 +1770,7 @@ git commit -m "feat(tools): adiciona tag-audit para relatório de recursos sem a
 
 **Interfaces:**
 - Produces: `module "tags" { source = ".../modules/tags"; environment = "dev" | "prod" | "shared" }` com saídas:
-  - `default_tags` = `{ Project = "escola-gratis-de-tecnologia", Environment = <env>, ManagedBy = "terraform", Repository = "github.com/engelmannlabs/escolagratisdetecnologia" }` (usada em `provider "aws" { default_tags { tags = module.tags.default_tags } }`)
+  - `default_tags` = `{ Project = "escola-gratis-de-tecnologia", Environment = <env>, ManagedBy = "terraform", Repository = "github.com/escolagratisdetecnologia/escolagratisdetecnologia" }` (usada em `provider "aws" { default_tags { tags = module.tags.default_tags } }`)
   - `name_prefix` = `"egt-<env>"`
 
 - [ ] **Step 1: Escrever o teste que falha**
@@ -1789,7 +1790,7 @@ run "dev_tags" {
       Project     = "escola-gratis-de-tecnologia"
       Environment = "dev"
       ManagedBy   = "terraform"
-      Repository  = "github.com/engelmannlabs/escolagratisdetecnologia"
+      Repository  = "github.com/escolagratisdetecnologia/escolagratisdetecnologia"
     }
     error_message = "default_tags fora do padrão para dev."
   }
@@ -1860,7 +1861,7 @@ variable "environment" {
 # recursos e custos da Escola; Component e DataClassification são definidas por cada módulo.
 locals {
   project    = "escola-gratis-de-tecnologia"
-  repository = "github.com/engelmannlabs/escolagratisdetecnologia"
+  repository = "github.com/escolagratisdetecnologia/escolagratisdetecnologia"
 }
 ```
 
@@ -3135,7 +3136,7 @@ git commit -m "feat(infra): adiciona raiz live, orçamento mensal, wrapper infra
 **Interfaces:**
 - Consumes: módulo `tags` (Task 6). Bucket de estado criado antes via AWS CLI (runbook, Task 14) e adotado por bloco `import`.
 - Produces (por conta dev/prod):
-  - Roles `egt-<env>-github-plan` (ReadOnlyAccess + escrita de `*.tflock`; confia em `repo:engelmannlabs/escolagratisdetecnologia:pull_request`), `egt-<env>-github-apply` (AdministratorAccess; confia em `...:environment:<env>`), `egt-<env>-github-audit` (Resource Explorer; confia em `...:ref:refs/heads/main`).
+  - Roles `egt-<env>-github-plan` (ReadOnlyAccess + escrita de `*.tflock`; confia em `repo:escolagratisdetecnologia/escolagratisdetecnologia:pull_request`), `egt-<env>-github-apply` (AdministratorAccess; confia em `...:environment:<env>`), `egt-<env>-github-audit` (Resource Explorer; confia em `...:ref:refs/heads/main`).
   - Zona Route 53 `var.zone_name` (+ delegações NS opcionais) com saída `zone_name_servers`.
   - Índice agregador do Resource Explorer em sa-east-1, índice local em us-east-1 e view padrão `egt-<env>-all` com tags.
 - Produces (gerenciamento): tag policy anexada às contas-membro; monitor de anomalia de custo por conta-membro com assinatura por e-mail; cost allocation tags `Project`, `Environment`, `Component` quando `activate_cost_allocation_tags = true`.
@@ -3348,7 +3349,7 @@ variable "subdomain_delegations" {
 variable "github_repository" {
   description = "Repositório autorizado a assumir as roles via OIDC (owner/nome)."
   type        = string
-  default     = "engelmannlabs/escolagratisdetecnologia"
+  default     = "escolagratisdetecnologia/escolagratisdetecnologia"
 }
 ```
 
@@ -3836,7 +3837,7 @@ git commit -m "feat(infra): adiciona bootstrap das contas com estado, OIDC, DNS,
 ### Task 10: CI/CD e governança do repositório
 
 **Files:**
-- Create: `.github/workflows/ci.yml`, `.github/workflows/infra.yml`, `.github/workflows/deploy.yml`, `.github/workflows/auditoria-tags.yml`, `.github/CODEOWNERS`, `.github/PULL_REQUEST_TEMPLATE.md`, `renovate.json`, `tools/deploy-site.sh`, `tools/smoke.sh`
+- Create: `.github/workflows/ci.yml`, `.github/workflows/infra.yml`, `.github/workflows/deploy.yml`, `.github/workflows/deploy-env.yml`, `.github/workflows/auditoria-tags.yml`, `.github/CODEOWNERS`, `.github/PULL_REQUEST_TEMPLATE.md`, `renovate.json`, `tools/deploy-site.sh`, `tools/smoke.sh`
 
 **Interfaces:**
 - Consumes: scripts `pnpm` (Tasks 1–3), `node tools/check-tags/src/cli.ts` (Task 4), `node tools/tag-audit/src/cli.ts` (Task 5), `infra/tf` e saídas `site_bucket_name`/`distribution_id` (Task 8), roles `egt-<env>-github-{plan,apply,audit}` (Task 9).
@@ -4116,7 +4117,7 @@ jobs:
           head-path: head
 ```
 
-`.github/workflows/deploy.yml`:
+`.github/workflows/deploy.yml` (orquestra: dev primeiro, prod só depois, com a aprovação exigida pelo environment `prod`):
 
 ```yaml
 name: deploy
@@ -4132,6 +4133,7 @@ on:
       - 'tools/smoke.sh'
       - 'pnpm-lock.yaml'
       - '.github/workflows/deploy.yml'
+      - '.github/workflows/deploy-env.yml'
   workflow_dispatch:
 
 permissions:
@@ -4142,40 +4144,56 @@ concurrency:
   group: deploy
   cancel-in-progress: false
 
-env:
-  TF_IN_AUTOMATION: 'true'
-
 jobs:
   dev:
-    runs-on: ubuntu-latest
-    environment: dev
-    steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .node-version
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - uses: hashicorp/setup-terraform@v4
-        with:
-          terraform_version: 1.16.5
-          terraform_wrapper: false
-      - uses: aws-actions/configure-aws-credentials@v6
-        with:
-          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/egt-dev-github-apply
-          aws-region: sa-east-1
-      - name: terraform apply
-        run: infra/tf live dev apply -input=false -auto-approve -lock-timeout=5m
-        env:
-          TF_VAR_alert_emails: ${{ vars.ALERT_EMAILS }}
-      - run: tools/deploy-site.sh dev
-      - run: tools/smoke.sh https://dev.escolagratisdetecnologia.com
+    uses: ./.github/workflows/deploy-env.yml
+    with:
+      environment: dev
+      site_url: https://dev.escolagratisdetecnologia.com
 
   prod:
     needs: dev
+    uses: ./.github/workflows/deploy-env.yml
+    with:
+      environment: prod
+      site_url: https://escolagratisdetecnologia.com
+      check_www_redirect: true
+```
+
+`.github/workflows/deploy-env.yml` (passos de um ambiente, escritos uma única vez):
+
+```yaml
+name: deploy-env
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Ambiente de destino (dev ou prod)
+        required: true
+        type: string
+      site_url:
+        description: URL pública do ambiente
+        required: true
+        type: string
+      check_www_redirect:
+        description: Confere se www redireciona para o domínio
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
     runs-on: ubuntu-latest
-    environment: prod
+    environment: ${{ inputs.environment }}
+    env:
+      ENVIRONMENT: ${{ inputs.environment }}
+      SITE_URL: ${{ inputs.site_url }}
+      TF_IN_AUTOMATION: 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -4190,18 +4208,20 @@ jobs:
           terraform_wrapper: false
       - uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/egt-prod-github-apply
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/egt-${{ inputs.environment }}-github-apply
           aws-region: sa-east-1
       - name: terraform apply
-        run: infra/tf live prod apply -input=false -auto-approve -lock-timeout=5m
+        run: infra/tf live "$ENVIRONMENT" apply -input=false -auto-approve -lock-timeout=5m
         env:
           TF_VAR_alert_emails: ${{ vars.ALERT_EMAILS }}
-      - run: tools/deploy-site.sh prod
-      - run: tools/smoke.sh https://escolagratisdetecnologia.com
+      - run: tools/deploy-site.sh "$ENVIRONMENT"
+      - run: tools/smoke.sh "$SITE_URL"
       - name: www redireciona para o domínio
+        if: inputs.check_www_redirect
         run: |
-          location="$(curl -s -o /dev/null -w '%{redirect_url}' https://www.escolagratisdetecnologia.com/)"
-          test "$location" = "https://escolagratisdetecnologia.com/" || { echo "Redirect inesperado: $location"; exit 1; }
+          host="${SITE_URL#https://}"
+          location="$(curl -s -o /dev/null -w '%{redirect_url}' "https://www.$host/")"
+          test "$location" = "$SITE_URL/" || { echo "Redirect inesperado: $location"; exit 1; }
 ```
 
 `.github/workflows/auditoria-tags.yml`:
@@ -4258,9 +4278,9 @@ jobs:
 `.github/CODEOWNERS`:
 
 ```
-* @engelmannlabs
-/infra/ @engelmannlabs
-/content/transparency/ @engelmannlabs
+* @escolagratisdetecnologia
+/infra/ @escolagratisdetecnologia
+/content/transparency/ @escolagratisdetecnologia
 ```
 
 `.github/PULL_REQUEST_TEMPLATE.md`:
@@ -4471,7 +4491,7 @@ Todo recurso AWS tagueável precisa de:
 | `Project` | `escola-gratis-de-tecnologia` | `default_tags` (módulo `tags`) |
 | `Environment` | `dev`, `prod`, `shared` | `default_tags` |
 | `ManagedBy` | `terraform` (ou `app` para recursos criados pela aplicação) | `default_tags` |
-| `Repository` | `github.com/engelmannlabs/escolagratisdetecnologia` | `default_tags` |
+| `Repository` | `github.com/escolagratisdetecnologia/escolagratisdetecnologia` | `default_tags` |
 | `Component` | `edge`, `site`, `api`, `data`, `auth`, `media`, `jobs`, `certificates`, `observability`, `bootstrap` | `tags = local.tags` em cada recurso do módulo |
 | `DataClassification` | `public`, `internal`, `personal` | só em S3, DynamoDB e Cognito |
 
@@ -5229,7 +5249,7 @@ As tags passam a aparecer no Cost Explorer em até 24 h.
 ```markdown
 # Configuração do repositório no GitHub
 
-Repositório: `engelmannlabs/escolagratisdetecnologia` (público).
+Repositório: `escolagratisdetecnologia/escolagratisdetecnologia` (público).
 
 ## Geral
 
@@ -5248,7 +5268,7 @@ Repositório: `engelmannlabs/escolagratisdetecnologia` (público).
 | Environment | Revisores | Branches | Variável |
 |---|---|---|---|
 | `dev` | nenhum | só `main` | `AWS_ACCOUNT_ID` = ID da conta egt-dev |
-| `prod` | `engelmannlabs` (obrigatório) | só `main` | `AWS_ACCOUNT_ID` = ID da conta egt-prod |
+| `prod` | `escolagratisdetecnologia` (obrigatório) | só `main` | `AWS_ACCOUNT_ID` = ID da conta egt-prod |
 
 ## Variáveis e segredos (Settings → Secrets and variables → Actions)
 
@@ -5393,7 +5413,7 @@ Expected: tudo verde; `git status` vazio.
 Pergunte ao mantenedor antes de qualquer push. Com aprovação:
 
 ```bash
-git ls-remote origin >/dev/null 2>&1 && echo "remoto existe" || echo "criar o repositório público engelmannlabs/escolagratisdetecnologia no GitHub (sem README) antes de seguir"
+git ls-remote origin >/dev/null 2>&1 && echo "remoto existe" || echo "criar o repositório público escolagratisdetecnologia/escolagratisdetecnologia no GitHub (sem README) antes de seguir"
 git push -u origin main
 git push -u origin fase-0/fundacao
 ```
