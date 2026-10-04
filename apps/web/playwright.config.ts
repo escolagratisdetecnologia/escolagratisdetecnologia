@@ -15,7 +15,8 @@ export default defineConfig({
     { name: 'iphone', use: { ...devices['iPhone 14'] } },
   ],
   webServer: {
-    command: 'pnpm preview --port 4322',
+    // Astro 7 auto-backgrounds `astro preview` when it detects an AI agent; `--ignore-lock` keeps it in the foreground so Playwright owns the process.
+    command: 'pnpm preview --port 4322 --ignore-lock',
     url: 'http://localhost:4322',
     reuseExistingServer: !process.env.CI,
   },
