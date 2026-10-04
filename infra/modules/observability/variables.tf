@@ -12,4 +12,5 @@ variable "alert_emails" {
   description = "E-mails que recebem alertas de orçamento. Vazio desliga as notificações."
   type        = list(string)
   default     = []
+  sensitive   = true
 }

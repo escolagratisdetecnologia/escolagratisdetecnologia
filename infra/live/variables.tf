@@ -28,4 +28,5 @@ variable "alert_emails" {
   description = "E-mails de alerta. Defina via TF_VAR_alert_emails; nunca versione e-mails pessoais."
   type        = list(string)
   default     = []
+  sensitive   = true
 }

@@ -18,7 +18,8 @@ resource "aws_budgets_budget" "monthly" {
   tags         = local.tags
 
   dynamic "notification" {
-    for_each = length(var.alert_emails) > 0 ? local.notifications : []
+    # alert_emails is sensitive; only whether it is empty drives the structure, so unwrap that bit.
+    for_each = nonsensitive(length(var.alert_emails)) > 0 ? local.notifications : []
 
     content {
       comparison_operator        = "GREATER_THAN"

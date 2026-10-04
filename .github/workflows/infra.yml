@@ -10,8 +10,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
-  pull-requests: write
 
 concurrency:
   group: infra-${{ github.ref }}
@@ -23,6 +21,8 @@ env:
 jobs:
   static:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v4
@@ -39,7 +39,7 @@ jobs:
           done
       - name: terraform test
         run: |
-          for root in modules/tags modules/edge bootstrap/management; do
+          for root in modules/tags modules/edge modules/observability bootstrap/management; do
             terraform -chdir=infra/$root init -backend=false -input=false >/dev/null
             terraform -chdir=infra/$root test
           done
@@ -64,6 +64,9 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository
     needs: static
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -100,6 +103,9 @@ jobs:
   infracost:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v7
         with:

@@ -24,6 +24,9 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-${{ inputs.environment }}
+      cancel-in-progress: false
     environment: ${{ inputs.environment }}
     env:
       ENVIRONMENT: ${{ inputs.environment }}
@@ -55,5 +58,8 @@ jobs:
         if: inputs.check_www_redirect
         run: |
           host="${SITE_URL#https://}"
-          location="$(curl -s -o /dev/null -w '%{redirect_url}' "https://www.$host/")"
-          test "$location" = "$SITE_URL/" || { echo "Redirect inesperado: $location"; exit 1; }
+          result="$(curl -s --max-time 10 --retry 3 --retry-all-errors -o /dev/null -w '%{http_code} %{redirect_url}' "https://www.$host/")"
+          if [ "$result" != "301 $SITE_URL/" ]; then
+            echo "Redirect de www inesperado: '$result' (esperado '301 $SITE_URL/')."
+            exit 1
+          fi
