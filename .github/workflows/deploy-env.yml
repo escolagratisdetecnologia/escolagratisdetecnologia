@@ -28,6 +28,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     concurrency:
       group: deploy-${{ inputs.environment }}
       cancel-in-progress: false
@@ -37,25 +38,25 @@ jobs:
       SITE_URL: ${{ inputs.site_url }}
       TF_IN_AUTOMATION: 'true'
     steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - uses: hashicorp/setup-terraform@v4
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
         with:
           terraform_version: 1.16.5
           terraform_wrapper: false
-      - uses: aws-actions/configure-aws-credentials@v6
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
         with:
           role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/egt-${{ inputs.environment }}-bootstrap-github-apply
           aws-region: sa-east-1
       - name: terraform apply
         run: infra/tf live "$ENVIRONMENT" apply -input=false -auto-approve -lock-timeout=5m
         env:
-          TF_VAR_alert_emails: ${{ secrets.ALERT_EMAILS }}
+          TF_VAR_alert_emails: ${{ secrets.ALERT_EMAILS || '[]' }}
       - run: tools/deploy-site.sh "$ENVIRONMENT"
       - run: tools/smoke.sh "$SITE_URL"
       - name: www redireciona para o domínio

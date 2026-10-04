@@ -5,7 +5,6 @@ on:
     branches: [main]
     paths:
       - 'apps/web/**'
-      - 'apps/api/**'
       - 'infra/**'
       - 'tools/deploy-site.sh'
       - 'tools/smoke.sh'
