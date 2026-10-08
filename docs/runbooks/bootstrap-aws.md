@@ -137,7 +137,7 @@ Siga `docs/runbooks/configurar-github.md` (variáveis com os IDs das contas e o 
 
 ## 9. Primeiro deploy
 
-Pelo pipeline (merge na `main` → job `dev` → aprovação → job `prod`; detalhes em `docs/runbooks/deploy.md`). Depois, assine os planos flat-rate: `docs/runbooks/cloudfront-flat-rate.md`.
+Pelo pipeline (merge na `main` → job `dev` → aprovação → job `prod`; detalhes em `docs/runbooks/deploy.md`). O CloudFront fica no pay-as-you-go (ADR 0019): não há plano a assinar.
 
 Contas novas às vezes recebem "Your account must be verified before you can add new CloudFront resources": abra um caso gratuito no AWS Support e, quando liberar, reexecute em GitHub → Actions → deploy → Run workflow.
 
