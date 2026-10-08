@@ -83,6 +83,7 @@ Se a criação da tag policy falhar com `InvalidInputException` citando um tipo 
 
 Confira o seu e-mail: se chegar uma mensagem de confirmação da inscrição do alerta de anomalia, confirme.
 
+[PAREI AQUI - VOLTAR A PARTIR DAQUI]
 ## 5. Conta dev
 
 Pode ser executado pelo Claude, com aprovação explícita, ou por você.
