@@ -27,13 +27,12 @@ Repositório: `escolagratisdetecnologia/escolagratisdetecnologia` (público), da
 
 ## Variáveis e segredos (Settings → Secrets and variables → Actions)
 
-| Tipo                       | Nome                  | Valor                                            |
-| -------------------------- | --------------------- | ------------------------------------------------ |
-| Variable (repositório)     | `AWS_ACCOUNT_ID_DEV`  | ID da conta egt-dev                              |
-| Variable (repositório)     | `AWS_ACCOUNT_ID_PROD` | ID da conta egt-prod                             |
-| Variable (por environment) | `AWS_ACCOUNT_ID`      | ID da conta do environment (ver tabela acima)    |
-| Secret (repositório)       | `ALERT_EMAILS`        | lista JSON, ex.: `["voce@exemplo.com"]`          |
-| Secret (repositório)       | `INFRACOST_API_KEY`   | chave gratuita em https://dashboard.infracost.io |
+| Tipo                       | Nome                  | Valor                                         |
+| -------------------------- | --------------------- | --------------------------------------------- |
+| Variable (repositório)     | `AWS_ACCOUNT_ID_DEV`  | ID da conta egt-dev                           |
+| Variable (repositório)     | `AWS_ACCOUNT_ID_PROD` | ID da conta egt-prod                          |
+| Variable (por environment) | `AWS_ACCOUNT_ID`      | ID da conta do environment (ver tabela acima) |
+| Secret (repositório)       | `ALERT_EMAILS`        | lista JSON, ex.: `["voce@exemplo.com"]`       |
 
 `ALERT_EMAILS` é Secret **do repositório** (não de environment), nunca Variable: os jobs de deploy declaram `environment:`, então um Secret de environment com o mesmo nome `ALERT_EMAILS` sobrescreveria o do repositório e plano/apply poderiam divergir. Se ficar vazio, o Terraform recebe `[]` e o orçamento fica sem notificações por e-mail.
 
@@ -46,6 +45,15 @@ Repositório: `escolagratisdetecnologia/escolagratisdetecnologia` (público), da
 ## Renovate
 
 Instale o app **Renovate** (https://github.com/apps/renovate) só neste repositório e aceite o PR de onboarding.
+
+## Infracost
+
+O delta de custo dos PRs de infra vem do app do Infracost no GitHub, não de um workflow: não há chave nem Secret para configurar.
+
+1. Entre em https://dashboard.infracost.io com a conta do GitHub e fique no plano **Free** (1.000 execuções por mês, sem cartão). Não inicie o trial do plano pago.
+2. Settings → Org Settings → Integrations → GitHub: siga o assistente autorizando com a conta do GitHub `escolagratisdetecnologia` (dona do repositório) e dê acesso **só a este repositório**. Se ele oferecer o **Infracost (Limited)**, prefira-o: só comenta nos PRs e lê o código. O app completo também pede escrita no conteúdo do repositório, para o AutoFix, que não usamos.
+3. Não defina configuração de repositório no painel: ela tem precedência sobre o `infracost.yml` da raiz, que define os projetos dev e prod e as premissas de uso (`infra/infracost-usage.yml`).
+4. No próximo PR que tocar em `infra/`, confira se o comentário traz os dois projetos (`live-dev` e `live-prod`).
 
 ## Opcional: PRs abertos pelo Claude
 
