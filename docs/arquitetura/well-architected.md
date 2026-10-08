@@ -54,14 +54,14 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 
 ## Otimização de custos
 
-| Prática                                                    | Status                                               |
-| ---------------------------------------------------------- | ---------------------------------------------------- |
-| Serverless pago por uso; nada ocioso                       | feito (Fase 0)                                       |
-| Infracost em todo PR de infra (app do GitHub)              | feito (Fase 0, via runbook)                          |
-| Budgets por conta e detecção de anomalias por conta-membro | feito (Fase 0)                                       |
-| Tags de custo (Project, Environment, Component)            | feito (Fase 0; ativação 24 h após o primeiro deploy) |
-| CloudFront flat-rate                                       | feito (Fase 0, via runbook)                          |
-| Gatilho de revisão do Cognito em 30 mil MAU                | planejado (Fase 1)                                   |
+| Prática                                                       | Status                                               |
+| ------------------------------------------------------------- | ---------------------------------------------------- |
+| Serverless pago por uso; nada ocioso                          | feito (Fase 0)                                       |
+| Infracost em todo PR de infra (app do GitHub)                 | feito (Fase 0, via runbook)                          |
+| Budgets por conta e detecção de anomalias por conta-membro    | feito (Fase 0)                                       |
+| Tags de custo (Project, Environment, Component)               | feito (Fase 0; ativação 24 h após o primeiro deploy) |
+| CloudFront pay-as-you-go no free tier; WAF à parte (ADR 0019) | feito (Fase 0)                                       |
+| Gatilho de revisão do Cognito em 30 mil MAU                   | planejado (Fase 1)                                   |
 
 ## Sustentabilidade
 

@@ -39,7 +39,7 @@ No Linux/WSL, o WebKit dos testes e2e pode exigir, uma única vez: `sudo env "PA
   - [Bootstrap da AWS](docs/runbooks/bootstrap-aws.md)
   - [Configuração do GitHub](docs/runbooks/configurar-github.md)
   - [Deploy, reexecução e rollback](docs/runbooks/deploy.md)
-  - [Plano flat-rate do CloudFront](docs/runbooks/cloudfront-flat-rate.md)
+  - [Plano flat-rate do CloudFront](docs/runbooks/cloudfront-flat-rate.md) (não usado hoje; ADR 0019)
   - [Servidores MCP](docs/runbooks/mcp.md)
   - [Remover 100% do projeto da AWS](docs/runbooks/remover-projeto.md)
 

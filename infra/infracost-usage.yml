@@ -1,5 +1,5 @@
-# Usage assumptions for the Infracost estimate (pay-as-you-go). The CloudFront flat-rate plan
-# (ADR 0004) is not modeled by Infracost: treat the CloudFront/WAF value as a ceiling.
+# Usage assumptions for the Infracost estimate. CloudFront is pay-as-you-go (ADR 0019), but
+# Infracost ignores the always-free tier: treat the CloudFront value as a ceiling.
 # Update these assumptions when the usage pattern changes (see infra/CLAUDE.md).
 version: 0.1
 resource_type_default_usage:
