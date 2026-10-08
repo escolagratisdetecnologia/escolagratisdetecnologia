@@ -518,12 +518,13 @@ Custos não tagueáveis (impostos, suporte, parte de transferência de dados) ap
 | Workflow | Gatilho | Etapas |
 |---|---|---|
 | `ci.yml` | PR | lint (ESLint/Prettier), typecheck, unit + integração (Vitest, DynamoDB Local), `content:check`, build, e2e Playwright, Lighthouse CI, axe |
-| `infra.yml` | PR que toca `infra/**` | fmt, validate, tflint, Trivy (misconfig), `terraform plan` em dev e prod (role somente leitura), `check-tags`, **comentário Infracost com delta de custo mensal** (premissas em `infra/infracost-usage.yml`) |
+| `infra.yml` | PR que toca `infra/**` | fmt, validate, tflint, Trivy (misconfig), `terraform plan` em dev e prod (role somente leitura), `check-tags` |
 | `deploy.yml` | push na `main` | build → apply **dev** → smoke tests → **aprovação manual** (environment `prod` com revisor obrigatório) → apply **prod** → sync do site + invalidação |
 | `social-semanal.yml`, `social-agendar.yml` | cron / merge de calendário | §9 |
 | `transparencia-mensal.yml` | cron dia 3 | §10.3 |
 | `auditoria-tags.yml` | cron semanal | §11.3 |
 
+- Delta de custo mensal: o app do Infracost no GitHub (plano Free, sem chave nem Secret) comenta todo PR que toca `infra/**`, com os projetos de `infracost.yml` e as premissas de `infra/infracost-usage.yml`.
 - `main` protegida: checks obrigatórios, 1 revisão, CODEOWNERS em `infra/` e `content/transparency/`.
 - Template de PR com seções obrigatórias: **Delta de custo**, **Pilares Well-Architected afetados**, **ADR** (quando houver decisão arquitetural).
 - CodeQL, secret scanning e Renovate (gratuitos para repositório público).

@@ -57,7 +57,7 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 | Prática                                                    | Status                                               |
 | ---------------------------------------------------------- | ---------------------------------------------------- |
 | Serverless pago por uso; nada ocioso                       | feito (Fase 0)                                       |
-| Infracost em todo PR de infra                              | feito (Fase 0)                                       |
+| Infracost em todo PR de infra (app do GitHub)              | feito (Fase 0, via runbook)                          |
 | Budgets por conta e detecção de anomalias por conta-membro | feito (Fase 0)                                       |
 | Tags de custo (Project, Environment, Component)            | feito (Fase 0; ativação 24 h após o primeiro deploy) |
 | CloudFront flat-rate                                       | feito (Fase 0, via runbook)                          |
