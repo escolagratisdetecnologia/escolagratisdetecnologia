@@ -54,6 +54,8 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
       - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          # Keep in sync with .mise.toml: the action's default (v0.70.0) panics on this code ("value is null").
+          version: v0.75.0
           scan-type: config
           scan-ref: infra
           severity: HIGH,CRITICAL
