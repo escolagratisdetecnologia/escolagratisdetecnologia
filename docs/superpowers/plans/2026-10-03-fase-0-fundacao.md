@@ -22,7 +22,7 @@
 - ESM em tudo (`"type": "module"`); imports relativos com extensão `.ts`.
 - Nenhum segredo, e-mail pessoal ou ID de conta AWS versionado; usar GitHub Variables/Secrets e `TF_VAR_*`.
 - Orçamentos web: ≤ 30 KB de JS por página de conteúdo, LCP ≤ 2,0 s, CLS ≤ 0,05, Lighthouse ≥ 95 (performance, acessibilidade, boas práticas, SEO), zero violações axe.
-- Commits: Conventional Commits em pt-BR, terminando com a linha `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+- Commits: Conventional Commits em pt-BR, terminando com a linha `Co-Authored-By` do modelo Claude que escreveu o commit (ex.: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`).
 - Ações externas (push, criar recursos na AWS, mudar DNS, configurar GitHub) só com aprovação explícita do mantenedor — tarefas marcadas **[mantenedor]**.
 
 ---

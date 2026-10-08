@@ -1,0 +1,41 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'infra/**'
+      - 'tools/deploy-site.sh'
+      - 'tools/smoke.sh'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - '.node-version'
+      - '.github/workflows/deploy.yml'
+      - '.github/workflows/deploy-env.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  dev:
+    uses: ./.github/workflows/deploy-env.yml
+    with:
+      environment: dev
+      site_url: https://dev.escolagratisdetecnologia.com
+    secrets:
+      ALERT_EMAILS: ${{ secrets.ALERT_EMAILS }}
+
+  prod:
+    needs: dev
+    uses: ./.github/workflows/deploy-env.yml
+    with:
+      environment: prod
+      site_url: https://escolagratisdetecnologia.com
+      check_www_redirect: true
+    secrets:
+      ALERT_EMAILS: ${{ secrets.ALERT_EMAILS }}

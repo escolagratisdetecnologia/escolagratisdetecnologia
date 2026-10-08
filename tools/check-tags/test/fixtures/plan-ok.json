@@ -1,0 +1,22 @@
+{
+  "resource_changes": [
+    {
+      "address": "module.site.aws_s3_bucket.site",
+      "mode": "managed",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "tags_all": {
+            "Project": "escola-gratis-de-tecnologia",
+            "Environment": "prod",
+            "Component": "site",
+            "ManagedBy": "terraform",
+            "Repository": "github.com/escolagratisdetecnologia/escolagratisdetecnologia",
+            "DataClassification": "public"
+          }
+        },
+        "after_unknown": {}
+      }
+    }
+  ]
+}

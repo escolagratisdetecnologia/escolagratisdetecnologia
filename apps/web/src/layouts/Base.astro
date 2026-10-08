@@ -1,0 +1,39 @@
+---
+import { SITE_ENV } from 'astro:env/server';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Keeps the page out of search engines in every environment (e.g. the 404 page). */
+  noindex?: boolean;
+}
+
+const { title, description, noindex = false } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const indexable = SITE_ENV === 'prod' && !noindex;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {!noindex && <link rel="canonical" href={canonical} />}
+    {!indexable && <meta name="robots" content="noindex, nofollow" />}
+    <meta name="theme-color" content="#5b21b6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b0b12" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content="Escola Grátis de Tecnologia" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    {!noindex && <meta property="og:url" content={canonical} />}
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

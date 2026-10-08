@@ -1,0 +1,20 @@
+{
+  "resource_changes": [
+    {
+      "address": "module.edge.aws_cloudfront_distribution.this",
+      "mode": "managed",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "tags_all": {
+            "Project": "escola-gratis-de-tecnologia",
+            "Environment": "prod",
+            "ManagedBy": "terraform",
+            "Repository": "github.com/escolagratisdetecnologia/escolagratisdetecnologia"
+          }
+        },
+        "after_unknown": {}
+      }
+    }
+  ]
+}

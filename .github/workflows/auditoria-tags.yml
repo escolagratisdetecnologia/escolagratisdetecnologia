@@ -1,0 +1,68 @@
+name: auditoria-tags
+
+on:
+  schedule:
+    - cron: '0 11 * * 1' # Mondays 08:00 in Brasília (UTC-3)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [dev, prod]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
+        with:
+          role-to-assume: arn:aws:iam::${{ matrix.env == 'prod' && vars.AWS_ACCOUNT_ID_PROD || vars.AWS_ACCOUNT_ID_DEV }}:role/egt-${{ matrix.env }}-bootstrap-github-audit
+          aws-region: sa-east-1
+      - id: audit
+        env:
+          ENVIRONMENT: ${{ matrix.env }}
+        run: |
+          # A failure here (AWS or search error) fails the step: errors are alarms, not issues.
+          aws resource-explorer-2 search --query-string "-tag.key:Project" --output json > resources.json
+          # Exit codes of the audit CLI: 0 clean, 1 findings, >= 2 error.
+          set +e
+          node tools/tag-audit/src/cli.ts "$ENVIRONMENT" < resources.json > report.md
+          code=$?
+          set -e
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          if [ "$code" -ge 2 ]; then
+            exit "$code"
+          fi
+      - name: abre ou atualiza a issue de pendências
+        if: steps.audit.outputs.code == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ENVIRONMENT: ${{ matrix.env }}
+        run: |
+          title="Auditoria de tags: recursos sem a tag Project em $ENVIRONMENT"
+          existing="$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file report.md
+          else
+            gh issue create --title "$title" --body-file report.md
+          fi
+      - name: fecha a issue quando não há pendências
+        if: steps.audit.outputs.code == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ENVIRONMENT: ${{ matrix.env }}
+        run: |
+          title="Auditoria de tags: recursos sem a tag Project em $ENVIRONMENT"
+          existing="$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Auditoria sem pendências: nenhum recurso sem a tag Project."
+            gh issue close "$existing"
+          fi

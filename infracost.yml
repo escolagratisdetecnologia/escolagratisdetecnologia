@@ -1,0 +1,12 @@
+version: 0.1
+projects:
+  - path: infra/live
+    name: live-dev
+    terraform_var_files:
+      - env/dev.tfvars
+    usage_file: infra/infracost-usage.yml
+  - path: infra/live
+    name: live-prod
+    terraform_var_files:
+      - env/prod.tfvars
+    usage_file: infra/infracost-usage.yml

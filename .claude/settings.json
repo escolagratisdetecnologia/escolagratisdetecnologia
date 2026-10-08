@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm format)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm test)",
+      "Bash(pnpm test:e2e)",
+      "Bash(pnpm build)",
+      "Bash(pnpm --filter:*)",
+      "Bash(terraform fmt:*)",
+      "Bash(terraform -chdir=infra/modules/tags test)",
+      "Bash(node tools/check-tags/src/cli.ts:*)",
+      "Bash(node tools/tag-audit/src/cli.ts:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)"
+    ],
+    "deny": [
+      "Bash(terraform apply:*)",
+      "Bash(terraform destroy:*)",
+      "Bash(terraform -chdir=infra/live apply:*)",
+      "Bash(terraform -chdir=infra/live destroy:*)",
+      "Bash(terraform -chdir=infra/bootstrap/account apply:*)",
+      "Bash(terraform -chdir=infra/bootstrap/account destroy:*)",
+      "Bash(terraform -chdir=infra/bootstrap/management apply:*)",
+      "Bash(terraform -chdir=infra/bootstrap/management destroy:*)",
+      "Bash(infra/tf live prod apply:*)",
+      "Bash(infra/tf live prod destroy:*)",
+      "Bash(infra/tf bootstrap/account prod apply:*)",
+      "Bash(infra/tf bootstrap/account prod destroy:*)",
+      "Bash(infra/tf bootstrap/management shared apply:*)",
+      "Bash(infra/tf bootstrap/management shared destroy:*)",
+      "Read(**/.env)",
+      "Read(**/.env.*)"
+    ]
+  }
+}

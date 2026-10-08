@@ -1,0 +1,8 @@
+pnpm-lock.yaml
+LICENSE
+docs/superpowers/
+**/.terraform/
+**/dist/
+**/.astro/
+.superpowers/
+tools/check-tags/test/fixtures/plan-invalid.json
