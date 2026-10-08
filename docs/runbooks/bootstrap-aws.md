@@ -7,6 +7,7 @@ Executado uma única vez pelo mantenedor, com acesso administrativo. Ordem: orga
 ## 0. Pré-requisitos
 
 - `mise install` (Terraform 1.16.5) e AWS CLI v2.
+- mise ativo no bash, senão o terminal não encontra o `terraform` (`terraform: command not found`). Uma vez só: `echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc && source ~/.bashrc`; confira com `terraform version`.
 - Conta de gerenciamento com MFA no root e acesso administrativo pelo IAM Identity Center.
 
 ## 1. Organização e contas
@@ -36,13 +37,17 @@ aws organizations list-create-account-status --query 'CreateAccountStatuses[].[A
 O perfil SSO `egt-management` já existe (sessão `egt`, região sa-east-1). Para os outros dois (um único login da sessão serve para os dois perfis):
 
 1. No IAM Identity Center, atribua o permission set `AdministratorAccess` ao seu usuário nas contas `egt-dev` e `egt-prod`.
-2. Crie os perfis reutilizando a sessão `egt`:
+2. Crie os perfis reutilizando a sessão `egt`. Rode `unset AWS_PROFILE` antes e passe `--profile`: com `AWS_PROFILE` exportado (passo 1), o `aws configure sso` não pergunta o nome e **sobrescreve** o perfil `egt-management`.
 
 ```bash
-aws configure sso   # sessão: egt (existente); escolha a conta egt-dev e AdministratorAccess; região padrão sa-east-1; o nome do perfil (egt-dev) é a última pergunta
-aws configure sso   # idem para a conta egt-prod, nome do perfil egt-prod
+unset AWS_PROFILE
+aws configure sso --profile egt-dev    # sessão: egt (existente); escolha a conta egt-dev e AdministratorAccess; região padrão sa-east-1
+aws configure sso --profile egt-prod   # idem para a conta egt-prod
 aws sso login --profile egt-dev
+for p in egt-management egt-dev egt-prod; do echo "$p -> $(aws sts get-caller-identity --profile "$p" --query Account --output text)"; done
 ```
+
+A última linha precisa mostrar três IDs diferentes: o da conta de gerenciamento e os das contas `egt-dev` e `egt-prod` (confira com o `list-accounts` do passo 1).
 
 ## 3. Buckets de estado
 
@@ -83,7 +88,6 @@ Se a criação da tag policy falhar com `InvalidInputException` citando um tipo 
 
 Confira o seu e-mail: se chegar uma mensagem de confirmação da inscrição do alerta de anomalia, confirme.
 
-[PAREI AQUI - VOLTAR A PARTIR DAQUI]
 ## 5. Conta dev
 
 Pode ser executado pelo Claude, com aprovação explícita, ou por você.
