@@ -54,5 +54,5 @@ Lock files: as raízes (`live/`, `bootstrap/*`) commitam o `.terraform.lock.hcl`
 ## Proibido
 
 - `apply`/`destroy` local em prod (o pipeline faz isso com aprovação). Exceção: o bootstrap e a remoção total, executados pelo mantenedor seguindo `docs/runbooks/bootstrap-aws.md` e `docs/runbooks/remover-projeto.md`.
-- Recursos criados à mão no console, exceto o que um runbook manda (ex.: plano flat-rate do CloudFront).
+- Recursos criados à mão no console, exceto o que um runbook manda.
 - Mudar arquitetura sem ADR e sem atualizar `docs/arquitetura/well-architected.md`.

@@ -24,7 +24,7 @@ Os vídeos usam S3 + MediaConvert (HLS em 360/540/720p, segmentos de 6 s) + Clou
 - Positivas:
   - Experiência limpa, acessível e sem rastreamento.
 - Negativas:
-  - Custo de transcodificação e de entrega, mitigado pela ADR 0004.
+  - Custo de transcodificação e de entrega por uso (ADR 0019), acompanhado por orçamento e alertas de custo.
 
 ## Pilares Well-Architected
 

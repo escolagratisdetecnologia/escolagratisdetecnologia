@@ -1,6 +1,6 @@
 # 0004. CloudFront com plano flat-rate
 
-- Status: aceita
+- Status: substituída por 0019
 - Data: 2026-10-03
 - Decisão do spec: D4
 

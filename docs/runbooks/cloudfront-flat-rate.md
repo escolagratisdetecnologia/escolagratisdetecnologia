@@ -1,5 +1,7 @@
 # Plano flat-rate do CloudFront
 
+> **Não usado hoje.** O projeto está no pay-as-you-go (ADR 0019), sem plano flat-rate. Este runbook fica para uma eventual migração.
+
 O provider Terraform AWS (6.67, verificado em 2026-10-03) não gerencia a assinatura do plano (ADR 0004). Faça pelo console, uma vez por distribuição (dev e prod).
 
 ## Assinar

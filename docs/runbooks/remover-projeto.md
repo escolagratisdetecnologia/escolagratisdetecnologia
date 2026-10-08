@@ -4,13 +4,10 @@ Irreversível. Só com decisão explícita do mantenedor. A tag `Project=escola-
 
 > **Quem executa.** Só os `destroy` de prod e da conta de gerenciamento (e `terraform -chdir=... destroy`) são bloqueados para o Claude Code. Mesmo assim, **todos os passos deste runbook são executados por você**, no seu terminal do WSL (com o PATH do mise). Não use o prefixo `!` do Claude Code: cada `!` roda num shell novo (o `export` não persiste) e o `yes` do Terraform pode ficar sem entrada.
 
-## 0. Preparação e plano flat-rate
+## 0. Preparação
 
-A AWS exige cancelar o plano flat-rate primeiro e só **depois do ciclo de cobrança atual** permite apagar a distribuição. Portanto:
-
-1. No console do CloudFront de cada conta (dev e prod), cancele o plano da distribuição.
-2. No GitHub, desative os workflows `deploy` e `auditoria-tags` (Actions → workflow → **Disable workflow**), para que nenhum merge republique a aplicação durante a espera.
-3. Espere o próximo ciclo de cobrança. Só então siga para o passo 1.
+1. No GitHub, desative os workflows `deploy` e `auditoria-tags` (Actions → workflow → **Disable workflow**), para que nenhum merge republique a aplicação durante a remoção.
+2. Só se algum plano flat-rate do CloudFront tiver sido assinado (hoje o projeto está no pay-as-you-go, ADR 0019): cancele o plano da distribuição no console do CloudFront de cada conta (dev e prod) e espere o próximo ciclo de cobrança, pois a AWS só permite apagar a distribuição depois dele. Sem plano assinado, siga direto para o passo 1.
 
 ## 1. Reverter o DNS no GoDaddy
 

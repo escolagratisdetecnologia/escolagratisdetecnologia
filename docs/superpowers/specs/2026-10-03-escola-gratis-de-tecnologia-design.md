@@ -60,8 +60,8 @@ A **Escola Grátis de Tecnologia** é uma escola online, 100% gratuita e benefic
 |---|---|---|---|
 | D1 | **Static-first: Astro + ilhas Preact + API serverless** | Next.js SSR em Lambda; SPA React | Menor JS no celular, páginas servidas da borda, custo ~zero ocioso |
 | D2 | **Conteúdo como código** (cursos em Markdown/YAML no Git) | CMS headless / admin próprio | Contribuição por PR, revisão, histórico, autoria pelo Claude Code |
-| D3 | **Vídeo na AWS** (S3 + MediaConvert HLS + CloudFront) | YouTube embed | Sem anúncios/rastreamento de terceiros, player leve, custo previsível com plano flat-rate |
-| D4 | **CloudFront com plano flat-rate** (Free no beta → Pro/Business) | Pay-as-you-go | Sem cobrança de excedente, WAF/DDoS e DNS inclusos, proteção contra "bill shock" |
+| D3 | **Vídeo na AWS** (S3 + MediaConvert HLS + CloudFront) | YouTube embed | Sem anúncios/rastreamento de terceiros, player leve, custo por uso acompanhado por orçamento e alertas (ADR 0019) |
+| D4 | **CloudFront pay-as-you-go com WAF** (ADR 0019, que substitui o plano flat-rate da ADR 0004) | Plano flat-rate (Free → Pro/Business) | Tudo no Terraform, sem os limites do plano; custo fixo do WAF e cobrança por uso acompanhados por orçamento e detecção de anomalias |
 | D5 | **API única em Lambda (Hono, Node 24, arm64) atrás de API Gateway HTTP** | Uma Lambda por rota; Function URL | Menos cold starts, roda igual localmente, throttling nativo |
 | D6 | **DynamoDB on-demand, tabela única** | Aurora Serverless; DSQL | Pago por uso real, sem pausa/retomada lenta, emulador local |
 | D7 | **Amazon Cognito Essentials (alunos) + Lite (equipe)** | Biblioteca de auth própria; Cognito Lite + gatilhos | Serviço gerenciado (pilar de segurança); escolha do mantenedor |
@@ -89,7 +89,7 @@ Cada decisão vira um ADR em `docs/adr/` na Fase 0 (§12.3).
                           Aluno (celular / app instalado)
                                        │ HTTPS
            ┌───────────────────────────▼────────────────────────────┐
-           │ CloudFront + WAF · escolagratisdetecnologia.com        │  plano flat-rate
+           │ CloudFront + WAF · escolagratisdetecnologia.com        │  pay-as-you-go
            └───────┬───────────────────┬──────────────┬─────────────┘
                 /* │            /api/* │              │ /media/*  /credentials/*
      S3 "site" (Astro estático)  API Gateway HTTP     S3 "media" (HLS, legendas,
@@ -484,7 +484,7 @@ infra/
 - Terraform ≥ 1.10; provider AWS 6.x com alias `us_east_1`.
 - Lambdas: código empacotado na CI (esbuild, arm64), `source_code_hash` no Terraform; **log groups criados pelo Terraform** (com tags e retenção de 30 dias), nunca implicitamente.
 - Ferramentas versionadas em `.mise.toml` (Node, pnpm, Terraform, tflint, infracost).
-- Assinatura do plano flat-rate do CloudFront: via Terraform se o provider suportar; caso contrário, runbook documentado (`docs/runbooks/cloudfront-flat-rate.md`).
+- CloudFront no preço pay-as-you-go, sem assinatura de plano (ADR 0019). O runbook `docs/runbooks/cloudfront-flat-rate.md` fica para uma eventual migração ao flat-rate.
 
 ### 11.3 Padrão de tags (obrigatório)
 
@@ -629,7 +629,7 @@ Cobertura mínima de 80% em `packages/core`, `packages/certificates` e `packages
 | Segurança | §5: Cognito gerenciado, MFA da equipe, BFF com cookies HttpOnly, WAF, CSP, menor privilégio, OIDC sem chaves longas, KMS, SSRF/injeção de prompt tratados, auditoria |
 | Confiabilidade | Serviços serverless multi-AZ; DynamoDB PITR; S3 versionado; SQS com DLQ; workers idempotentes; degradação elegante (corretor fora → fila retém) |
 | Eficiência de performance | Static-first na borda; HLS adaptativo; arm64; bundles pequenos; orçamentos na CI |
-| Otimização de custos | Pago por uso; CDN flat-rate; Budgets e Cost Anomaly Detection; Infracost em PR; tags de custo; gatilhos de revisão (Cognito em 30 mil MAU) |
+| Otimização de custos | Pago por uso; CDN pay-as-you-go no free tier; Budgets e Cost Anomaly Detection; Infracost em PR; tags de custo; gatilhos de revisão (Cognito em 30 mil MAU) |
 | Sustentabilidade | Graviton; nada ocioso; conteúdo estático e cache; codificação eficiente; ciclo de vida para originais |
 
 ---
@@ -668,7 +668,7 @@ Notas: Cognito Essentials é gratuito até 10 mil MAU e custa US$ 0,015/MAU acim
 | R4 | Video Agent do HeyGen aceita fixar avatar/voz do elenco | 3 | `create_video_from_avatar` / `create_video_from_studio` com cenas roteirizadas |
 | R5 | MCP/API do Buffer com chave em execução headless (CI) | 5 | Rodar `social-agendar` localmente pelo mantenedor |
 | R6 | Confiabilidade do corretor e injeção de prompt | 2 | Evals, verificações determinísticas, amostragem humana, revogação |
-| R7 | Suporte do provider Terraform ao plano flat-rate do CloudFront (ausente no provider 6.67, verificado em 2026-10-03) | 0 | Runbook manual |
+| R7 | Suporte do provider Terraform ao plano flat-rate do CloudFront (ausente no provider 6.67, verificado em 2026-10-03; sem efeito no pay-as-you-go, ADR 0019) | 0 | Runbook manual |
 | R8 | Custo do Cognito ao crescer | contínuo | ADR com gatilho em 30 mil MAU (reavaliar Lite + gatilhos ou auth própria) |
 | R9 | Pix disponível na conta Stripe da entidade | 4 | Cartão e boleto; link para Pix direto da entidade documentado na transparência |
 | R10 | Tempo de build com muitos cursos | 3 | Cache de build do Astro; medir com 500 aulas; considerar geração incremental |

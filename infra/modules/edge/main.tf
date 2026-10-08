@@ -43,7 +43,7 @@ resource "aws_acm_certificate_validation" "site" {
   validation_record_fqdns = [for record in aws_route53_record.certificate_validation : record.fqdn]
 }
 
-# --- WAF (CLOUDFRONT scope in us-east-1; required on the flat-rate plans) ---
+# --- WAF (CLOUDFRONT scope in us-east-1) ---
 
 resource "aws_wafv2_web_acl" "edge" {
   provider = aws.us_east_1
