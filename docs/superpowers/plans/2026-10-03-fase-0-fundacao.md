@@ -1,5 +1,7 @@
 # Fase 0 — Fundação: Plano de Implementação
 
+> **Status:** concluída em 2026-10-09 (PRs #1 e #8 a #13), com os critérios de pronto do spec (§17) conferidos. Desvios em relação a este plano: CloudFront no pay-as-you-go em vez do plano flat-rate (ADR 0019), Infracost pelo app do GitHub em vez de job com chave, e domínio principal `escolagratisdetecnologia.com.br` (ADR 0020).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Deixar o monorepo pronto para crescer — ferramentas, padrões, CLAUDE.md, licenças, ADRs, CI/CD com delta de custo e checagem de tags, ambiente local, Terraform (bootstrap + borda + site) — e publicar a página "Em breve" em `dev.escolagratisdetecnologia.com` e `escolagratisdetecnologia.com`.
