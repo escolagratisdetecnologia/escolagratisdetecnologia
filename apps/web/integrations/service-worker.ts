@@ -17,13 +17,17 @@ export function serviceWorker(): AstroIntegration {
           mode: 'production',
           sourcemap: false,
           inlineWorkboxRuntime: false,
+          // Hashed files never change under the same name, so they need no revision query.
+          dontCacheBustURLsMatching: /^_astro\//,
           cleanupOutdatedCaches: true,
           clientsClaim: true,
           skipWaiting: true,
           runtimeCaching: [
             {
               // Pages the learner opened stay available offline; others fall back to /offline/.
-              urlPattern: ({ request }) => request.mode === 'navigate',
+              // The API always goes to the network (spec 4.5).
+              urlPattern: ({ request, url }) =>
+                request.mode === 'navigate' && !url.pathname.startsWith('/api/'),
               handler: 'NetworkFirst',
               options: {
                 cacheName: 'paginas',

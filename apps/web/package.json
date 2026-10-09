@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "SITE_DRAFTS=true astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "typecheck": "astro check",
     "check:csp": "node scripts/check-csp.ts",
+    "check:drafts": "node scripts/check-drafts.ts",
     "test:e2e": "playwright test",
     "lighthouse": "lhci autorun"
   },

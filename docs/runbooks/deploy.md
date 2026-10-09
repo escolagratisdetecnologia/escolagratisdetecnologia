@@ -4,8 +4,8 @@ Como a aplicação chega a dev e prod, e o que fazer quando algo dá errado.
 
 ## Como funciona
 
-1. Toda mudança entra por PR na `main`. O merge dispara o workflow `deploy` quando muda algo que vai para a AWS (`apps/web/`, `infra/`, `tools/deploy-site.sh`, `tools/smoke.sh`, dependências ou os próprios workflows de deploy). Mudança só de documentação não publica nada.
-2. Job `dev` (environment `dev`, sem aprovação): `terraform apply` da raiz `live`, build e publicação do site (dev mostra os cursos em rascunho, `SITE_DRAFTS=true`; prod mostra só os publicados) (`tools/deploy-site.sh`, que espera a invalidação do CloudFront terminar) e smoke tests (`tools/smoke.sh`).
+1. Toda mudança entra por PR na `main`. O merge dispara o workflow `deploy` quando muda algo que vai para a AWS (`apps/web/`, `content/`, `packages/`, `infra/`, `tools/deploy-site.sh`, `tools/smoke.sh`, dependências ou os próprios workflows de deploy). Mudança só de documentação não publica nada.
+2. Job `dev` (environment `dev`, sem aprovação): `terraform apply` da raiz `live`, build e publicação do site (`tools/deploy-site.sh`, que espera a invalidação do CloudFront terminar; dev mostra os cursos em rascunho, `SITE_DRAFTS=true`, e prod mostra só os publicados) e smoke tests (`tools/smoke.sh`).
 3. Job `prod`: só começa se o `dev` passou e fica esperando aprovação no environment `prod`. Para aprovar: Actions → execução do `deploy` → **Review deployments** → marque `prod` → **Approve and deploy**. Faz os mesmos passos do dev e ainda confere os redirects de `www.escolagratisdetecnologia.com.br`, `escolagratisdetecnologia.com` e `www.escolagratisdetecnologia.com` (ADR 0020).
 
 Dentro do mesmo environment apenas um deploy é executado por vez; um deploy mais novo pendente substitui um mais antigo ainda aguardando, e um deploy em execução nunca é cancelado. Cada job tem limite de 45 minutos.
@@ -42,6 +42,23 @@ aws cloudfront create-invalidation --distribution-id "$distribution" --paths '/*
 ```
 
 A cópia mantém o tipo e o cache da versão antiga, e os assets de `_astro/` antigos continuam no bucket, então o HTML restaurado funciona. Em seguida, abra o PR de revert: senão o próximo deploy publica o problema de novo.
+
+## Service worker: reverter
+
+O site instala um service worker (`/sw.js`, gerado no build) que guarda o app e as páginas visitadas. Se um deploy publicar um service worker com defeito, quem já o instalou continua com ele até receber outro, então reverter o código nem sempre basta. Abra um PR que, por um deploy, troque o `sw.js` gerado por um que se desinstala e apaga os caches (por exemplo, fazendo a integração `apps/web/integrations/service-worker.ts` escrever este arquivo no lugar do gerado pelo Workbox):
+
+```js
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', async () => {
+  for (const key of await caches.keys()) await caches.delete(key);
+  await self.registration.unregister();
+  for (const client of await self.clients.matchAll()) client.navigate(client.url);
+});
+```
+
+Depois que o deploy chegar a prod (e o CloudFront invalidar), os aparelhos trocam para esse arquivo na próxima visita e voltam a carregar tudo da rede. Corrija o service worker por PR e volte ao gerado.
+
+Limitação conhecida: uma página salva para uso offline antes de um deploy de código pode abrir sem estilos offline depois dele, porque o precache troca os arquivos antigos de `_astro/` (nomes com hash). Deploys só de conteúdo mantêm os hashes e não causam isso.
 
 ## Onde ver logs
 

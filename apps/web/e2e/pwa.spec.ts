@@ -39,16 +39,19 @@ test('visited pages open offline and the rest shows the offline page', async ({
   await page.goto(lessonUrl(course, lesson));
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(lesson.frontmatter.title);
 
-  // The deterministic part first: the visited page and the offline page are in the caches.
-  const cached = await page.evaluate(
-    async (url) => {
-      const visited = await (await caches.open('paginas')).match(url);
-      const offline = await caches.match('/offline/index.html', { ignoreSearch: true });
-      return { visited: Boolean(visited), offline: Boolean(offline) };
-    },
-    lessonUrl(course, lesson),
-  );
-  expect(cached).toEqual({ visited: true, offline: true });
+  // The NetworkFirst write happens in the background, so poll until both entries show up.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        async (url) => {
+          const visited = await (await caches.open('paginas')).match(url);
+          const offline = await caches.match('/offline/index.html', { ignoreSearch: true });
+          return { visited: Boolean(visited), offline: Boolean(offline) };
+        },
+        lessonUrl(course, lesson),
+      ),
+    )
+    .toEqual({ visited: true, offline: true });
 
   await context.setOffline(true);
   await page.reload();
