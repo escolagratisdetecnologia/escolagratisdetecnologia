@@ -33,4 +33,22 @@ describe('findInlineCode', () => {
       '<script type="module" src="/_astro/a.js"></script><a href="/cursos/">ok</a><img src="/brand/egt-mark.svg" alt="">';
     expect(findInlineCode(html)).toEqual([]);
   });
+
+  it.each([
+    ['<svg><script>x()</script></svg>', ['script']],
+    ['<svg><style>p{}</style><rect style="fill:red"/></svg>', ['style', 'style-attribute']],
+    ['<svg><a xlink:href="javascript:x()"><text>t</text></a></svg>', ['javascript-url']],
+    ['<a href="java&#9;script:x()">a</a>', ['javascript-url']],
+    ['<a href="&#106;avascript:x()">b</a>', ['javascript-url']],
+    ['<button ONCLICK="go()">c</button>', ['event-handler']],
+    ['<template><script>x()</script></template>', ['script']],
+  ])('flags %s', (html, kinds) => {
+    expect(findInlineCode(html).map((finding) => finding.kind)).toEqual(kinds);
+  });
+
+  it('accepts a clean document with an inline SVG icon', () => {
+    const html =
+      '<!doctype html><html><head><link rel="stylesheet" href="/_astro/a.css"></head><body><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7"></path></svg><script type="module" src="/_astro/a.js"></script><a href="/cursos/">ok</a></body></html>';
+    expect(findInlineCode(html)).toEqual([]);
+  });
 });
