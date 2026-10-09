@@ -41,6 +41,7 @@ const indexable = SITE_ENV === 'prod' && !noindex;
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     {!noindex && <meta property="og:url" content={canonical} />}
+    <slot name="head" />
   </head>
   <body>
     <slot />

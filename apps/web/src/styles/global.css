@@ -74,7 +74,7 @@ html:has(.lesson-actions) {
   );
 }
 
-/* Author-level display rules (.button, .variant-switcher) must not defeat the hidden attribute. */
+/* Author-level display rules (.button) must not defeat the hidden attribute. */
 [hidden] {
   display: none !important;
 }
@@ -686,11 +686,29 @@ progress::-moz-progress-bar {
 
 /* Platform variants */
 
+/* device-early.js sets data-device on <html> before first paint; without it the switcher stays
+   hidden and every variant is visible. */
 .variant-switcher {
-  display: flex;
+  display: none;
   flex-wrap: wrap;
   gap: var(--space-2);
   margin-bottom: var(--space-3);
+}
+
+:root[data-device] .variant-switcher {
+  display: flex;
+}
+
+:root[data-device] .variant {
+  display: none;
+}
+
+:root[data-device='android'] .variant[data-platform='android'],
+:root[data-device='ios'] .variant[data-platform='ios'],
+:root[data-device='chromeos'] .variant[data-platform='chromeos'],
+:root[data-device='windows'] .variant[data-platform='windows'],
+:root[data-device='mac'] .variant[data-platform='mac'] {
+  display: block;
 }
 
 .variant-switcher .button[aria-pressed='true'] {
@@ -759,7 +777,7 @@ progress::-moz-progress-bar {
   min-height: calc(2 * 1.6em);
 }
 
-.my-progress + .card {
+[data-island='my-progress'] ~ .card {
   margin-top: var(--space-5);
 }
 

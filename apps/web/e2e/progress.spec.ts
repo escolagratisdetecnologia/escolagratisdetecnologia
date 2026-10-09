@@ -57,24 +57,24 @@ test('the home does not jump for returning learners', async ({ page, browserName
   await expect(page.getByRole('link', { name: 'Continuar de onde parou' })).toBeVisible();
   await page.waitForTimeout(300);
 
-  const shift = await page.evaluate(
+  const { supported, shift } = await page.evaluate(
     () =>
-      new Promise<number>((resolve) => {
+      new Promise<{ supported: boolean; shift: number }>((resolve) => {
+        const supported = PerformanceObserver.supportedEntryTypes.includes('layout-shift');
+        let sum = 0;
         const observer = new PerformanceObserver((list) => {
-          let sum = 0;
           for (const entry of list.getEntries() as unknown as {
             value: number;
             hadRecentInput: boolean;
           }[]) {
             if (!entry.hadRecentInput) sum += entry.value;
           }
-          resolve(sum);
         });
         observer.observe({ type: 'layout-shift', buffered: true });
-        setTimeout(() => resolve(0), 500);
+        setTimeout(() => resolve({ supported, shift: sum }), 500);
       }),
   );
-  console.log(`measured CLS: ${shift}`);
+  expect(supported).toBe(true);
   expect(shift).toBeLessThanOrEqual(0.05);
 });
 

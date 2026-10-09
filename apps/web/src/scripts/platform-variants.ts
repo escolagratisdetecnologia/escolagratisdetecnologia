@@ -1,23 +1,21 @@
-import { detectPlatform } from '../lib/platform.ts';
-
-// Module 0: shows only the steps for the learner's device, with buttons to switch.
+// Module 0: wires the device buttons. Which variant is visible is decided by CSS from
+// <html data-device>, which device-early.js sets in <head> before first paint.
 const root = document.querySelector<HTMLElement>('[data-variants]');
 if (root) {
-  const sections = [...root.querySelectorAll<HTMLElement>('[data-platform]')];
+  const html = document.documentElement;
   const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-show]')];
-  const show = (platform: string) => {
-    for (const section of sections) section.hidden = section.dataset.platform !== platform;
+  const press = (platform: string | undefined) => {
     for (const button of buttons)
       button.setAttribute('aria-pressed', String(button.dataset.show === platform));
   };
 
-  const available = sections.map((section) => section.dataset.platform ?? '');
-  const detected = detectPlatform(navigator.userAgent, navigator.maxTouchPoints);
-  show(detected && available.includes(detected) ? detected : (available[0] ?? ''));
-  for (const button of buttons)
-    button.addEventListener('click', () => show(button.dataset.show ?? ''));
-
-  const switcher = root.querySelector<HTMLElement>('[data-switcher]');
-  if (switcher) switcher.hidden = false;
+  // Without data-device (the head script did not run) the no-JS layout stays as it is.
+  if (html.dataset.device) press(html.dataset.device);
+  for (const button of buttons) {
+    button.addEventListener('click', () => {
+      html.dataset.device = button.dataset.show ?? '';
+      press(html.dataset.device);
+    });
+  }
   root.dataset.ready = 'true';
 }

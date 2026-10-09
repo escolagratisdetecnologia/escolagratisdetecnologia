@@ -1,5 +1,5 @@
 import { PLATFORM_LABELS, type Platform } from '@egt/content';
-import { expect, test } from '@playwright/test';
+import { devices, expect, test } from '@playwright/test';
 import { PROGRESS_KEY } from '../src/lib/progress-store.ts';
 import { courseUrl, lessonUrl, lessonsOf, projectUrl } from '../src/lib/urls.ts';
 import { expectNoA11yViolations } from './support/axe.ts';
@@ -74,6 +74,45 @@ test('module 0 opens the steps for the learner device and lets them switch', asy
   await expect(variants.getByRole('heading', { name: mine, level: 3 })).toBeHidden();
 });
 
+// A tablet-size Chromium: the switcher used to push the steps down ~176 px there (CLS 0.12).
+const { defaultBrowserType: _browser, ...tablet } = devices['Galaxy Tab S4'];
+test.describe('layout stability', () => {
+  test.use(tablet);
+
+  test('the lesson with variants does not jump while it loads', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'layout-shift entries are Chromium-only');
+    const course = await pilotCourse();
+    const lesson = lessonsOf(course).find((candidate) => candidate.frontmatter.variants)!;
+
+    // Slow scripts, like a real phone: the page is painted before the deferred ones run.
+    await page.route('**/_astro/*.js', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      await route.continue();
+    });
+    await page.goto(lessonUrl(course, lesson));
+    await expect(page.locator('[data-variants]')).toHaveAttribute('data-ready', 'true');
+    const { supported, shift } = await page.evaluate(
+      () =>
+        new Promise<{ supported: boolean; shift: number }>((resolve) => {
+          const supported = PerformanceObserver.supportedEntryTypes.includes('layout-shift');
+          let sum = 0;
+          const observer = new PerformanceObserver((list) => {
+            for (const entry of list.getEntries() as unknown as {
+              value: number;
+              hadRecentInput: boolean;
+            }[]) {
+              if (!entry.hadRecentInput) sum += entry.value;
+            }
+          });
+          observer.observe({ type: 'layout-shift', buffered: true });
+          setTimeout(() => resolve({ supported, shift: sum }), 500);
+        }),
+    );
+    expect(supported).toBe(true);
+    expect(shift).toBeLessThanOrEqual(0.05);
+  });
+});
+
 test('opening a lesson marks the course as started', async ({ page }) => {
   const course = await pilotCourse();
   const lessons = lessonsOf(course);
@@ -111,7 +150,9 @@ test.describe('without JavaScript', () => {
     const lesson = lessonsOf(course).find((candidate) => candidate.frontmatter.variants)!;
     await page.goto(lessonUrl(course, lesson));
 
-    await expect(page.getByRole('group', { name: 'Escolha seu aparelho' })).not.toBeVisible();
+    const switcher = page.locator('[data-switcher]');
+    await expect(switcher).toHaveCount(1);
+    await expect(switcher).toBeHidden();
     for (const platform of Object.keys(lesson.frontmatter.variants!) as Platform[]) {
       await expect(
         page.getByRole('heading', { name: PLATFORM_LABELS[platform], level: 3 }),

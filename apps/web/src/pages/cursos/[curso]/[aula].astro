@@ -2,6 +2,7 @@
 import { PLATFORMS, PLATFORM_LABELS } from '@egt/content';
 import type { InferGetStaticPropsType } from 'astro';
 import Island from '../../../components/Island.astro';
+import deviceUrl from '../../../scripts/device-early.js?url';
 import Quiz from '../../../islands/Quiz.tsx';
 import App from '../../../layouts/App.astro';
 import { getCourses } from '../../../lib/catalog.ts';
@@ -32,6 +33,12 @@ const variantEntries = PLATFORMS.flatMap((platform) => {
 ---
 
 <App title={`${title} · ${course.meta.title}`} description={summary} tab="cursos">
+  {variantEntries.length > 0 && (
+    <Fragment slot="head">
+      <meta name="egt-variants" content={variantEntries.map((v) => v.platform).join(' ')} />
+      <script is:inline src={deviceUrl}></script>
+    </Fragment>
+  )}
   <article class="lesson" data-course={course.slug} data-lesson={lesson.slug}>
     <p class="back">
       <a href={courseUrl(course)}>{course.meta.title}</a>
@@ -48,13 +55,7 @@ const variantEntries = PLATFORMS.flatMap((platform) => {
     {variantEntries.length > 0 && (
       <section class="variants" data-variants aria-labelledby="aparelho-titulo">
         <h2 id="aparelho-titulo">No seu aparelho</h2>
-        <div
-          class="variant-switcher"
-          data-switcher
-          role="group"
-          aria-label="Escolha seu aparelho"
-          hidden
-        >
+        <div class="variant-switcher" data-switcher role="group" aria-label="Escolha seu aparelho">
           {variantEntries.map((variant) => (
             <button
               type="button"
@@ -108,7 +109,6 @@ const variantEntries = PLATFORMS.flatMap((platform) => {
       </a>
     </div>
   </article>
+  <script src="../../../scripts/lesson-complete.ts"></script>
+  <script src="../../../scripts/platform-variants.ts"></script>
 </App>
-
-<script src="../../../scripts/lesson-complete.ts"></script>
-<script src="../../../scripts/platform-variants.ts"></script>

@@ -14,9 +14,10 @@ O `security.csp` do Astro 7 calcula hashes, mas os grava numa meta tag por pági
 
 - Ilhas Preact são renderizadas no build pelo Astro, **sem** diretiva `client:*`, dentro de `<div data-island data-props>` (`src/components/Island.astro`). O script externo `src/scripts/islands.ts` hidrata cada uma com `hydrate()` do Preact e importa o componente sob demanda (`src/islands/registry.ts`).
 - Melhorias pequenas e sem estado (variantes por aparelho, concluir aula, instalar o app, atalho "Continuar curso") usam scripts externos sem framework.
+- Quando algo precisa ser decidido antes da primeira pintura (a variante de aparelho da aula do módulo 0, para não deslocar o layout), usamos um script clássico **externo** no `<head>` (`src/scripts/device-early.js`, slot `head` do layout), só nas aulas com variantes e sem código inline: ele só marca `data-device` no `<html>` e o CSS faz o resto.
 - `vite.build.assetsInlineLimit: 0`: nenhum script, fonte ou imagem vira inline.
 - O service worker é gerado pelo `workbox-build` numa integração própria no hook `astro:build:done`, com o runtime do Workbox em arquivo separado.
-- A CI roda `pnpm --filter @egt/web check:csp`, que falha se o HTML gerado tiver `<script>` sem `src`, `<style>`, atributo `style` ou handler `on*`.
+- A CI roda `pnpm --filter @egt/web check:csp`, que falha se o HTML gerado (lido com o parse5) tiver `<script>` sem `src`, `<style>`, atributo `style`, handler `on*` ou URL `javascript:`.
 
 ## Alternativas consideradas
 
