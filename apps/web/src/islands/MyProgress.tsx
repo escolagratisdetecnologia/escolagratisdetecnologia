@@ -12,13 +12,21 @@ export default function MyProgress({ outlines }: Props) {
   const [confirming, setConfirming] = useState(false);
   const [cleared, setCleared] = useState(false);
   const confirmButton = useRef<HTMLButtonElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const focusAfter = useRef<'trigger' | 'heading' | undefined>(undefined);
 
   useEffect(() => setProgress(readProgress()), []);
   useEffect(() => {
     if (confirming) confirmButton.current?.focus();
   }, [confirming]);
+  useEffect(() => {
+    if (focusAfter.current === 'trigger') trigger.current?.focus();
+    if (focusAfter.current === 'heading') heading.current?.focus();
+    focusAfter.current = undefined;
+  });
 
-  if (!progress) return <p class="lead">Carregando seu progresso…</p>;
+  if (!progress) return <p class="lead">Seu progresso neste aparelho aparece aqui.</p>;
 
   const started = outlines
     .map((outline) => ({ outline, status: courseStatus(outline, progress.courses[outline.slug]) }))
@@ -29,11 +37,14 @@ export default function MyProgress({ outlines }: Props) {
     setProgress(emptyProgress());
     setConfirming(false);
     setCleared(true);
+    focusAfter.current = 'heading';
   };
 
   return (
     <div class="my-progress">
-      <h2>Seus cursos</h2>
+      <h2 ref={heading} tabIndex={-1}>
+        Seus cursos
+      </h2>
       {started.length === 0 ? (
         <p>
           Você ainda não começou nenhum curso. <a href="/cursos/">Ver os cursos</a>
@@ -53,7 +64,11 @@ export default function MyProgress({ outlines }: Props) {
                 max={status.total}
                 value={status.done}
               />
-              <a class="button button-secondary" href={status.next.url}>
+              <a
+                class="button button-secondary"
+                href={status.next.url}
+                aria-label={`Continuar ${outline.title}`}
+              >
                 Continuar
               </a>
             </li>
@@ -67,6 +82,7 @@ export default function MyProgress({ outlines }: Props) {
         <button
           type="button"
           class="button button-secondary"
+          ref={trigger}
           onClick={() => {
             setCleared(false);
             setConfirming(true);
@@ -87,7 +103,10 @@ export default function MyProgress({ outlines }: Props) {
             <button
               type="button"
               class="button button-secondary"
-              onClick={() => setConfirming(false)}
+              onClick={() => {
+                focusAfter.current = 'trigger';
+                setConfirming(false);
+              }}
             >
               Cancelar
             </button>

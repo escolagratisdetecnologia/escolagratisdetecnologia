@@ -702,22 +702,14 @@ progress::-moz-progress-bar {
   margin-top: var(--space-2);
 }
 
-/* Continue card and Eu tab */
+/* Home call to action and Eu tab */
 
-.continue {
-  margin: var(--space-4) 0;
+.home-action-note {
+  /* two lines reserved, so a long course title never pushes the page down */
+  min-height: calc(2 * 1.6em);
+  margin: var(--space-2) 0 var(--space-4);
 }
 
-.continue h2 {
-  margin-top: 0;
-}
-
-.continue-course {
-  margin-bottom: var(--space-1);
-  font-weight: 700;
-}
-
-.continue progress,
 .my-courses progress {
   margin-bottom: var(--space-3);
 }
@@ -731,7 +723,9 @@ progress::-moz-progress-bar {
 }
 
 .my-course-title {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
   margin-bottom: var(--space-1);
   font-weight: 700;
 }

@@ -2,7 +2,7 @@
 import CourseCard from '../components/CourseCard.astro';
 import InstallPrompt from '../components/InstallPrompt.astro';
 import Island from '../components/Island.astro';
-import ContinueCard from '../islands/ContinueCard.tsx';
+import HomeAction from '../islands/HomeAction.tsx';
 import App from '../layouts/App.astro';
 import { getCourses } from '../lib/catalog.ts';
 import { outlineOf } from '../lib/urls.ts';
@@ -23,14 +23,7 @@ const courses = await getCourses();
     Microcursos com aulas de 2 a 5 minutos e um projeto real no final, com certificado que qualquer
     pessoa consegue conferir.
   </p>
-  <a class="button" href="/cursos/">
-    Ver os cursos
-  </a>
-  <Island
-    name="continue-card"
-    component={ContinueCard}
-    props={{ outlines: courses.map(outlineOf) }}
-  />
+  <Island name="home-action" component={HomeAction} props={{ outlines: courses.map(outlineOf) }} />
   <section aria-labelledby="comece-titulo">
     <h2 id="comece-titulo">Comece por aqui</h2>
     {courses.length > 0 ? (
