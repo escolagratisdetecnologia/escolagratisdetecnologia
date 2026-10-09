@@ -7,11 +7,23 @@
     "ec2:route-table",
     "ec2:network-acl",
     "ec2:dhcp-options",
-    "ec2:internet-gateway"
+    "ec2:internet-gateway",
+    "cloudfront:origin-access-control",
+    "cloudfront:response-headers-policy",
+    "kms:key"
   ],
   "arnPatterns": [
     ":role/aws-service-role/",
     ":role/aws-reserved/",
-    ":role/OrganizationAccountAccessRole$"
+    ":role/OrganizationAccountAccessRole$",
+    ":role/egt-(dev|prod)-",
+    ":saml-provider/AWSSSO_",
+    ":budget/null$",
+    ":athena:[^:]+:\\d+:(datacatalog/AwsDataCatalog|workgroup/primary)$",
+    ":event-bus/default$",
+    ":sampling-rule/Default$",
+    ":storage-lens/default-account-dashboard$",
+    ":elasticache:[^:]+:\\d+:(user:default(\\.iam-user)?|usergroup:default\\.iam-user-group)$",
+    ":memorydb:[^:]+:\\d+:(user/default|acl/open-access|parametergroup/default\\.[a-z0-9.-]+)$"
   ]
 }

@@ -31,7 +31,8 @@ jobs:
           ENVIRONMENT: ${{ matrix.env }}
         run: |
           # A failure here (AWS or search error) fails the step: errors are alarms, not issues.
-          aws resource-explorer-2 search --query-string "-tag.key:Project" --output json > resources.json
+          # The value starts with "-": without "=", the CLI parses it as an option (exit 252).
+          aws resource-explorer-2 search --query-string=-tag.key:Project --output json > resources.json
           # Exit codes of the audit CLI: 0 clean, 1 findings, >= 2 error.
           set +e
           node tools/tag-audit/src/cli.ts "$ENVIRONMENT" < resources.json > report.md
