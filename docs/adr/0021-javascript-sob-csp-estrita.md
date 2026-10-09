@@ -17,7 +17,7 @@ O `security.csp` do Astro 7 calcula hashes, mas os grava numa meta tag por pági
 - Quando algo precisa ser decidido antes da primeira pintura (a variante de aparelho da aula do módulo 0, para não deslocar o layout), usamos um script clássico **externo** no `<head>` (`src/scripts/device-early.js`, slot `head` do layout), só nas aulas com variantes e sem código inline: ele só marca `data-device` no `<html>` e o CSS faz o resto.
 - `vite.build.assetsInlineLimit: 0`: nenhum script, fonte ou imagem vira inline.
 - O service worker é gerado pelo `workbox-build` numa integração própria no hook `astro:build:done`, com o runtime do Workbox em arquivo separado.
-- A CI roda `pnpm --filter @egt/web check:csp`, que falha se o HTML gerado (lido com o parse5) tiver `<script>` sem `src`, `<style>`, atributo `style`, handler `on*` ou URL `javascript:`.
+- A CI roda `pnpm --filter @egt/web check:csp`, que falha se o HTML gerado (lido com o parse5) tiver `<script>` sem `src`, `<style>`, atributo `style`, handler `on*` ou URL `javascript:`, `vbscript:` ou `data:`.
 
 ## Alternativas consideradas
 

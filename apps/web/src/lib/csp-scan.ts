@@ -5,21 +5,25 @@ type Node = DefaultTreeAdapterMap['node'];
 type Element = DefaultTreeAdapterMap['element'];
 
 export interface InlineCode {
-  kind: 'script' | 'style' | 'style-attribute' | 'event-handler' | 'javascript-url';
+  kind: 'script' | 'style' | 'style-attribute' | 'event-handler' | 'unsafe-url';
   snippet: string;
 }
 
 // Attributes whose value a browser may navigate to or load as a URL.
 const URL_ATTRIBUTES = new Set(['href', 'src', 'action', 'formaction', 'data']);
 
+// The site never inlines assets (Vite assetsInlineLimit: 0), so any data: URL is a mistake,
+// and data: URLs on scripts or frames would bypass review.
+const UNSAFE_SCHEMES = ['javascript:', 'vbscript:', 'data:'];
+
 // Browsers drop tab/LF/CR anywhere in a URL and trim leading C0 controls and spaces.
-function isJavascriptUrl(value: string): boolean {
+function isUnsafeUrl(value: string): boolean {
   const cleaned = value
     .replace(/[\t\n\r]/g, '')
     // eslint-disable-next-line no-control-regex
     .replace(/^[\u0000- ]+/, '')
     .toLowerCase();
-  return cleaned.startsWith('javascript:');
+  return UNSAFE_SCHEMES.some((scheme) => cleaned.startsWith(scheme));
 }
 
 function isElement(node: Node): node is Element {
@@ -47,12 +51,12 @@ export function findInlineCode(html: string): InlineCode[] {
       if (node.tagName === 'style') add('style');
       if (names.includes('style')) add('style-attribute');
       if (names.some((name) => name.startsWith('on'))) add('event-handler');
-      const isScriptUrl = node.attrs.some(
+      const hasUnsafeUrl = node.attrs.some(
         (attr) =>
           URL_ATTRIBUTES.has(attr.name.toLowerCase().replace(/^.*:/, '')) &&
-          isJavascriptUrl(attr.value),
+          isUnsafeUrl(attr.value),
       );
-      if (isScriptUrl) add('javascript-url');
+      if (hasUnsafeUrl) add('unsafe-url');
     }
     if ('content' in node) visit(node.content);
     if ('childNodes' in node) node.childNodes.forEach(visit);

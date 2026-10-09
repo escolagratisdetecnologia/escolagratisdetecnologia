@@ -23,7 +23,7 @@ describe('findInlineCode', () => {
     ['<script data-src="x">alert(1)</script>', 'script'],
     ['<p style=color:red>x</p>', 'style-attribute'],
     ['<button onclick=go()>y</button>', 'event-handler'],
-    ['<a href=" JavaScript:alert(1)">z</a>', 'javascript-url'],
+    ['<a href=" JavaScript:alert(1)">z</a>', 'unsafe-url'],
   ])('flags %s', (html, kind) => {
     expect(findInlineCode(html).map((finding) => finding.kind)).toEqual([kind]);
   });
@@ -37,9 +37,13 @@ describe('findInlineCode', () => {
   it.each([
     ['<svg><script>x()</script></svg>', ['script']],
     ['<svg><style>p{}</style><rect style="fill:red"/></svg>', ['style', 'style-attribute']],
-    ['<svg><a xlink:href="javascript:x()"><text>t</text></a></svg>', ['javascript-url']],
-    ['<a href="java&#9;script:x()">a</a>', ['javascript-url']],
-    ['<a href="&#106;avascript:x()">b</a>', ['javascript-url']],
+    ['<svg><a xlink:href="javascript:x()"><text>t</text></a></svg>', ['unsafe-url']],
+    ['<a href="java&#9;script:x()">a</a>', ['unsafe-url']],
+    ['<a href="&#106;avascript:x()">b</a>', ['unsafe-url']],
+    ['<a href="vbscript:msgbox(1)">x</a>', ['unsafe-url']],
+    ['<a href="data:text/html,<script>x()</script>">y</a>', ['unsafe-url']],
+    ['<img src="data:image/png;base64,AAAA" alt="">', ['unsafe-url']],
+    ['<iframe src=" DATA:text/html,x"></iframe>', ['unsafe-url']],
     ['<button ONCLICK="go()">c</button>', ['event-handler']],
     ['<template><script>x()</script></template>', ['script']],
   ])('flags %s', (html, kinds) => {
