@@ -578,3 +578,28 @@ progress::-moz-progress-bar {
 .criterion-weight {
   color: var(--color-muted);
 }
+
+/* Course progress island */
+
+.progress-label {
+  margin-bottom: var(--space-2);
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+}
+
+.course-progress progress {
+  margin-bottom: var(--space-3);
+}
+
+.done-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-success);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.done-badge::before {
+  content: '✓' / '';
+}

@@ -24,3 +24,4 @@ Cada decisão relevante vira um arquivo `NNNN-titulo.md` a partir de `0000-model
 | 0018 | Entidade de doações parametrizada                           | aceita               |
 | 0019 | CloudFront pay-as-you-go                                    | aceita               |
 | 0020 | Domínio principal .com.br                                   | aceita               |
+| 0021 | JavaScript no cliente sob CSP estrita                       | aceita               |

@@ -1,9 +1,11 @@
+import preact from '@astrojs/preact';
 import { defineConfig, envField } from 'astro/config';
 
 export default defineConfig({
   site: process.env.SITE_URL ?? 'http://localhost:4321',
   output: 'static',
   trailingSlash: 'ignore',
+  integrations: [preact()],
   // CSS sempre em arquivo externo: a CSP do CloudFront não permite <style> inline.
   build: { format: 'directory', inlineStylesheets: 'never' },
   compressHTML: true,
@@ -19,6 +21,8 @@ export default defineConfig({
     },
   },
   vite: {
+    // Never inline scripts, fonts or images: the CSP only allows files from the site itself (ADR 0021).
+    build: { assetsInlineLimit: 0 },
     server: { proxy: { '/api': 'http://localhost:3001' } },
   },
 });

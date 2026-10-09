@@ -8,14 +8,17 @@
     "build": "astro build",
     "preview": "astro preview",
     "typecheck": "astro check",
+    "check:csp": "node scripts/check-csp.ts",
     "test:e2e": "playwright test",
     "lighthouse": "lhci autorun"
   },
   "dependencies": {
+    "@astrojs/preact": "^6.0.6",
     "@egt/content": "workspace:*",
     "@egt/core": "workspace:*",
     "astro": "^7.3.5",
-    "marked": "^18.1.0"
+    "marked": "^18.1.0",
+    "preact": "^10.29.8"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",

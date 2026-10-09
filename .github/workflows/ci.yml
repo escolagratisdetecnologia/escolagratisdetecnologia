@@ -32,6 +32,7 @@ jobs:
           SITE_ENV: prod
           SITE_DRAFTS: 'true'
           SITE_URL: https://escolagratisdetecnologia.com.br
+      - run: pnpm --filter @egt/web check:csp
       - run: pnpm --filter @egt/web exec playwright install --with-deps chromium webkit
       - run: pnpm --filter @egt/web test:e2e
       - run: pnpm --filter @egt/web lighthouse

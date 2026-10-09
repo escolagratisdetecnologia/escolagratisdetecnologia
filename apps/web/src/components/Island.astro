@@ -1,0 +1,19 @@
+---
+import type { ComponentType } from 'preact';
+
+interface Props {
+  /** Name registered in src/islands/registry.ts. */
+  name: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  component: ComponentType<any>;
+  props: Record<string, unknown>;
+}
+
+const { name, component: Component, props } = Astro.props;
+---
+
+<div data-island={name} data-props={JSON.stringify(props)}>
+  <Component {...props} />
+</div>
+
+<script src="../scripts/islands.ts"></script>

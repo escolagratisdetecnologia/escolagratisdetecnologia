@@ -2,11 +2,13 @@
 import { LEVEL_LABELS } from '@egt/content';
 import type { InferGetStaticPropsType } from 'astro';
 import CourseChips from '../../../components/CourseChips.astro';
+import Island from '../../../components/Island.astro';
 import NeedsCard from '../../../components/NeedsCard.astro';
+import CourseProgress from '../../../islands/CourseProgress.tsx';
 import App from '../../../layouts/App.astro';
 import { getCourses } from '../../../lib/catalog.ts';
 import { outcomeResult } from '../../../lib/course-text.ts';
-import { lessonUrl, lessonsOf, projectUrl } from '../../../lib/urls.ts';
+import { outlineOf } from '../../../lib/urls.ts';
 
 export async function getStaticPaths() {
   const courses = await getCourses();
@@ -16,7 +18,6 @@ export async function getStaticPaths() {
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { course } = Astro.props;
-const first = lessonsOf(course)[0];
 ---
 
 <App
@@ -31,29 +32,9 @@ const first = lessonsOf(course)[0];
   </p>
   <CourseChips course={course} />
   <NeedsCard course={course} />
-  <div class="course-progress">
-    {first && (
-      <a class="button button-block" href={lessonUrl(course, first)}>
-        Bora começar
-      </a>
-    )}
-    <h2 id="conteudo-do-curso">O que tem no curso</h2>
-    <ol class="modules">
-      {course.modules.map((module) => (
-        <li>
-          <h3>{module.title}</h3>
-          <ol class="lessons">
-            {module.lessons.map((lesson) => (
-              <li class="lesson-item">
-                <a href={lessonUrl(course, lesson)}>{lesson.frontmatter.title}</a>
-              </li>
-            ))}
-          </ol>
-        </li>
-      ))}
-    </ol>
-    <p class="project-link">
-      <a href={projectUrl(course)}>Projeto final: {course.project.frontmatter.title}</a>
-    </p>
-  </div>
+  <Island
+    name="course-progress"
+    component={CourseProgress}
+    props={{ outline: outlineOf(course) }}
+  />
 </App>
