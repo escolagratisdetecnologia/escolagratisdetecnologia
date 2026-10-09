@@ -12,7 +12,10 @@
     "lighthouse": "lhci autorun"
   },
   "dependencies": {
-    "astro": "^7.3.5"
+    "@egt/content": "workspace:*",
+    "@egt/core": "workspace:*",
+    "astro": "^7.3.5",
+    "marked": "^18.1.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",

@@ -1,5 +1,9 @@
 ---
+import CourseCard from '../../components/CourseCard.astro';
 import App from '../../layouts/App.astro';
+import { getCourses } from '../../lib/catalog.ts';
+
+const courses = await getCourses();
 ---
 
 <App
@@ -9,5 +13,13 @@ import App from '../../layouts/App.astro';
 >
   <h1>Cursos</h1>
   <p class="lead">Escolha um curso e comece agora. Não precisa criar conta para assistir.</p>
-  <p class="empty">Os primeiros cursos estão chegando. Volte em breve!</p>
+  {courses.length > 0 ? (
+    <div class="course-list">
+      {courses.map((course) => (
+        <CourseCard course={course} />
+      ))}
+    </div>
+  ) : (
+    <p class="empty">Os primeiros cursos estão chegando. Volte em breve!</p>
+  )}
 </App>

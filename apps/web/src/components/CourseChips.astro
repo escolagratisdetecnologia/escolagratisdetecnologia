@@ -1,0 +1,16 @@
+---
+import type { Course } from '@egt/content';
+import { devicesText } from '../lib/course-text.ts';
+
+interface Props {
+  course: Course;
+}
+
+const { meta } = Astro.props.course;
+---
+
+<ul class="chips" aria-label="Sobre o curso">
+  <li>{meta.durationMin} min</li>
+  <li>{devicesText(meta.devices)}</li>
+  <li>R$ 0</li>
+</ul>

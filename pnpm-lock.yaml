@@ -63,9 +63,18 @@ importers:
 
   apps/web:
     dependencies:
+      '@egt/content':
+        specifier: workspace:*
+        version: link:../../packages/content
+      '@egt/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       astro:
         specifier: ^7.3.5
         version: 7.3.5(@types/node@24.19.1)(yaml@2.9.1)
+      marked:
+        specifier: ^18.1.0
+        version: 18.1.0
     devDependencies:
       '@astrojs/check':
         specifier: ^0.9.10

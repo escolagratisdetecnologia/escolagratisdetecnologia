@@ -1,0 +1,42 @@
+---
+import type { Course } from '@egt/content';
+import { capitalize, devicesText, requirementsText } from '../lib/course-text.ts';
+
+interface Props {
+  course: Course;
+}
+
+const { course } = Astro.props;
+const { devices, requirements, paidTools } = course.meta;
+const titleId = `precisa-${course.slug}`;
+---
+
+<section class="card needs" aria-labelledby={titleId}>
+  <h2 id={titleId}>O que você precisa</h2>
+  <dl>
+    <div>
+      <dt>Aparelho</dt>
+      <dd>{capitalize(devicesText(devices))}</dd>
+    </div>
+    <div>
+      <dt>Contas grátis</dt>
+      <dd>{requirements.length > 0 ? capitalize(requirementsText(requirements)) : 'Nenhuma'}</dd>
+    </div>
+    <div>
+      <dt>Custo</dt>
+      <dd>
+        R$ 0
+        {paidTools.map((tool) => (
+          <span>
+            {' '}
+            · {tool.name} é pago; use {tool.freeAlternative} no lugar.
+          </span>
+        ))}
+      </dd>
+    </div>
+    <div>
+      <dt>Internet</dt>
+      <dd>Para ver as aulas e usar as ferramentas online</dd>
+    </div>
+  </dl>
+</section>

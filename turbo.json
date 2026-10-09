@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "env": ["SITE_URL", "SITE_ENV"],
+      "env": ["SITE_URL", "SITE_ENV", "SITE_DRAFTS"],
       "outputs": ["dist/**"]
     },
     "typecheck": {},

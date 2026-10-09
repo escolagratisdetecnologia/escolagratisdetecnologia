@@ -1,5 +1,9 @@
 ---
+import CourseCard from '../components/CourseCard.astro';
 import App from '../layouts/App.astro';
+import { getCourses } from '../lib/catalog.ts';
+
+const courses = await getCourses();
 ---
 
 <App
@@ -18,6 +22,18 @@ import App from '../layouts/App.astro';
   <a class="button" href="/cursos/">
     Ver os cursos
   </a>
+  <section aria-labelledby="comece-titulo">
+    <h2 id="comece-titulo">Comece por aqui</h2>
+    {courses.length > 0 ? (
+      <div class="course-list">
+        {courses.map((course) => (
+          <CourseCard course={course} headingLevel={3} />
+        ))}
+      </div>
+    ) : (
+      <p class="empty">Os primeiros cursos estão chegando. Volte em breve!</p>
+    )}
+  </section>
   <ul class="points">
     <li>
       <strong>100% grátis</strong>, sempre. Sem pegadinha.

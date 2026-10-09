@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     passWithNoTests: true,
     projects: [
+      'apps/web',
       'apps/api',
       'packages/content',
       'packages/core',

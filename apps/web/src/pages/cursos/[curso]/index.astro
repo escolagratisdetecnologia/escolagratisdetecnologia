@@ -1,0 +1,59 @@
+---
+import { LEVEL_LABELS } from '@egt/content';
+import type { InferGetStaticPropsType } from 'astro';
+import CourseChips from '../../../components/CourseChips.astro';
+import NeedsCard from '../../../components/NeedsCard.astro';
+import App from '../../../layouts/App.astro';
+import { getCourses } from '../../../lib/catalog.ts';
+import { outcomeResult } from '../../../lib/course-text.ts';
+import { lessonUrl, lessonsOf, projectUrl } from '../../../lib/urls.ts';
+
+export async function getStaticPaths() {
+  const courses = await getCourses();
+  return courses.map((course) => ({ params: { curso: course.slug }, props: { course } }));
+}
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { course } = Astro.props;
+const first = lessonsOf(course)[0];
+---
+
+<App
+  title={`${course.meta.title} · Escola Grátis de Tecnologia`}
+  description={course.meta.outcome}
+  tab="cursos"
+>
+  <p class="eyebrow">Curso grátis · {LEVEL_LABELS[course.meta.level]}</p>
+  <h1>{course.meta.title}</h1>
+  <p class="outcome">
+    Você sai com: <mark>{outcomeResult(course.meta.outcome)}</mark>
+  </p>
+  <CourseChips course={course} />
+  <NeedsCard course={course} />
+  <div class="course-progress">
+    {first && (
+      <a class="button button-block" href={lessonUrl(course, first)}>
+        Bora começar
+      </a>
+    )}
+    <h2 id="conteudo-do-curso">O que tem no curso</h2>
+    <ol class="modules">
+      {course.modules.map((module) => (
+        <li>
+          <h3>{module.title}</h3>
+          <ol class="lessons">
+            {module.lessons.map((lesson) => (
+              <li class="lesson-item">
+                <a href={lessonUrl(course, lesson)}>{lesson.frontmatter.title}</a>
+              </li>
+            ))}
+          </ol>
+        </li>
+      ))}
+    </ol>
+    <p class="project-link">
+      <a href={projectUrl(course)}>Projeto final: {course.project.frontmatter.title}</a>
+    </p>
+  </div>
+</App>

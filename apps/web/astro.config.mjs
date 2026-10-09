@@ -15,6 +15,7 @@ export default defineConfig({
         values: ['local', 'dev', 'prod'],
         default: 'local',
       }),
+      SITE_DRAFTS: envField.boolean({ context: 'server', access: 'public', default: false }),
     },
   },
   vite: {
