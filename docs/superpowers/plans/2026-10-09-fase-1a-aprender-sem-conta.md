@@ -1967,7 +1967,7 @@ Conteúdo como código (spec §4.1, decisão D2). Tudo aqui é validado por `pnp
 - Toda aula tem `summary` de uma linha (até 140 caracteres), 1 a 3 perguntas no `quiz` (`answer` conta a partir de 0) e o roteiro ou a transcrição no corpo.
 - `variants` (passo a passo por aparelho) só no módulo 0, com pelo menos duas plataformas: `android`, `ios`, `windows`, `mac`, `chromeos`.
 - Vídeo de 2 a 5 minutos (`durationSec` de 120 a 300). Curso com `status: published` precisa de vídeo e legenda em todas as aulas.
-- Só Markdown: HTML é recusado (a CSP do site bloqueia estilos e scripts inline).
+- Só Markdown: HTML solto no texto é recusado (a CSP do site bloqueia estilos e scripts inline). Exemplos de HTML vão entre crases ou em bloco de código, e links automáticos como `<https://…>` são aceitos.
 - Rubrica do projeto com pesos somando 100 e `passScore` de 0 a 100.
 
 ## Tom
@@ -5900,7 +5900,7 @@ Eficiência de performance:
 - §4.1, tabela da aula: a linha de `quiz` passa a dizer "obrigatório: 1–3 perguntas: `question`, `options`, `answer`, `explanation`" e a de `variants`, "(só no módulo 0) passo a passo `{ steps }` por plataforma: `android`, `ios`, `windows`, `mac`, `chromeos`". Logo depois da tabela, acrescente o parágrafo:
 
   ```md
-  A URL da aula é `/cursos/{curso}/{aula}/`, com o nome do arquivo sem o número; ele não se repete no curso, e `projeto` é reservado. Corpo e passos só em Markdown, sem HTML.
+  A URL da aula é `/cursos/{curso}/{aula}/`, com o nome do arquivo sem o número; ele não se repete no curso, e `projeto` é reservado. Corpo e passos só em Markdown: HTML solto é recusado; exemplos de HTML vão entre crases ou em bloco de código.
   ```
 
 - §4.5: troque "Service worker (Workbox via `@vite-pwa/astro`)" por "Service worker gerado pelo `workbox-build` no fim do build (ADR 0021)".
