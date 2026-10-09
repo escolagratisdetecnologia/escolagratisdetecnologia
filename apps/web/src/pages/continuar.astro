@@ -1,0 +1,33 @@
+---
+import App from '../layouts/App.astro';
+import { getCourses } from '../lib/catalog.ts';
+import { outlineOf } from '../lib/urls.ts';
+
+const outlines = (await getCourses()).map(outlineOf);
+---
+
+<App
+  title="Continuar curso · Escola Grátis de Tecnologia"
+  description="Volte para a próxima aula do curso que você está fazendo."
+  noindex
+>
+  <h1>Continuar curso</h1>
+  <div data-continue data-outlines={JSON.stringify(outlines)}>
+    {outlines.length > 0 ? (
+      <>
+        <p>Escolha o curso para continuar:</p>
+        <ul>
+          {outlines.map((outline) => (
+            <li>
+              <a href={outline.url}>{outline.title}</a>
+            </li>
+          ))}
+        </ul>
+      </>
+    ) : (
+      <p class="empty">Os primeiros cursos estão chegando. Volte em breve!</p>
+    )}
+  </div>
+</App>
+
+<script src="../scripts/continue.ts"></script>

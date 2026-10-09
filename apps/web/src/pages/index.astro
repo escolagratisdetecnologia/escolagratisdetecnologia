@@ -1,7 +1,10 @@
 ---
 import CourseCard from '../components/CourseCard.astro';
+import Island from '../components/Island.astro';
+import ContinueCard from '../islands/ContinueCard.tsx';
 import App from '../layouts/App.astro';
 import { getCourses } from '../lib/catalog.ts';
+import { outlineOf } from '../lib/urls.ts';
 
 const courses = await getCourses();
 ---
@@ -22,6 +25,11 @@ const courses = await getCourses();
   <a class="button" href="/cursos/">
     Ver os cursos
   </a>
+  <Island
+    name="continue-card"
+    component={ContinueCard}
+    props={{ outlines: courses.map(outlineOf) }}
+  />
   <section aria-labelledby="comece-titulo">
     <h2 id="comece-titulo">Comece por aqui</h2>
     {courses.length > 0 ? (

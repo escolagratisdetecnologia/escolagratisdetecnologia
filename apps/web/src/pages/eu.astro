@@ -1,5 +1,11 @@
 ---
+import Island from '../components/Island.astro';
+import MyProgress from '../islands/MyProgress.tsx';
 import App from '../layouts/App.astro';
+import { getCourses } from '../lib/catalog.ts';
+import { outlineOf } from '../lib/urls.ts';
+
+const outlines = (await getCourses()).map(outlineOf);
 ---
 
 <App
@@ -8,7 +14,7 @@ import App from '../layouts/App.astro';
   tab="eu"
 >
   <h1>Eu</h1>
-  <p class="lead">Seu progresso nos cursos fica salvo neste aparelho e aparece aqui.</p>
+  <Island name="my-progress" component={MyProgress} props={{ outlines }} />
   <section class="card" aria-labelledby="conta-titulo">
     <h2 id="conta-titulo">Sua conta</h2>
     <p>
