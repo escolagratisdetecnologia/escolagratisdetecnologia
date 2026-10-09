@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "test:e2e": "turbo run test:e2e",
     "lint": "eslint . && prettier --check .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "content:check": "node packages/content/src/cli.ts content"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
