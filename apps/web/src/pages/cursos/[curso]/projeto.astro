@@ -1,0 +1,54 @@
+---
+import { DELIVERABLE_LABELS } from '@egt/content';
+import type { InferGetStaticPropsType } from 'astro';
+import App from '../../../layouts/App.astro';
+import { getCourses } from '../../../lib/catalog.ts';
+import { renderMarkdown } from '../../../lib/markdown.ts';
+import { courseUrl } from '../../../lib/urls.ts';
+
+export async function getStaticPaths() {
+  const courses = await getCourses();
+  return courses.map((course) => ({ params: { curso: course.slug }, props: { course } }));
+}
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { course } = Astro.props;
+const { frontmatter, body } = course.project;
+---
+
+<App
+  title={`Projeto final · ${course.meta.title}`}
+  description={`Projeto final do curso ${course.meta.title}: ${frontmatter.title}.`}
+  tab="cursos"
+>
+  <p class="back">
+    <a href={courseUrl(course)}>{course.meta.title}</a>
+  </p>
+  <h1>Projeto final: {frontmatter.title}</h1>
+  <div class="prose" set:html={renderMarkdown(body)} />
+  <h2>O que entregar</h2>
+  <ul>
+    {frontmatter.deliverables.map((deliverable) => (
+      <li>{DELIVERABLE_LABELS[deliverable]}</li>
+    ))}
+  </ul>
+  <h2>Como vamos avaliar</h2>
+  <ol class="criteria">
+    {frontmatter.criteria.map((criterion) => (
+      <li>
+        {criterion.description}{' '}
+        <span class="criterion-weight">
+          ({criterion.weight} pontos{criterion.required ? ', obrigatório' : ''})
+        </span>
+      </li>
+    ))}
+  </ol>
+  <p>
+    Para passar: {frontmatter.passScore} de 100 pontos, cumprindo todos os critérios obrigatórios.
+  </p>
+  <p class="card">
+    O envio do projeto e o certificado chegam em breve. Para enviar, você vai entrar com sua conta,
+    só nesta etapa.
+  </p>
+</App>

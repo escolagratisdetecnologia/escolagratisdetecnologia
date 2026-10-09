@@ -24,15 +24,27 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      - run: pnpm content:check
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
         env:
           SITE_ENV: prod
+          SITE_DRAFTS: 'true'
           SITE_URL: https://escolagratisdetecnologia.com.br
+      - run: pnpm --filter @egt/web check:csp
       - run: pnpm --filter @egt/web exec playwright install --with-deps chromium webkit
       - run: pnpm --filter @egt/web test:e2e
       - run: pnpm --filter @egt/web lighthouse
+      - name: Build de prod (sem rascunhos) e guardas
+        run: |
+          pnpm build
+          pnpm --filter @egt/web check:csp
+          pnpm --filter @egt/web check:drafts
+        env:
+          SITE_ENV: prod
+          SITE_DRAFTS: 'false'
+          SITE_URL: https://escolagratisdetecnologia.com.br
       - if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:

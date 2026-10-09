@@ -1,0 +1,18 @@
+title: Crie seu site com IA
+outcome: 'Você sai com: o site de um negócio do bairro no ar, feito com ajuda de IA'
+level: iniciante
+durationMin: 45
+devices: [celular, computador]
+cost: 0
+requirements: [github, claude]
+skills:
+  - Escrever pedidos claros para uma IA
+  - Publicar um site estático de graça
+  - Revisar um site no celular
+hosts: []
+status: draft
+modules:
+  - id: 00-preparacao
+    title: Prepare seu ambiente
+  - id: 01-seu-primeiro-site
+    title: Seu primeiro site

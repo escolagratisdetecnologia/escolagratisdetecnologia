@@ -1,0 +1,25 @@
+---
+import CourseCard from '../../components/CourseCard.astro';
+import App from '../../layouts/App.astro';
+import { getCourses } from '../../lib/catalog.ts';
+
+const courses = await getCourses();
+---
+
+<App
+  title="Cursos · Escola Grátis de Tecnologia"
+  description="Microcursos grátis de tecnologia, com aulas curtinhas e um projeto real no final."
+  tab="cursos"
+>
+  <h1>Cursos</h1>
+  <p class="lead">Escolha um curso e comece agora. Não precisa criar conta para assistir.</p>
+  {courses.length > 0 ? (
+    <div class="course-list">
+      {courses.map((course) => (
+        <CourseCard course={course} />
+      ))}
+    </div>
+  ) : (
+    <p class="empty">Os primeiros cursos estão chegando. Volte em breve!</p>
+  )}
+</App>

@@ -204,10 +204,12 @@ content/courses/{slug}/
 | `durationMin` | 30–90 |
 | `devices` | `[celular, computador]` (o que serve) |
 | `cost` | `0` — se algo pago for citado, precisa de alternativa grátis |
-| `requirements` | contas grátis necessárias, ex.: `[google, github]` |
+| `requirements` | contas grátis necessárias: `google`, `github`, `claude` |
 | `skills` | habilidades certificadas (vão para o Open Badge) |
 | `hosts` | IDs do elenco (§8.2) |
 | `status` | `draft` · `published` |
+| `paidTools` | ferramentas pagas citadas, cada uma com `freeAlternative` |
+| `modules` | lista ordenada `{ id, title }` igual às pastas `NN-slug`; a primeira é `00-preparacao` |
 
 Aula (`.md`, frontmatter + corpo):
 
@@ -216,10 +218,12 @@ Aula (`.md`, frontmatter + corpo):
 | `title`, `summary` | resumo de 1 linha |
 | `video` | `{ id, durationSec }` — `id` deve existir como mídia pronta |
 | `captions` | VTT pt-BR obrigatória para publicar |
-| `variants` | (só no módulo 0) por plataforma: `android`, `ios`, `windows`, `mac`, `chromeos` |
-| `quiz` | 1–3 perguntas: `question`, `options`, `answer`, `explanation` |
+| `variants` | (só no módulo 0) passo a passo `{ steps }` por plataforma: `android`, `ios`, `windows`, `mac`, `chromeos` |
+| `quiz` | obrigatório: 1–3 perguntas: `question`, `options`, `answer`, `explanation` |
 | `checkpoint` | checklist opcional "mão na massa" |
 | corpo | roteiro/transcrição (usado no HeyGen e exibido como transcrição) |
+
+A URL da aula é `/cursos/{curso}/{aula}/`, com o nome do arquivo sem o número; ele não se repete no curso, e `projeto` é reservado. Corpo e passos só em Markdown: HTML solto é recusado; exemplos de HTML vão entre crases ou em bloco de código.
 
 `projeto.md`: cenário realista, entregáveis aceitos (`url`, `github`, `images`, `text`), rubrica (`criteria: [{ id, description, weight, required }]`), `passScore` (0–100).
 
@@ -252,7 +256,7 @@ O validador (`pnpm content:check`, roda na CI) garante: módulo 0 presente, `out
 ### 4.5 App instalável (PWA)
 
 - Manifesto pt-BR (`display: standalone`, ícones maskable, atalho "Continuar curso").
-- Service worker (Workbox via `@vite-pwa/astro`): precache do shell, páginas visitadas disponíveis offline, página offline amigável; API sempre pela rede.
+- Service worker gerado pelo `workbox-build` no fim do build (ADR 0021): precache do shell, páginas visitadas disponíveis offline, página offline amigável; API sempre pela rede.
 - Android: botão "Instalar app" via `beforeinstallprompt`. iPhone: folha ilustrada "Compartilhar → Adicionar à Tela de Início".
 
 ### 4.6 Desempenho e acessibilidade (bloqueiam merge na CI)
@@ -602,6 +606,8 @@ pnpm workspaces + Turborepo; TypeScript `strict` (6.0, por compatibilidade com t
 - Corretor: Claude real se `ANTHROPIC_API_KEY` existir; senão `FakeGrader`.
 - Certificados assinados com chave local; SMS impresso no console; vídeos de exemplo de `fixtures/media`.
 - Opcional: apontar a API local para o user pool real de `dev` via `.env`.
+
+Cursos em rascunho aparecem quando `SITE_DRAFTS=true` (local, dev e build da CI); o deploy de prod usa `false`.
 
 Outros comandos: `pnpm test`, `pnpm test:e2e`, `pnpm content:check`, `infra/tf live dev plan`.
 

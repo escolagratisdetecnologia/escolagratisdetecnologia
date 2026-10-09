@@ -1,0 +1,24 @@
+---
+import type { Course } from '@egt/content';
+import { outcomeResult } from '../lib/course-text.ts';
+import { courseUrl } from '../lib/urls.ts';
+import CourseChips from './CourseChips.astro';
+
+interface Props {
+  course: Course;
+  headingLevel?: 2 | 3;
+}
+
+const { course, headingLevel = 2 } = Astro.props;
+const Heading = `h${headingLevel}` as 'h2' | 'h3';
+---
+
+<article class="course-card">
+  <Heading class="course-card-title">
+    <a href={courseUrl(course)}>{course.meta.title}</a>
+  </Heading>
+  <p class="outcome">
+    Você sai com: <mark>{outcomeResult(course.meta.outcome)}</mark>
+  </p>
+  <CourseChips course={course} />
+</article>

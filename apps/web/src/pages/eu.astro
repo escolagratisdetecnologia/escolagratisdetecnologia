@@ -1,0 +1,27 @@
+---
+import InstallPrompt from '../components/InstallPrompt.astro';
+import Island from '../components/Island.astro';
+import MyProgress from '../islands/MyProgress.tsx';
+import App from '../layouts/App.astro';
+import { getCourses } from '../lib/catalog.ts';
+import { outlineOf } from '../lib/urls.ts';
+
+const outlines = (await getCourses()).map(outlineOf);
+---
+
+<App
+  title="Eu · Escola Grátis de Tecnologia"
+  description="Seu progresso nos cursos da Escola Grátis de Tecnologia."
+  tab="eu"
+>
+  <h1>Eu</h1>
+  <Island name="my-progress" component={MyProgress} props={{ outlines }} />
+  <section class="card" aria-labelledby="conta-titulo">
+    <h2 id="conta-titulo">Sua conta</h2>
+    <p>
+      Por enquanto, seu progresso fica salvo só neste aparelho. Em breve, você vai poder entrar com
+      sua conta e levar o progresso para qualquer aparelho.
+    </p>
+  </section>
+  <InstallPrompt />
+</App>

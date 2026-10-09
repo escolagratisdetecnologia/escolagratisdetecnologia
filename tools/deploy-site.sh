@@ -6,15 +6,15 @@ set -euo pipefail
 
 environment="${1:?Uso: tools/deploy-site.sh <dev|prod>}"
 case "$environment" in
-  dev) site_url="https://dev.escolagratisdetecnologia.com" ;;
-  prod) site_url="https://escolagratisdetecnologia.com.br" ;;
+  dev) site_url="https://dev.escolagratisdetecnologia.com"; drafts=true ;;
+  prod) site_url="https://escolagratisdetecnologia.com.br"; drafts=false ;;
   *) echo "Ambiente inválido: $environment (use dev ou prod)." >&2; exit 2 ;;
 esac
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 dist="$root/apps/web/dist"
 
-SITE_URL="$site_url" SITE_ENV="$environment" pnpm --filter @egt/web build
+SITE_URL="$site_url" SITE_ENV="$environment" SITE_DRAFTS="$drafts" pnpm --filter @egt/web build
 
 bucket="$(terraform -chdir="$root/infra/live" output -raw site_bucket_name)"
 distribution="$(terraform -chdir="$root/infra/live" output -raw distribution_id)"

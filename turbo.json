@@ -4,7 +4,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "env": ["SITE_URL", "SITE_ENV"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/content/**"],
+      "env": ["SITE_URL", "SITE_ENV", "SITE_DRAFTS"],
       "outputs": ["dist/**"]
     },
     "typecheck": {},

@@ -1,0 +1,15 @@
+title: Curso de teste
+outcome: 'Você sai com: um teste que passa'
+level: iniciante
+durationMin: 30
+devices: [celular, computador]
+cost: 0
+requirements: [github]
+skills: [Escrever testes]
+hosts: [ana]
+status: draft
+modules:
+  - id: 00-preparacao
+    title: Prepare seu ambiente
+  - id: 01-mao-na-massa
+    title: Mão na massa

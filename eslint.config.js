@@ -29,6 +29,16 @@ export default defineConfig([
     },
   },
   {
+    // Código do site que roda no navegador (ilhas e scripts).
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    languageOptions: { globals: { ...globals.browser } },
+  },
+  {
+    // Script clássico do <head> (sem import/export), roda antes da primeira pintura.
+    files: ['apps/web/src/scripts/*.js'],
+    languageOptions: { sourceType: 'script', globals: { ...globals.browser } },
+  },
+  {
     // CloudFront Functions: script clássico, o runtime chama `handler` pelo nome.
     files: ['infra/modules/edge/functions/*.js'],
     languageOptions: { sourceType: 'script', globals: {} },

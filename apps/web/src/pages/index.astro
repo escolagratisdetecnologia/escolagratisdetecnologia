@@ -1,36 +1,51 @@
 ---
-import Base from '../layouts/Base.astro';
+import CourseCard from '../components/CourseCard.astro';
+import InstallPrompt from '../components/InstallPrompt.astro';
+import Island from '../components/Island.astro';
+import HomeAction from '../islands/HomeAction.tsx';
+import App from '../layouts/App.astro';
+import { getCourses } from '../lib/catalog.ts';
+import { outlineOf } from '../lib/urls.ts';
 
-const repositoryUrl = 'https://github.com/escolagratisdetecnologia/escolagratisdetecnologia';
+const courses = await getCourses();
 ---
 
-<Base
+<App
   title="Escola Grátis de Tecnologia"
   description="Microcursos grátis de tecnologia, feitos pro celular, com certificado verificável. Aprenda e saia resolvendo um problema de verdade."
+  tab="inicio"
 >
-  <main class="page">
-    <p class="badge">Em breve</p>
-    <h1>Aprenda tecnologia de graça e saia resolvendo um problema de verdade.</h1>
-    <p class="lead">
-      Microcursos com aulas de 2 a 5 minutos, feitos pra rodar no seu celular, com certificado que
-      qualquer pessoa consegue conferir.
-    </p>
-    <ul class="points">
-      <li>
-        <strong>100% grátis</strong>, sempre. Sem pegadinha.
-      </li>
-      <li>
-        <strong>Mão na massa</strong>: todo curso termina num projeto real.
-      </li>
-      <li>
-        <strong>Certificado verificável</strong> pra mostrar no LinkedIn.
-      </li>
-    </ul>
-  </main>
-  <footer class="footer">
-    <p>
-      Projeto beneficente e de código aberto.
-      <a href={repositoryUrl}>Veja o código no GitHub</a>.
-    </p>
-  </footer>
-</Base>
+  <p class="eyebrow">100% grátis · feito para o celular</p>
+  <h1>
+    Aprenda tecnologia de graça e saia resolvendo um problema de <mark>verdade</mark>.
+  </h1>
+  <p class="lead">
+    Microcursos com aulas de 2 a 5 minutos e um projeto real no final, com certificado que qualquer
+    pessoa consegue conferir.
+  </p>
+  <Island name="home-action" component={HomeAction} props={{ outlines: courses.map(outlineOf) }} />
+  <section aria-labelledby="comece-titulo">
+    <h2 id="comece-titulo">Comece por aqui</h2>
+    {courses.length > 0 ? (
+      <div class="course-list">
+        {courses.map((course) => (
+          <CourseCard course={course} headingLevel={3} />
+        ))}
+      </div>
+    ) : (
+      <p class="empty">Os primeiros cursos estão chegando. Volte em breve!</p>
+    )}
+  </section>
+  <ul class="points">
+    <li>
+      <strong>100% grátis</strong>, sempre. Sem pegadinha.
+    </li>
+    <li>
+      <strong>Mão na massa</strong>: todo curso termina num projeto real.
+    </li>
+    <li>
+      <strong>Certificado verificável</strong> pra mostrar no LinkedIn.
+    </li>
+  </ul>
+  <InstallPrompt />
+</App>

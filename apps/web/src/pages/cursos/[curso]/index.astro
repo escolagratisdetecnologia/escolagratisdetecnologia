@@ -1,0 +1,40 @@
+---
+import { LEVEL_LABELS } from '@egt/content';
+import type { InferGetStaticPropsType } from 'astro';
+import CourseChips from '../../../components/CourseChips.astro';
+import Island from '../../../components/Island.astro';
+import NeedsCard from '../../../components/NeedsCard.astro';
+import CourseProgress from '../../../islands/CourseProgress.tsx';
+import App from '../../../layouts/App.astro';
+import { getCourses } from '../../../lib/catalog.ts';
+import { outcomeResult } from '../../../lib/course-text.ts';
+import { outlineOf } from '../../../lib/urls.ts';
+
+export async function getStaticPaths() {
+  const courses = await getCourses();
+  return courses.map((course) => ({ params: { curso: course.slug }, props: { course } }));
+}
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { course } = Astro.props;
+---
+
+<App
+  title={`${course.meta.title} · Escola Grátis de Tecnologia`}
+  description={course.meta.outcome}
+  tab="cursos"
+>
+  <p class="eyebrow">Curso grátis · {LEVEL_LABELS[course.meta.level]}</p>
+  <h1>{course.meta.title}</h1>
+  <p class="outcome">
+    Você sai com: <mark>{outcomeResult(course.meta.outcome)}</mark>
+  </p>
+  <CourseChips course={course} />
+  <NeedsCard course={course} />
+  <Island
+    name="course-progress"
+    component={CourseProgress}
+    props={{ outline: outlineOf(course) }}
+  />
+</App>

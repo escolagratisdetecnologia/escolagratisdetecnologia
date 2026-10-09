@@ -1,0 +1,33 @@
+---
+import BottomNav from '../components/BottomNav.astro';
+import Header from '../components/Header.astro';
+import Base from './Base.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  tab?: 'inicio' | 'cursos' | 'eu';
+  noindex?: boolean;
+}
+
+const { tab, ...base } = Astro.props;
+const repositoryUrl = 'https://github.com/escolagratisdetecnologia/escolagratisdetecnologia';
+---
+
+<Base {...base}>
+  <slot name="head" slot="head" />
+  <a class="skip-link" href="#conteudo">
+    Pular para o conteúdo
+  </a>
+  <Header />
+  <main class="page" id="conteudo">
+    <slot />
+  </main>
+  <footer class="footer">
+    <p>
+      Projeto beneficente e de código aberto.
+      <a href={repositoryUrl}>Veja o código no GitHub</a>.
+    </p>
+  </footer>
+  <BottomNav current={tab} />
+</Base>

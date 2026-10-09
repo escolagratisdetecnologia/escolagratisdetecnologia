@@ -1,0 +1,114 @@
+---
+import { PLATFORMS, PLATFORM_LABELS } from '@egt/content';
+import type { InferGetStaticPropsType } from 'astro';
+import Island from '../../../components/Island.astro';
+import deviceUrl from '../../../scripts/device-early.js?url';
+import Quiz from '../../../islands/Quiz.tsx';
+import App from '../../../layouts/App.astro';
+import { getCourses } from '../../../lib/catalog.ts';
+import { renderMarkdown } from '../../../lib/markdown.ts';
+import { courseUrl, lessonUrl, lessonsOf, projectUrl } from '../../../lib/urls.ts';
+
+export async function getStaticPaths() {
+  const courses = await getCourses();
+  return courses.flatMap((course) => {
+    const lessons = lessonsOf(course);
+    return lessons.map((lesson, index) => ({
+      params: { curso: course.slug, aula: lesson.slug },
+      props: { course, lesson, index, total: lessons.length, next: lessons[index + 1] },
+    }));
+  });
+}
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { course, lesson, index, total, next } = Astro.props;
+const { title, summary, variants, checkpoint, video, quiz } = lesson.frontmatter;
+const variantEntries = PLATFORMS.flatMap((platform) => {
+  const variant = variants?.[platform];
+  return variant
+    ? [{ platform, label: PLATFORM_LABELS[platform], html: renderMarkdown(variant.steps) }]
+    : [];
+});
+---
+
+<App title={`${title} · ${course.meta.title}`} description={summary} tab="cursos">
+  {variantEntries.length > 0 && (
+    <Fragment slot="head">
+      <meta name="egt-variants" content={variantEntries.map((v) => v.platform).join(' ')} />
+      <script is:inline src={deviceUrl}></script>
+    </Fragment>
+  )}
+  <article class="lesson" data-course={course.slug} data-lesson={lesson.slug}>
+    <p class="back">
+      <a href={courseUrl(course)}>{course.meta.title}</a>
+    </p>
+    <div class="video-slot">
+      <p>O vídeo desta aula está em produção. Por enquanto, leia a transcrição logo abaixo.</p>
+    </div>
+    <h1>{title}</h1>
+    <p class="position">
+      Aula {index + 1} de {total}
+    </p>
+    <progress aria-label="Posição no curso" max={total} value={index + 1}></progress>
+    <p class="lead summary">{summary}</p>
+    {variantEntries.length > 0 && (
+      <section class="variants" data-variants aria-labelledby="aparelho-titulo">
+        <h2 id="aparelho-titulo">No seu aparelho</h2>
+        <div class="variant-switcher" data-switcher role="group" aria-label="Escolha seu aparelho">
+          {variantEntries.map((variant) => (
+            <button
+              type="button"
+              class="button button-secondary"
+              data-show={variant.platform}
+              aria-pressed="false"
+            >
+              {variant.label}
+            </button>
+          ))}
+        </div>
+        {variantEntries.map((variant) => (
+          <div class="variant" data-platform={variant.platform}>
+            <h3>{variant.label}</h3>
+            <div class="prose" set:html={variant.html} />
+          </div>
+        ))}
+      </section>
+    )}
+    {checkpoint && (
+      <section class="checkpoint" aria-labelledby="mao-na-massa-titulo">
+        <h2 id="mao-na-massa-titulo">Mão na massa</h2>
+        <ul class="checklist">
+          {checkpoint.map((item) => (
+            <li>{item}</li>
+          ))}
+        </ul>
+      </section>
+    )}
+    <details class="box quiz-box" open>
+      <summary>
+        Teste rápido ({quiz.length} {quiz.length === 1 ? 'pergunta' : 'perguntas'})
+      </summary>
+      <Island
+        name="quiz"
+        component={Quiz}
+        props={{ course: course.slug, lesson: lesson.slug, questions: quiz }}
+      />
+    </details>
+    <details class="box transcript" open={!video}>
+      <summary>Transcrição</summary>
+      <div class="prose" set:html={renderMarkdown(lesson.body)} />
+    </details>
+    <div class="lesson-actions">
+      <a
+        class="button button-block"
+        data-complete
+        href={next ? lessonUrl(course, next) : projectUrl(course)}
+      >
+        {next ? 'Concluir e continuar' : 'Concluir e ver o projeto'}
+      </a>
+    </div>
+  </article>
+  <script src="../../../scripts/lesson-complete.ts"></script>
+  <script src="../../../scripts/platform-variants.ts"></script>
+</App>

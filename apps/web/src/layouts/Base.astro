@@ -18,22 +18,33 @@ const indexable = SITE_ENV === 'prod' && !noindex;
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{title}</title>
     <meta name="description" content={description} />
     {!noindex && <link rel="canonical" href={canonical} />}
     {!indexable && <meta name="robots" content="noindex, nofollow" />}
-    <meta name="theme-color" content="#5b21b6" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0b0b12" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d1226" media="(prefers-color-scheme: dark)" />
+    <link
+      rel="preload"
+      href="/fonts/bricolage-grotesque-800.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="pt_BR" />
     <meta property="og:site_name" content="Escola Grátis de Tecnologia" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     {!noindex && <meta property="og:url" content={canonical} />}
+    <slot name="head" />
   </head>
   <body>
     <slot />
+    <script src="../scripts/register-sw.ts"></script>
   </body>
 </html>
