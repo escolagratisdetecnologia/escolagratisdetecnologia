@@ -1,4 +1,6 @@
+import { PLATFORM_LABELS, type Platform } from '@egt/content';
 import { expect, test } from '@playwright/test';
+import { PROGRESS_KEY } from '../src/lib/progress-store.ts';
 import { courseUrl, lessonUrl, lessonsOf, projectUrl } from '../src/lib/urls.ts';
 import { expectNoA11yViolations } from './support/axe.ts';
 import { gzippedScriptBytes } from './support/budget.ts';
@@ -94,9 +96,76 @@ for (const scheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme: scheme });
     await page.goto(lessonUrl(course, lesson));
     await expect(page.locator('[data-island="quiz"]')).toHaveAttribute('data-hydrated', 'true');
+    // The sticky action bar legitimately overlaps content mid-scroll; check from the end of the page.
+    // Keeping focus out from under the bar is covered by the keyboard test below.
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await expectNoA11yViolations(page);
   });
 }
+
+test.describe('without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+
+  test('module 0 shows every device and no switcher', async ({ page }) => {
+    const course = await pilotCourse();
+    const lesson = lessonsOf(course).find((candidate) => candidate.frontmatter.variants)!;
+    await page.goto(lessonUrl(course, lesson));
+
+    await expect(page.getByRole('group', { name: 'Escolha seu aparelho' })).not.toBeVisible();
+    for (const platform of Object.keys(lesson.frontmatter.variants!) as Platform[]) {
+      await expect(
+        page.getByRole('heading', { name: PLATFORM_LABELS[platform], level: 3 }),
+      ).toBeVisible();
+    }
+  });
+});
+
+test('keyboard focus is never hidden behind the action bar', async ({ page }) => {
+  const course = await pilotCourse();
+  const lesson = lessonsOf(course).find((candidate) => candidate.frontmatter.variants)!;
+  await page.goto(lessonUrl(course, lesson));
+  await expect(page.locator('[data-variants]')).toHaveAttribute('data-ready', 'true');
+  await expect(page.locator('[data-island="quiz"]')).toHaveAttribute('data-hydrated', 'true');
+
+  // "Conferir" stays disabled (and unfocusable) until an option is picked.
+  await page.getByRole('radio').first().check();
+  const targets = [
+    page.locator('[data-switcher] button').last(),
+    page.getByRole('button', { name: 'Conferir' }).first(),
+  ];
+  for (const target of targets) {
+    await target.focus();
+    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press('Tab');
+    await expect(target).toBeFocused();
+    // Let the browser finish scrolling the focused element into view.
+    await page.waitForTimeout(300);
+    const box = (await target.boundingBox())!;
+    const bar = (await page.locator('.lesson-actions').boundingBox())!;
+    expect(box.y + box.height).toBeLessThanOrEqual(bar.y);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+  }
+});
+
+test('a correct answer is remembered on this device', async ({ page }) => {
+  const course = await pilotCourse();
+  const lesson = lessonsOf(course).find((candidate) => candidate.frontmatter.variants)!;
+  const question = lesson.frontmatter.quiz[0]!;
+
+  await page.goto(lessonUrl(course, lesson));
+  await expect(page.locator('[data-island="quiz"]')).toHaveAttribute('data-hydrated', 'true');
+  const group = page.getByRole('group', { name: question.question });
+  await group.getByLabel(question.options[question.answer]!, { exact: true }).check();
+  await group.getByRole('button', { name: 'Conferir' }).click();
+  await expect(group.getByText(`Isso aí! ${question.explanation}`)).toBeVisible();
+
+  await page.reload();
+  const stored = await page.evaluate((key) => localStorage.getItem(key), PROGRESS_KEY);
+  const progress = JSON.parse(stored!) as {
+    courses: Record<string, { correctAnswers: string[] }>;
+  };
+  expect(progress.courses[course.slug]!.correctAnswers).toContain(`${lesson.slug}#0`);
+});
 
 test('a lesson stays within the 30 KB gzip JavaScript budget', async ({ page }) => {
   const course = await pilotCourse();

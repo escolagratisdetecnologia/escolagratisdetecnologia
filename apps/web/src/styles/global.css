@@ -62,6 +62,21 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  scroll-padding-bottom: calc(
+    var(--nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-3)
+  );
+}
+
+/* Keyboard focus and in-page scrolling must not land under the sticky lesson bar. */
+html:has(.lesson-actions) {
+  scroll-padding-bottom: calc(
+    var(--nav-height) + var(--tap) + env(safe-area-inset-bottom, 0px) + var(--space-5)
+  );
+}
+
+/* Author-level display rules (.button, .variant-switcher) must not defeat the hidden attribute. */
+[hidden] {
+  display: none !important;
 }
 
 body {
@@ -563,6 +578,10 @@ progress::-moz-progress-bar {
   padding: 0 var(--space-3) var(--space-3);
 }
 
+.lesson {
+  padding-bottom: calc(var(--tap) + var(--space-5));
+}
+
 .lesson-actions {
   position: sticky;
   bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-2));
@@ -669,13 +688,9 @@ progress::-moz-progress-bar {
 
 .variant-switcher {
   display: flex;
-  overflow-x: auto;
+  flex-wrap: wrap;
   gap: var(--space-2);
   margin-bottom: var(--space-3);
-}
-
-.variant-switcher .button {
-  flex: none;
 }
 
 .variant-switcher .button[aria-pressed='true'] {

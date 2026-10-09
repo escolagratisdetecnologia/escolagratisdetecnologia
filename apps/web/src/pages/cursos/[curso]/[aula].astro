@@ -67,10 +67,10 @@ const variantEntries = PLATFORMS.flatMap((platform) => {
           ))}
         </div>
         {variantEntries.map((variant) => (
-          <section class="variant" data-platform={variant.platform} aria-label={variant.label}>
+          <div class="variant" data-platform={variant.platform}>
             <h3>{variant.label}</h3>
             <div class="prose" set:html={variant.html} />
-          </section>
+          </div>
         ))}
       </section>
     )}
