@@ -1,0 +1,40 @@
+---
+// Hidden until src/scripts/install-prompt.ts decides the browser can install the app.
+---
+
+<section class="card install" data-install hidden aria-labelledby="instalar-titulo">
+  <h2 id="instalar-titulo">Instale o app</h2>
+  <p>Abra a Escola direto da tela inicial, como um aplicativo.</p>
+  <button type="button" class="button" data-install-android hidden>
+    Instalar app
+  </button>
+  <button
+    type="button"
+    class="button"
+    data-install-ios
+    hidden
+    aria-expanded="false"
+    aria-controls="instalar-iphone"
+  >
+    Como instalar no iPhone
+  </button>
+  <ol id="instalar-iphone" class="install-steps" hidden>
+    <li>
+      Toque em <strong>Compartilhar</strong>
+      <svg class="share-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 3v12"></path>
+        <path d="m8 7 4-4 4 4"></path>
+        <path d="M5 11v9h14v-9"></path>
+      </svg>
+      na barra do Safari.
+    </li>
+    <li>
+      Role a lista e toque em <strong>Adicionar à Tela de Início</strong>.
+    </li>
+    <li>
+      Toque em <strong>Adicionar</strong>.
+    </li>
+  </ol>
+</section>
+
+<script src="../scripts/install-prompt.ts"></script>

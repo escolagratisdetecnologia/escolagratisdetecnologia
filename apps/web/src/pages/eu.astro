@@ -1,4 +1,5 @@
 ---
+import InstallPrompt from '../components/InstallPrompt.astro';
 import Island from '../components/Island.astro';
 import MyProgress from '../islands/MyProgress.tsx';
 import App from '../layouts/App.astro';
@@ -22,4 +23,5 @@ const outlines = (await getCourses()).map(outlineOf);
       sua conta e levar o progresso para qualquer aparelho.
     </p>
   </section>
+  <InstallPrompt />
 </App>

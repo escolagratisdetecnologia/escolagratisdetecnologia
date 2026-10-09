@@ -763,3 +763,33 @@ progress::-moz-progress-bar {
 .my-progress + .card {
   margin-top: var(--space-5);
 }
+
+/* Install prompt */
+
+.install {
+  margin-top: var(--space-5);
+}
+
+.install h2 {
+  margin-top: 0;
+}
+
+.install-steps {
+  margin: var(--space-3) 0 0;
+  padding-left: 1.25em;
+}
+
+.install-steps li + li {
+  margin-top: var(--space-2);
+}
+
+.share-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  vertical-align: -0.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

@@ -1,11 +1,12 @@
 import preact from '@astrojs/preact';
+import { serviceWorker } from './integrations/service-worker.ts';
 import { defineConfig, envField } from 'astro/config';
 
 export default defineConfig({
   site: process.env.SITE_URL ?? 'http://localhost:4321',
   output: 'static',
   trailingSlash: 'ignore',
-  integrations: [preact()],
+  integrations: [preact(), serviceWorker()],
   // CSS sempre em arquivo externo: a CSP do CloudFront não permite <style> inline.
   build: { format: 'directory', inlineStylesheets: 'never' },
   compressHTML: true,

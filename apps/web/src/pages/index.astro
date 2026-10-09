@@ -1,5 +1,6 @@
 ---
 import CourseCard from '../components/CourseCard.astro';
+import InstallPrompt from '../components/InstallPrompt.astro';
 import Island from '../components/Island.astro';
 import ContinueCard from '../islands/ContinueCard.tsx';
 import App from '../layouts/App.astro';
@@ -53,4 +54,5 @@ const courses = await getCourses();
       <strong>Certificado verificável</strong> pra mostrar no LinkedIn.
     </li>
   </ul>
+  <InstallPrompt />
 </App>

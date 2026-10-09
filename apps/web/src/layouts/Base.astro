@@ -34,6 +34,7 @@ const indexable = SITE_ENV === 'prod' && !noindex;
     />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="pt_BR" />
     <meta property="og:site_name" content="Escola Grátis de Tecnologia" />
@@ -43,5 +44,6 @@ const indexable = SITE_ENV === 'prod' && !noindex;
   </head>
   <body>
     <slot />
+    <script src="../scripts/register-sw.ts"></script>
   </body>
 </html>
