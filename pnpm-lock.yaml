@@ -102,6 +102,15 @@ importers:
         specifier: ~6.0.3
         version: 6.0.3
 
+  packages/core:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.19.1
+        version: 24.19.1
+      typescript:
+        specifier: ~6.0.3
+        version: 6.0.3
+
   tools/check-tags:
     devDependencies:
       '@types/node':
