@@ -84,6 +84,8 @@ infra/tf bootstrap/management shared plan
 infra/tf bootstrap/management shared apply   # você executa, no seu terminal
 ```
 
+O `shared.tfvars` já ativa as tags de custo (`activate_cost_allocation_tags = true`). Num bootstrap do zero, as chaves ainda não existem no billing e o apply falha nelas: até o passo 10, acrescente `-var activate_cost_allocation_tags=false` ao `plan` e ao `apply`.
+
 Se a criação da tag policy falhar com `InvalidInputException` citando um tipo de recurso, remova esse tipo de `enforced_resource_types` em `infra/bootstrap/management/main.tf` e rode de novo.
 
 Confira o seu e-mail: se chegar uma mensagem de confirmação da inscrição do alerta de anomalia, confirme.
@@ -147,16 +149,14 @@ Depois que o deploy passar nos dois ambientes, rode a auditoria de tags uma vez 
 
 ## 10. Tags de custo (24 h depois do primeiro deploy)
 
-Ative as tags (mantenha as variáveis da etapa 4 exportadas). Se `aws_ce_cost_allocation_tag` falhar porque as chaves ainda não apareceram no billing, espere mais um dia e repita:
+Ative as tags rodando o apply da etapa 4 sem o `-var activate_cost_allocation_tags=false` (mantenha as variáveis exportadas). Se `aws_ce_cost_allocation_tag` falhar porque as chaves ainda não apareceram no billing, espere mais um dia e repita:
 
 ```bash
 export AWS_PROFILE=egt-management
 export TF_VAR_member_account_ids='{"dev":"<id-dev>","prod":"<id-prod>"}'
 export TF_VAR_alert_emails='["<seu-e-mail>"]'
-TF_VAR_activate_cost_allocation_tags=true infra/tf bootstrap/management shared plan
-TF_VAR_activate_cost_allocation_tags=true infra/tf bootstrap/management shared apply   # você executa, no seu terminal
+infra/tf bootstrap/management shared plan
+infra/tf bootstrap/management shared apply   # você executa, no seu terminal
 ```
-
-Em seguida, **persista** a ativação: via PR, acrescente `activate_cost_allocation_tags = true` em `infra/bootstrap/management/env/shared.tfvars`. Sem isso, o próximo apply desativa as tags.
 
 As tags passam a aparecer no Cost Explorer em até 24 h.
