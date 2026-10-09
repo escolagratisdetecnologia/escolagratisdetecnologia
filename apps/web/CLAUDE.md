@@ -5,7 +5,8 @@
 - **CSP estrita:** nada de `<script>` ou `<style>` inline (`build.inlineStylesheets: 'never'`). Precisa de script? Arquivo externo.
 - **Acessibilidade (WCAG 2.2 AA):** `lang="pt-BR"`, um `h1` por página, alvos de toque ≥ 48 px, contraste, foco visível, `prefers-reduced-motion`, texto alternativo. O e2e roda axe em todas as páginas novas.
 - **Mobile-first:** CSS começa no celular; media queries só ampliam.
-- **Design tokens:** cores, espaços e raios em `src/styles/global.css` (claro e escuro). Não use cores soltas.
+- **Design tokens e marca:** cores, espaços e raios em `src/styles/global.css` (claro e escuro); não use cores soltas. Marca, paleta e fonte em `docs/marca/identidade-visual.md`. O marca-texto (`<mark>`) cobre a palavra inteira e o texto sobre ele é sempre escuro; o amarelo nunca vira cor de texto, barra ou ícone.
+- **Layout:** páginas usam `src/layouts/App.astro` (cabeçalho com a marca, `main#conteudo`, rodapé e abas Início/Cursos/Eu, com `tab` marcando a aba atual).
 - **Variáveis de build:** `SITE_URL` (URL canônica) e `SITE_ENV` (`local` | `dev` | `prod`, via `astro:env`). Fora de `prod`, páginas `noindex` e `robots.txt` bloqueando tudo. Páginas que nunca devem ser indexadas (como a 404) passam `noindex` ao `Base.astro`, que omite canonical e `og:url`; no Lighthouse, a 404 confere as auditorias de SEO uma a uma, sem a de indexação (`lighthouserc.json`).
 - **Microcopy:** tom da Escola — trate por "você", frases curtas, verbos de ação ("Bora começar", "Concluir e continuar"), sem gíria forçada, sem "clique aqui".
 - **Astro 7:** compilador estrito — feche todas as tags; `compressHTML: true` mantém o espaço entre elementos inline.

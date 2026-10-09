@@ -1,0 +1,17 @@
+---
+// Top bar with the EGT mark; the <picture> swaps to the light-letter mark in dark mode.
+---
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/">
+      <picture>
+        <source srcset="/brand/egt-mark-dark.svg" media="(prefers-color-scheme: dark)" />
+        <img class="brand-mark" src="/brand/egt-mark.svg" alt="" width="63" height="32" />
+      </picture>
+      <span class="brand-name">
+        Escola Grátis <span class="brand-name-sub">de Tecnologia</span>
+      </span>
+    </a>
+  </div>
+</header>
