@@ -9,9 +9,15 @@ variable "domain_name" {
 }
 
 variable "redirect_www" {
-  description = "Se true, atende www.<domínio> e redireciona para o domínio canônico."
+  description = "Se true, atende www.<domínio> (e o www de cada domínio em redirect_zone_ids) e redireciona para o domínio canônico."
   type        = bool
   default     = false
+}
+
+variable "redirect_zone_ids" {
+  description = "Outros domínios que redirecionam para o domínio canônico => ID da zona Route 53 de cada um (ADR 0020)."
+  type        = map(string)
+  default     = {}
 }
 
 variable "zone_id" {

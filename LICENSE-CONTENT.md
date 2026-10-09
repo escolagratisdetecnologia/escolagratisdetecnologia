@@ -4,7 +4,7 @@ Salvo indicação em contrário, o conteúdo educacional da Escola Grátis de Te
 
 Você pode copiar, adaptar e redistribuir, inclusive comercialmente, desde que:
 
-- dê o crédito: "Escola Grátis de Tecnologia — escolagratisdetecnologia.com — CC BY-SA 4.0";
+- dê o crédito: "Escola Grátis de Tecnologia — escolagratisdetecnologia.com.br — CC BY-SA 4.0";
 - indique se fez alterações;
 - distribua obras derivadas sob a mesma licença.
 

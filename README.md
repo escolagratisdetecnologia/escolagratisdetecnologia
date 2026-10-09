@@ -2,7 +2,7 @@
 
 Aprenda tecnologia de graça, em aulas curtinhas pensadas pro celular, e saia de cada curso resolvendo um problema de verdade — com certificado que qualquer pessoa consegue conferir.
 
-> **Status:** Fase 0 (fundação). Site: https://escolagratisdetecnologia.com
+> **Status:** Fase 0 (fundação). Site: https://escolagratisdetecnologia.com.br
 
 ## Por que existe
 

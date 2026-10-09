@@ -8,23 +8,33 @@ interface CfRequest {
   querystring: QueryString;
 }
 
-const source = readFileSync(new URL('./viewer-request.js', import.meta.url), 'utf8').replaceAll(
-  '__CANONICAL_HOST__',
-  'escolagratisdetecnologia.com',
-);
-const handler = new Function(`${source}\nreturn handler;`)() as (event: {
-  request: CfRequest;
-}) => unknown;
+// Same substitutions Terraform makes in modules/edge/main.tf.
+function loadHandler(canonicalHost: string, redirectHosts: string[]) {
+  const source = readFileSync(new URL('./viewer-request.js', import.meta.url), 'utf8')
+    .replaceAll('__CANONICAL_HOST__', canonicalHost)
+    .replaceAll('__REDIRECT_HOSTS__', redirectHosts.join(','));
+  return new Function(`${source}\nreturn handler;`)() as (event: { request: CfRequest }) => unknown;
+}
 
-function event(uri: string, host = 'escolagratisdetecnologia.com', querystring: QueryString = {}) {
+const handler = loadHandler('escolagratisdetecnologia.com.br', [
+  'escolagratisdetecnologia.com',
+  'www.escolagratisdetecnologia.com',
+  'www.escolagratisdetecnologia.com.br',
+]);
+
+function event(
+  uri: string,
+  host = 'escolagratisdetecnologia.com.br',
+  querystring: QueryString = {},
+) {
   return { request: { uri, headers: { host: { value: host } }, querystring } };
 }
 
 describe('viewer-request', () => {
   it('redirects www regardless of host case', () => {
-    expect(handler(event('/', 'WWW.EscolaGratisDeTecnologia.com'))).toMatchObject({
+    expect(handler(event('/', 'WWW.EscolaGratisDeTecnologia.com.br'))).toMatchObject({
       statusCode: 301,
-      headers: { location: { value: 'https://escolagratisdetecnologia.com/' } },
+      headers: { location: { value: 'https://escolagratisdetecnologia.com.br/' } },
     });
   });
 
@@ -48,7 +58,7 @@ describe('viewer-request', () => {
 
   it('redirects www to the canonical host keeping path and query', () => {
     const result = handler(
-      event('/cursos', 'www.escolagratisdetecnologia.com', {
+      event('/cursos', 'www.escolagratisdetecnologia.com.br', {
         utm_source: { value: 'instagram' },
         tag: { value: 'a', multiValue: [{ value: 'a' }, { value: 'b' }] },
       }),
@@ -59,14 +69,37 @@ describe('viewer-request', () => {
       statusDescription: 'Moved Permanently',
       headers: {
         location: {
-          value: 'https://escolagratisdetecnologia.com/cursos?utm_source=instagram&tag=a&tag=b',
+          value: 'https://escolagratisdetecnologia.com.br/cursos?utm_source=instagram&tag=a&tag=b',
         },
       },
     });
   });
 
+  it.each(['escolagratisdetecnologia.com', 'www.escolagratisdetecnologia.com'])(
+    'redirects the old domain %s to the canonical host',
+    (host) => {
+      expect(handler(event('/cursos/python', host, { ref: { value: '' } }))).toMatchObject({
+        statusCode: 301,
+        headers: {
+          location: { value: 'https://escolagratisdetecnologia.com.br/cursos/python?ref' },
+        },
+      });
+    },
+  );
+
   it('does not redirect other hosts', () => {
     expect(handler(event('/', 'd111111abcdef8.cloudfront.net'))).toMatchObject({
+      uri: '/index.html',
+    });
+  });
+
+  it('serves every host when there is nothing to redirect', () => {
+    const dev = loadHandler('dev.escolagratisdetecnologia.com', []);
+
+    expect(dev(event('/', 'www.dev.escolagratisdetecnologia.com'))).toMatchObject({
+      uri: '/index.html',
+    });
+    expect(dev({ request: { uri: '/', headers: {}, querystring: {} } })).toMatchObject({
       uri: '/index.html',
     });
   });

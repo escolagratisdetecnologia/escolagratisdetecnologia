@@ -11,11 +11,11 @@ on:
         description: URL pública do ambiente
         required: true
         type: string
-      check_www_redirect:
-        description: Confere se www redireciona para o domínio
+      redirect_hosts:
+        description: Nomes que devem redirecionar para a URL do ambiente, separados por espaço
         required: false
-        type: boolean
-        default: false
+        type: string
+        default: ''
     secrets:
       ALERT_EMAILS:
         description: Lista JSON de e-mails de alerta de orçamento
@@ -59,12 +59,15 @@ jobs:
           TF_VAR_alert_emails: ${{ secrets.ALERT_EMAILS || '[]' }}
       - run: tools/deploy-site.sh "$ENVIRONMENT"
       - run: tools/smoke.sh "$SITE_URL"
-      - name: www redireciona para o domínio
-        if: inputs.check_www_redirect
+      - name: outros nomes redirecionam para o domínio
+        if: inputs.redirect_hosts != ''
+        env:
+          REDIRECT_HOSTS: ${{ inputs.redirect_hosts }}
         run: |
-          host="${SITE_URL#https://}"
-          result="$(curl -s --max-time 10 --retry 3 --retry-all-errors -o /dev/null -w '%{http_code} %{redirect_url}' "https://www.$host/")"
-          if [ "$result" != "301 $SITE_URL/" ]; then
-            echo "Redirect de www inesperado: '$result' (esperado '301 $SITE_URL/')."
-            exit 1
-          fi
+          for host in $REDIRECT_HOSTS; do
+            result="$(curl -s --max-time 10 --retry 3 --retry-all-errors -o /dev/null -w '%{http_code} %{redirect_url}' "https://$host/")"
+            if [ "$result" != "301 $SITE_URL/" ]; then
+              echo "Redirect de $host inesperado: '$result' (esperado '301 $SITE_URL/')."
+              exit 1
+            fi
+          done
