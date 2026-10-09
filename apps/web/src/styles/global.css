@@ -711,7 +711,12 @@ progress::-moz-progress-bar {
   display: block;
 }
 
-.variant-switcher .button[aria-pressed='true'] {
+.variant-switcher .button[aria-pressed='true'],
+:root[data-device='android'] .variant-switcher [data-show='android'],
+:root[data-device='ios'] .variant-switcher [data-show='ios'],
+:root[data-device='chromeos'] .variant-switcher [data-show='chromeos'],
+:root[data-device='windows'] .variant-switcher [data-show='windows'],
+:root[data-device='mac'] .variant-switcher [data-show='mac'] {
   background: var(--color-accent);
   color: var(--color-accent-fg);
 }

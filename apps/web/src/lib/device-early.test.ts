@@ -48,6 +48,17 @@ describe('device-early.js', () => {
     expect(run(ALL, userAgent, touch)).toBe(detectPlatform(userAgent, touch) ?? 'android');
   });
 
+  const MAC =
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Safari/605.1.15';
+  it.each([
+    [MAC, 0, 'mac'],
+    [MAC, 1, 'mac'],
+    [MAC, 2, 'ios'],
+    ['Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148', 0, 'ios'],
+  ])('detects %s with %i touch points as %s', (userAgent, touch, expected) => {
+    expect(run(ALL, userAgent, touch)).toBe(expected);
+  });
+
   it('falls back to the first available platform when the detected one is missing', () => {
     const windows = USER_AGENTS[5]![0];
     expect(run('android ios', windows, 0)).toBe('android');

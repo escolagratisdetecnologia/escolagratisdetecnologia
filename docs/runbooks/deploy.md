@@ -49,14 +49,25 @@ O site instala um service worker (`/sw.js`, gerado no build) que guarda o app e 
 
 ```js
 self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', async () => {
-  for (const key of await caches.keys()) await caches.delete(key);
-  await self.registration.unregister();
-  for (const client of await self.clients.matchAll()) client.navigate(client.url);
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    (async () => {
+      for (const key of await caches.keys()) await caches.delete(key);
+      await self.registration.unregister();
+      for (const client of await self.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+      })) {
+        client.navigate(client.url);
+      }
+    })(),
+  );
 });
 ```
 
 Depois que o deploy chegar a prod (e o CloudFront invalidar), os aparelhos trocam para esse arquivo na próxima visita e voltam a carregar tudo da rede. Corrija o service worker por PR e volte ao gerado.
+
+O navegador precisa buscar o novo `sw.js` sem cache: o `tools/deploy-site.sh` já o publica com `max-age=0` e o deploy invalida o CloudFront.
 
 Limitação conhecida: uma página salva para uso offline antes de um deploy de código pode abrir sem estilos offline depois dele, porque o precache troca os arquivos antigos de `_astro/` (nomes com hash). Deploys só de conteúdo mantêm os hashes e não causam isso.
 

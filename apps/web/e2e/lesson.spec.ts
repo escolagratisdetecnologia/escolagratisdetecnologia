@@ -109,7 +109,41 @@ test.describe('layout stability', () => {
         }),
     );
     expect(supported).toBe(true);
-    expect(shift).toBeLessThanOrEqual(0.05);
+    expect(shift).toBeLessThanOrEqual(0.01);
+  });
+
+  test('the platform is decided by the head script alone', async ({ page }) => {
+    const course = await pilotCourse();
+    const lesson = lessonsOf(course).find((candidate) => candidate.frontmatter.variants)!;
+
+    // No deferred module runs, so only device-early.js can have decided the platform.
+    await page.route('**/_astro/*.js', (route) =>
+      route.request().url().includes('device-early') ? route.continue() : route.abort(),
+    );
+    await page.goto(lessonUrl(course, lesson));
+    const device = await page.evaluate(() => document.documentElement.dataset.device);
+    expect(device).toBeTruthy();
+    await expect(page.locator('[data-variants]')).not.toHaveAttribute('data-ready', 'true');
+    await expect(page.locator('[data-switcher]')).toBeVisible();
+    const visible = page.locator('.variant:visible');
+    await expect(visible).toHaveCount(1);
+    await expect(visible).toHaveAttribute('data-platform', device!);
+  });
+
+  test('the platform is already set when the DOM is ready', async ({ page }) => {
+    const course = await pilotCourse();
+    const lesson = lessonsOf(course).find((candidate) => candidate.frontmatter.variants)!;
+    await page.addInitScript(() => {
+      document.addEventListener('DOMContentLoaded', () => {
+        (window as unknown as Record<string, unknown>).__deviceAtDomReady =
+          document.documentElement.dataset.device ?? null;
+      });
+    });
+    await page.goto(lessonUrl(course, lesson));
+    const atReady = await page.evaluate(
+      () => (window as unknown as Record<string, unknown>).__deviceAtDomReady,
+    );
+    expect(atReady).toBeTruthy();
   });
 });
 
