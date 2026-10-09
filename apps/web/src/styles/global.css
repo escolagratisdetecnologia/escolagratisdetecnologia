@@ -603,3 +603,86 @@ progress::-moz-progress-bar {
 .done-badge::before {
   content: '✓' / '';
 }
+
+/* Quiz */
+
+.quiz {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.quiz-question {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.quiz-question legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-weight: 700;
+}
+
+.quiz-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-small);
+  cursor: pointer;
+}
+
+.quiz-option:has(input:checked) {
+  border-color: var(--color-accent);
+  background: var(--color-surface);
+}
+
+.quiz-option input {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--color-accent);
+}
+
+.quiz-question .button {
+  justify-self: start;
+}
+
+.quiz-feedback {
+  min-height: 1.6em;
+  margin: 0;
+  font-weight: 700;
+}
+
+.quiz-feedback.is-correct {
+  color: var(--color-success);
+}
+
+.quiz-feedback.is-wrong {
+  color: var(--color-danger);
+}
+
+/* Platform variants */
+
+.variant-switcher {
+  display: flex;
+  overflow-x: auto;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.variant-switcher .button {
+  flex: none;
+}
+
+.variant-switcher .button[aria-pressed='true'] {
+  background: var(--color-accent);
+  color: var(--color-accent-fg);
+}
+
+.variant h3 {
+  margin-top: var(--space-2);
+}

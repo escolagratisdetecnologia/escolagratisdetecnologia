@@ -1,6 +1,8 @@
 ---
 import { PLATFORMS, PLATFORM_LABELS } from '@egt/content';
 import type { InferGetStaticPropsType } from 'astro';
+import Island from '../../../components/Island.astro';
+import Quiz from '../../../islands/Quiz.tsx';
 import App from '../../../layouts/App.astro';
 import { getCourses } from '../../../lib/catalog.ts';
 import { renderMarkdown } from '../../../lib/markdown.ts';
@@ -20,7 +22,7 @@ export async function getStaticPaths() {
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { course, lesson, index, total, next } = Astro.props;
-const { title, summary, variants, checkpoint, video } = lesson.frontmatter;
+const { title, summary, variants, checkpoint, video, quiz } = lesson.frontmatter;
 const variantEntries = PLATFORMS.flatMap((platform) => {
   const variant = variants?.[platform];
   return variant
@@ -46,6 +48,24 @@ const variantEntries = PLATFORMS.flatMap((platform) => {
     {variantEntries.length > 0 && (
       <section class="variants" data-variants aria-labelledby="aparelho-titulo">
         <h2 id="aparelho-titulo">No seu aparelho</h2>
+        <div
+          class="variant-switcher"
+          data-switcher
+          role="group"
+          aria-label="Escolha seu aparelho"
+          hidden
+        >
+          {variantEntries.map((variant) => (
+            <button
+              type="button"
+              class="button button-secondary"
+              data-show={variant.platform}
+              aria-pressed="false"
+            >
+              {variant.label}
+            </button>
+          ))}
+        </div>
         {variantEntries.map((variant) => (
           <section class="variant" data-platform={variant.platform} aria-label={variant.label}>
             <h3>{variant.label}</h3>
@@ -64,6 +84,16 @@ const variantEntries = PLATFORMS.flatMap((platform) => {
         </ul>
       </section>
     )}
+    <details class="box quiz-box" open>
+      <summary>
+        Teste rápido ({quiz.length} {quiz.length === 1 ? 'pergunta' : 'perguntas'})
+      </summary>
+      <Island
+        name="quiz"
+        component={Quiz}
+        props={{ course: course.slug, lesson: lesson.slug, questions: quiz }}
+      />
+    </details>
     <details class="box transcript" open={!video}>
       <summary>Transcrição</summary>
       <div class="prose" set:html={renderMarkdown(lesson.body)} />
@@ -79,3 +109,6 @@ const variantEntries = PLATFORMS.flatMap((platform) => {
     </div>
   </article>
 </App>
+
+<script src="../../../scripts/lesson-complete.ts"></script>
+<script src="../../../scripts/platform-variants.ts"></script>
