@@ -754,6 +754,11 @@ progress::-moz-progress-bar {
   color: var(--color-bg);
 }
 
+.my-progress-note {
+  /* two lines reserved, so the empty state and its placeholder have the same height */
+  min-height: calc(2 * 1.6em);
+}
+
 .my-progress + .card {
   margin-top: var(--space-5);
 }

@@ -15,6 +15,7 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 | Concorrência de deploy por ambiente e espera pela invalidação do CloudFront antes dos smoke tests | feito (Fase 0)        |
 | Permissões mínimas por job nos workflows                                                          | feito (Fase 0)        |
 | GitHub Actions fixadas por digest, atualizadas pelo Renovate                                      | feito (Fase 0)        |
+| Conteúdo validado na CI (`pnpm content:check`) e rascunhos só em dev                              | feito (Fase 1A)       |
 | Exceções do Trivy documentadas inline, por recurso                                                | feito (Fase 0)        |
 
 ## Segurança
@@ -34,6 +35,7 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 | Role `plan` com Deny explícito em leituras do plano de dados (objetos S3 fora do estado, DynamoDB, Cognito, logs, segredos, `kms:Decrypt`) | feito (Fase 0)            |
 | E-mails de alerta como Secret e `alert_emails` marcada como `sensitive`                                                                    | feito (Fase 0)            |
 | Rate limit do WAF que ignora assets imutáveis (`/_astro/`)                                                                                 | feito (Fase 0)            |
+| Nenhum script ou estilo inline no HTML (`check:csp` na CI, ADR 0021)                                                                       | feito (Fase 1A)           |
 
 ## Confiabilidade
 
@@ -44,6 +46,7 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 | DynamoDB com PITR; SQS com DLQ; workers idempotentes                                         | planejado (Fases 1–2) |
 | Deploys serializados por ambiente e smoke tests só após a invalidação do CloudFront terminar | feito (Fase 0)        |
 | Domínio principal `.com.br`; `.com` e `www` redirecionam com 301 na mesma borda (ADR 0020)   | feito (Fase 0)        |
+| Páginas visitadas disponíveis offline (service worker)                                       | feito (Fase 1A)       |
 
 ## Eficiência de performance
 
@@ -52,6 +55,7 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 | Site estático na borda, HTTP/3, compressão               | feito (Fase 0)     |
 | Orçamentos de desempenho na CI (Lighthouse, 30 KB de JS) | feito (Fase 0)     |
 | Vídeo HLS adaptativo; Lambda arm64                       | planejado (Fase 1) |
+| Ilhas Preact sob demanda; JS medido em gzip no e2e       | feito (Fase 1A)    |
 
 ## Otimização de custos
 

@@ -10,13 +10,16 @@ Escola online 100% gratuita e beneficente para brasileiros (maioria geração Z,
 
 ## Mapa do repositório
 
-| Caminho    | O que é                                           | Guia                 |
-| ---------- | ------------------------------------------------- | -------------------- |
-| `apps/web` | Site Astro static-first (PWA a partir da Fase 1)  | `apps/web/CLAUDE.md` |
-| `apps/api` | API Hono (Lambda + servidor local)                | `apps/api/CLAUDE.md` |
-| `tools/`   | CLIs e scripts do repositório                     | `tools/CLAUDE.md`    |
-| `infra/`   | Terraform: `bootstrap/`, `modules/`, raiz `live/` | `infra/CLAUDE.md`    |
-| `docs/`    | Specs, planos, ADRs, arquitetura, runbooks        | —                    |
+| Caminho            | O que é                                                | Guia                 |
+| ------------------ | ------------------------------------------------------ | -------------------- |
+| `apps/web`         | Site Astro static-first (PWA a partir da Fase 1)       | `apps/web/CLAUDE.md` |
+| `apps/api`         | API Hono (Lambda + servidor local)                     | `apps/api/CLAUDE.md` |
+| `packages/content` | Schemas e validação do conteúdo (`pnpm content:check`) | `content/CLAUDE.md`  |
+| `packages/core`    | Regras puras (progresso, conclusão)                    | —                    |
+| `content/`         | Cursos em Markdown e YAML                              | `content/CLAUDE.md`  |
+| `tools/`           | CLIs e scripts do repositório                          | `tools/CLAUDE.md`    |
+| `infra/`           | Terraform: `bootstrap/`, `modules/`, raiz `live/`      | `infra/CLAUDE.md`    |
+| `docs/`            | Specs, planos, ADRs, arquitetura, runbooks             | —                    |
 
 ## Comandos
 
@@ -25,6 +28,7 @@ Escola online 100% gratuita e beneficente para brasileiros (maioria geração Z,
 - `pnpm install`
 - `pnpm dev` — site em http://localhost:4321 e API em http://localhost:3001 (o site encaminha `/api`)
 - `pnpm lint` · `pnpm format` · `pnpm typecheck` · `pnpm test` · `pnpm test:e2e` · `pnpm build`
+- `pnpm content:check` — valida os cursos de `content/` (roda na CI); recusa HTML solto no Markdown (HTML dentro de código e autolinks são aceitos), usando o lexer do `marked`, o mesmo renderizador do site
 - `infra/tf <raiz> <ambiente> <comando>` — Terraform com backend e variáveis do ambiente (ex.: `infra/tf live dev plan`)
 
 ## Convenções

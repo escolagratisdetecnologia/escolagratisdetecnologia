@@ -5,7 +5,7 @@ Como a aplicação chega a dev e prod, e o que fazer quando algo dá errado.
 ## Como funciona
 
 1. Toda mudança entra por PR na `main`. O merge dispara o workflow `deploy` quando muda algo que vai para a AWS (`apps/web/`, `infra/`, `tools/deploy-site.sh`, `tools/smoke.sh`, dependências ou os próprios workflows de deploy). Mudança só de documentação não publica nada.
-2. Job `dev` (environment `dev`, sem aprovação): `terraform apply` da raiz `live`, build e publicação do site (`tools/deploy-site.sh`, que espera a invalidação do CloudFront terminar) e smoke tests (`tools/smoke.sh`).
+2. Job `dev` (environment `dev`, sem aprovação): `terraform apply` da raiz `live`, build e publicação do site (dev mostra os cursos em rascunho, `SITE_DRAFTS=true`; prod mostra só os publicados) (`tools/deploy-site.sh`, que espera a invalidação do CloudFront terminar) e smoke tests (`tools/smoke.sh`).
 3. Job `prod`: só começa se o `dev` passou e fica esperando aprovação no environment `prod`. Para aprovar: Actions → execução do `deploy` → **Review deployments** → marque `prod` → **Approve and deploy**. Faz os mesmos passos do dev e ainda confere os redirects de `www.escolagratisdetecnologia.com.br`, `escolagratisdetecnologia.com` e `www.escolagratisdetecnologia.com` (ADR 0020).
 
 Dentro do mesmo environment apenas um deploy é executado por vez; um deploy mais novo pendente substitui um mais antigo ainda aguardando, e um deploy em execução nunca é cancelado. Cada job tem limite de 45 minutos.

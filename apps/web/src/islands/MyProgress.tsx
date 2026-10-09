@@ -26,7 +26,15 @@ export default function MyProgress({ outlines }: Props) {
     focusAfter.current = undefined;
   });
 
-  if (!progress) return <p class="lead">Seu progresso neste aparelho aparece aqui.</p>;
+  // Same shape as the empty state below, so hydration does not move the page.
+  if (!progress)
+    return (
+      <div class="my-progress">
+        <h2>Seus cursos</h2>
+        <p class="my-progress-note">Seu progresso neste aparelho aparece aqui.</p>
+        <p class="status" role="status" />
+      </div>
+    );
 
   const started = outlines
     .map((outline) => ({ outline, status: courseStatus(outline, progress.courses[outline.slug]) }))
@@ -46,7 +54,7 @@ export default function MyProgress({ outlines }: Props) {
         Seus cursos
       </h2>
       {started.length === 0 ? (
-        <p>
+        <p class="my-progress-note">
           Você ainda não começou nenhum curso. <a href="/cursos/">Ver os cursos</a>
         </p>
       ) : (

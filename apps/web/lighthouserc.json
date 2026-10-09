@@ -2,6 +2,15 @@
   "ci": {
     "collect": {
       "staticDistDir": "./dist",
+      "url": [
+        "/index.html",
+        "/404.html",
+        "/cursos/index.html",
+        "/cursos/crie-seu-site-com-ia/index.html",
+        "/cursos/crie-seu-site-com-ia/deixe-as-ferramentas-a-mao/index.html",
+        "/cursos/crie-seu-site-com-ia/projeto/index.html",
+        "/eu/index.html"
+      ],
       "numberOfRuns": 3
     },
     "assert": {
