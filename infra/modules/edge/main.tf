@@ -1,6 +1,12 @@
 locals {
-  tags    = { Component = "edge" }
-  aliases = var.redirect_www ? [var.domain_name, "www.${var.domain_name}"] : [var.domain_name]
+  tags = { Component = "edge" }
+  # Every name the distribution serves => the Route 53 zone of its domain.
+  host_zone_ids = merge([
+    for domain, zone_id in merge(var.redirect_zone_ids, { (var.domain_name) = var.zone_id }) :
+    var.redirect_www ? { (domain) = zone_id, "www.${domain}" = zone_id } : { (domain) = zone_id }
+  ]...)
+  aliases        = keys(local.host_zone_ids)
+  redirect_hosts = [for host in local.aliases : host if host != var.domain_name]
   validation = {
     for option in aws_acm_certificate.site.domain_validation_options : option.domain_name => option
   }
@@ -16,7 +22,7 @@ locals {
 resource "aws_acm_certificate" "site" {
   provider                  = aws.us_east_1
   domain_name               = var.domain_name
-  subject_alternative_names = var.redirect_www ? ["www.${var.domain_name}"] : []
+  subject_alternative_names = local.redirect_hosts
   validation_method         = "DNS"
   tags                      = local.tags
 
@@ -27,9 +33,9 @@ resource "aws_acm_certificate" "site" {
 
 # Static keys (the domains) so for_each works before the certificate exists.
 resource "aws_route53_record" "certificate_validation" {
-  for_each = toset(local.aliases)
+  for_each = local.host_zone_ids
 
-  zone_id         = var.zone_id
+  zone_id         = each.value
   name            = local.validation[each.key].resource_record_name
   type            = local.validation[each.key].resource_record_type
   records         = [local.validation[each.key].resource_record_value]
@@ -148,10 +154,13 @@ resource "aws_cloudfront_origin_access_control" "site" {
 resource "aws_cloudfront_function" "viewer_request" {
   name    = "${var.name_prefix}-edge-viewer-request"
   runtime = "cloudfront-js-2.0"
-  comment = "Redirects www and resolves directory index.html"
+  comment = "Redirects alternate hosts and resolves directory index.html"
   publish = true
-  code    = replace(file("${path.module}/functions/viewer-request.js"), "__CANONICAL_HOST__", var.domain_name)
-  tags    = local.tags
+  code = replace(
+    replace(file("${path.module}/functions/viewer-request.js"), "__CANONICAL_HOST__", var.domain_name),
+    "__REDIRECT_HOSTS__", join(",", local.redirect_hosts)
+  )
+  tags = local.tags
 }
 
 resource "aws_cloudfront_response_headers_policy" "security" {
@@ -258,12 +267,13 @@ resource "aws_cloudfront_distribution" "site" {
 resource "aws_route53_record" "alias" {
   for_each = {
     for pair in setproduct(local.aliases, ["A", "AAAA"]) : "${pair[0]}-${pair[1]}" => {
-      name = pair[0]
-      type = pair[1]
+      name    = pair[0]
+      type    = pair[1]
+      zone_id = local.host_zone_ids[pair[0]]
     }
   }
 
-  zone_id = var.zone_id
+  zone_id = each.value.zone_id
   name    = each.value.name
   type    = each.value.type
 

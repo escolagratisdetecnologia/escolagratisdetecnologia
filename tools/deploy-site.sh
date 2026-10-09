@@ -7,7 +7,7 @@ set -euo pipefail
 environment="${1:?Uso: tools/deploy-site.sh <dev|prod>}"
 case "$environment" in
   dev) site_url="https://dev.escolagratisdetecnologia.com" ;;
-  prod) site_url="https://escolagratisdetecnologia.com" ;;
+  prod) site_url="https://escolagratisdetecnologia.com.br" ;;
   *) echo "Ambiente inválido: $environment (use dev ou prod)." >&2; exit 2 ;;
 esac
 

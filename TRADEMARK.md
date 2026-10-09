@@ -6,7 +6,7 @@ O código é livre (AGPL-3.0) e o conteúdo também (CC BY-SA 4.0), mas o nome *
 
 - Citar o projeto pelo nome, inclusive em artigos, vídeos e trabalhos acadêmicos.
 - Dizer que seu material é baseado no conteúdo da Escola, com o crédito pedido em `LICENSE-CONTENT.md`.
-- Linkar para escolagratisdetecnologia.com.
+- Linkar para escolagratisdetecnologia.com.br.
 
 ## Não pode
 

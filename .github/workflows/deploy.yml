@@ -35,7 +35,7 @@ jobs:
     uses: ./.github/workflows/deploy-env.yml
     with:
       environment: prod
-      site_url: https://escolagratisdetecnologia.com
-      check_www_redirect: true
+      site_url: https://escolagratisdetecnologia.com.br
+      redirect_hosts: www.escolagratisdetecnologia.com.br escolagratisdetecnologia.com www.escolagratisdetecnologia.com
     secrets:
       ALERT_EMAILS: ${{ secrets.ALERT_EMAILS }}

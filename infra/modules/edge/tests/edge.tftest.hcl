@@ -33,7 +33,11 @@ mock_provider "aws" {
     defaults = {
       arn = "arn:aws:acm:us-east-1:123456789012:certificate/00000000-0000-0000-0000-000000000000"
       domain_validation_options = [
-        for domain in ["escolagratisdetecnologia.com", "www.escolagratisdetecnologia.com", "dev.escolagratisdetecnologia.com"] : {
+        for domain in [
+          "escolagratisdetecnologia.com.br", "www.escolagratisdetecnologia.com.br",
+          "escolagratisdetecnologia.com", "www.escolagratisdetecnologia.com",
+          "dev.escolagratisdetecnologia.com",
+          ] : {
           domain_name           = domain
           resource_record_name  = "_validacao.${domain}."
           resource_record_type  = "CNAME"
@@ -52,27 +56,55 @@ variables {
   site_bucket_regional_domain_name = "egt-test-site-123.s3.sa-east-1.amazonaws.com"
 }
 
-run "prod_serves_apex_and_www" {
+run "prod_serves_canonical_and_redirect_domains" {
   command = apply
 
   variables {
-    domain_name  = "escolagratisdetecnologia.com"
-    redirect_www = true
+    domain_name       = "escolagratisdetecnologia.com.br"
+    redirect_www      = true
+    redirect_zone_ids = { "escolagratisdetecnologia.com" = "Z1111111111111" }
   }
 
   assert {
-    condition     = aws_cloudfront_distribution.site.aliases == toset(["escolagratisdetecnologia.com", "www.escolagratisdetecnologia.com"])
-    error_message = "Prod deveria atender o domínio e o www."
+    condition = aws_cloudfront_distribution.site.aliases == toset([
+      "escolagratisdetecnologia.com.br", "www.escolagratisdetecnologia.com.br",
+      "escolagratisdetecnologia.com", "www.escolagratisdetecnologia.com",
+    ])
+    error_message = "Prod deveria atender o domínio canônico, o domínio antigo e o www de cada um."
   }
 
   assert {
-    condition     = length(aws_route53_record.alias) == 4
-    error_message = "Prod precisa de registros A e AAAA para o domínio e o www."
+    condition = (
+      aws_acm_certificate.site.domain_name == "escolagratisdetecnologia.com.br" &&
+      toset(aws_acm_certificate.site.subject_alternative_names) == toset([
+        "www.escolagratisdetecnologia.com.br", "escolagratisdetecnologia.com", "www.escolagratisdetecnologia.com",
+      ])
+    )
+    error_message = "O certificado deveria ter o domínio canônico e os outros nomes como SAN."
   }
 
   assert {
-    condition     = strcontains(aws_cloudfront_function.viewer_request.code, "var CANONICAL_HOST = 'escolagratisdetecnologia.com';")
-    error_message = "A função de borda deveria receber o domínio canônico."
+    condition     = length(aws_route53_record.alias) == 8
+    error_message = "Prod precisa de registros A e AAAA para cada um dos quatro nomes."
+  }
+
+  # Static keys: each name goes to its own domain's zone.
+  assert {
+    condition = (
+      aws_route53_record.alias["www.escolagratisdetecnologia.com.br-AAAA"].zone_id == "Z0000000000000" &&
+      aws_route53_record.alias["www.escolagratisdetecnologia.com-AAAA"].zone_id == "Z1111111111111" &&
+      aws_route53_record.certificate_validation["escolagratisdetecnologia.com.br"].zone_id == "Z0000000000000" &&
+      aws_route53_record.certificate_validation["escolagratisdetecnologia.com"].zone_id == "Z1111111111111"
+    )
+    error_message = "Cada registro deveria ir para a zona do seu domínio."
+  }
+
+  assert {
+    condition = (
+      strcontains(aws_cloudfront_function.viewer_request.code, "var CANONICAL_HOST = 'escolagratisdetecnologia.com.br';") &&
+      strcontains(aws_cloudfront_function.viewer_request.code, "var REDIRECT_HOSTS = 'escolagratisdetecnologia.com,www.escolagratisdetecnologia.com,www.escolagratisdetecnologia.com.br'.split(',');")
+    )
+    error_message = "A função de borda deveria receber o domínio canônico e os nomes que redirecionam."
   }
 }
 
@@ -91,6 +123,11 @@ run "dev_serves_only_its_domain" {
   assert {
     condition     = length(aws_route53_record.alias) == 2
     error_message = "Dev precisa só de A e AAAA."
+  }
+
+  assert {
+    condition     = strcontains(aws_cloudfront_function.viewer_request.code, "var REDIRECT_HOSTS = ''.split(',');")
+    error_message = "Dev não deveria redirecionar nenhum nome."
   }
 
   assert {

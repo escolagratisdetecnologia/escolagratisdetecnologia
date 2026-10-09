@@ -19,6 +19,12 @@ variable "redirect_www" {
   default     = false
 }
 
+variable "redirect_domains" {
+  description = "Outros domínios que redirecionam para domain_name (somente prod; a zona de cada um é criada no bootstrap, ADR 0020)."
+  type        = list(string)
+  default     = []
+}
+
 variable "monthly_budget_usd" {
   description = "Orçamento mensal da conta em USD."
   type        = number

@@ -7,6 +7,11 @@ data "aws_route53_zone" "site" {
   name = var.domain_name
 }
 
+data "aws_route53_zone" "redirect" {
+  for_each = toset(var.redirect_domains)
+  name     = each.key
+}
+
 module "site" {
   source      = "../modules/site"
   name_prefix = module.tags.name_prefix
@@ -23,6 +28,7 @@ module "edge" {
   name_prefix                      = module.tags.name_prefix
   domain_name                      = var.domain_name
   redirect_www                     = var.redirect_www
+  redirect_zone_ids                = { for domain, zone in data.aws_route53_zone.redirect : domain => zone.zone_id }
   zone_id                          = data.aws_route53_zone.site.zone_id
   site_bucket_id                   = module.site.bucket_id
   site_bucket_arn                  = module.site.bucket_arn
