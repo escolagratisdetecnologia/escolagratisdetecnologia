@@ -36,4 +36,22 @@ describe('mountIslands', () => {
     expect(error).toHaveBeenCalledWith('Unknown island: nao-existe');
     expect(document.body.textContent).toBe('Oi');
   });
+
+  it('keeps hydrating the other islands when one fails', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    document.body.innerHTML =
+      '<div id="a" data-island="counter" data-props="{oops"><button type="button">Cliques: 0</button></div>' +
+      '<div id="b" data-island="counter" data-props=\'{"start":5}\'><button type="button">Cliques: 5</button></div>';
+
+    await mountIslands(document, { counter: async () => ({ default: Counter }) });
+
+    const first = document.querySelector<HTMLElement>('#a')!;
+    const second = document.querySelector<HTMLElement>('#b')!;
+    expect(first.dataset.hydrated).toBeUndefined();
+    expect(second.dataset.hydrated).toBe('true');
+    second.querySelector('button')!.click();
+    await nextTick();
+    expect(second.textContent).toBe('Cliques: 6');
+    expect(error).toHaveBeenCalledWith('Failed to hydrate island: counter', expect.anything());
+  });
 });

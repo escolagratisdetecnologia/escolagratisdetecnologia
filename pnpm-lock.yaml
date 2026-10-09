@@ -100,6 +100,9 @@ importers:
       '@types/node':
         specifier: ^24.19.1
         version: 24.19.1
+      happy-dom:
+        specifier: ^20.14.6
+        version: 20.14.6
       typescript:
         specifier: ~6.0.3
         version: 6.0.3

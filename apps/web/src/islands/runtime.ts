@@ -18,10 +18,14 @@ export async function mountIslands(root: ParentNode, registry: IslandRegistry): 
         console.error(`Unknown island: ${name}`);
         return;
       }
-      const { default: Component } = await load();
-      const props = JSON.parse(element.dataset.props ?? '{}') as Record<string, unknown>;
-      hydrate(h(Component, props), element);
-      element.dataset.hydrated = 'true';
+      try {
+        const { default: Component } = await load();
+        const props = JSON.parse(element.dataset.props ?? '{}') as Record<string, unknown>;
+        hydrate(h(Component, props), element);
+        element.dataset.hydrated = 'true';
+      } catch (error) {
+        console.error(`Failed to hydrate island: ${name}`, error);
+      }
     }),
   );
 }

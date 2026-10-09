@@ -18,4 +18,19 @@ describe('findInlineCode', () => {
       'event-handler',
     ]);
   });
+
+  it.each([
+    ['<script data-src="x">alert(1)</script>', 'script'],
+    ['<p style=color:red>x</p>', 'style-attribute'],
+    ['<button onclick=go()>y</button>', 'event-handler'],
+    ['<a href=" JavaScript:alert(1)">z</a>', 'javascript-url'],
+  ])('flags %s', (html, kind) => {
+    expect(findInlineCode(html).map((finding) => finding.kind)).toEqual([kind]);
+  });
+
+  it('accepts external scripts, plain links and images', () => {
+    const html =
+      '<script type="module" src="/_astro/a.js"></script><a href="/cursos/">ok</a><img src="/brand/egt-mark.svg" alt="">';
+    expect(findInlineCode(html)).toEqual([]);
+  });
 });
