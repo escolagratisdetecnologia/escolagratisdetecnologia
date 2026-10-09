@@ -138,7 +138,41 @@ describe('loadCatalog', () => {
       edit(dir, `${COURSE}/00-preparacao/01-boas-vindas.md`, (s) => `${s}\n<b>Atenção</b>\n`),
     );
     expect(problems).toEqual([
-      `${COURSE}/00-preparacao/01-boas-vindas.md: use só Markdown: HTML não é permitido (a CSP do site bloqueia estilos e scripts inline)`,
+      `${COURSE}/00-preparacao/01-boas-vindas.md: use Markdown: HTML fora de código não é permitido (exemplos de HTML vão entre crases ou em bloco de código; a CSP do site bloqueia estilos e scripts inline)`,
+    ]);
+  });
+
+  it('accepts HTML examples inside code', async () => {
+    const problems = await problemsAfter((dir) =>
+      edit(
+        dir,
+        `${COURSE}/00-preparacao/01-boas-vindas.md`,
+        (s) =>
+          `${s}\n\`\`\`html\n<a href="https://wa.me/5511999999999">Chamar no WhatsApp</a>\n\`\`\`\n\nUse a tag \`<strong>\` para negrito.\n`,
+      ),
+    );
+    expect(problems).toEqual([]);
+  });
+
+  it('accepts Markdown autolinks', async () => {
+    const problems = await problemsAfter((dir) =>
+      edit(
+        dir,
+        `${COURSE}/00-preparacao/01-boas-vindas.md`,
+        (s) => `${s}\nVeja <https://github.com> para criar sua conta.\n`,
+      ),
+    );
+    expect(problems).toEqual([]);
+  });
+
+  it('still rejects HTML in platform steps', async () => {
+    const problems = await problemsAfter((dir) =>
+      edit(dir, `${COURSE}/00-preparacao/02-no-seu-aparelho.md`, (s) =>
+        s.replace('1. Abra o Chrome.', '1. Abra o <b>Chrome</b>.'),
+      ),
+    );
+    expect(problems).toEqual([
+      `${COURSE}/00-preparacao/02-no-seu-aparelho.md: use Markdown: HTML fora de código não é permitido (exemplos de HTML vão entre crases ou em bloco de código; a CSP do site bloqueia estilos e scripts inline)`,
     ]);
   });
 
