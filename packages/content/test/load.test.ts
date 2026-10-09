@@ -11,6 +11,9 @@ async function problemsAfter(change: (dir: string) => Promise<void>): Promise<st
   return describeProblems(dir, problems);
 }
 
+const HTML_MESSAGE =
+  'use Markdown: HTML fora de código não é permitido (exemplos de HTML vão entre crases ou em bloco de código; a CSP do site bloqueia estilos e scripts inline)';
+
 describe('loadCatalog', () => {
   it('reads a valid course with its modules, lessons and project', async () => {
     const { catalog, problems } = await loadCatalog(VALID);
@@ -148,10 +151,28 @@ describe('loadCatalog', () => {
         dir,
         `${COURSE}/00-preparacao/01-boas-vindas.md`,
         (s) =>
-          `${s}\n\`\`\`html\n<a href="https://wa.me/5511999999999">Chamar no WhatsApp</a>\n\`\`\`\n\nUse a tag \`<strong>\` para negrito.\n`,
+          `${s}\n\`\`\`html\n<div>\n  <a href="https://wa.me/5511999999999">Chamar no WhatsApp</a>\n</div>\n\`\`\`\n\nUse a tag \`<strong>\` para negrito.\n\n~~~html\n<p>aberto</p>\n<p>sem fechar</p>\n`,
       ),
     );
     expect(problems).toEqual([]);
+  });
+
+  it('rejects HTML hidden between stray backticks', async () => {
+    const problems = await problemsAfter((dir) =>
+      edit(
+        dir,
+        `${COURSE}/00-preparacao/01-boas-vindas.md`,
+        (s) => `${s}\nIsso\`s\n\n<b>x</b>\n\nfim \`ok\n`,
+      ),
+    );
+    expect(problems).toEqual([`${COURSE}/00-preparacao/01-boas-vindas.md: ${HTML_MESSAGE}`]);
+  });
+
+  it('rejects HTML comments', async () => {
+    const problems = await problemsAfter((dir) =>
+      edit(dir, `${COURSE}/00-preparacao/01-boas-vindas.md`, (s) => `${s}\n<!-- nota -->\n`),
+    );
+    expect(problems).toEqual([`${COURSE}/00-preparacao/01-boas-vindas.md: ${HTML_MESSAGE}`]);
   });
 
   it('accepts Markdown autolinks', async () => {

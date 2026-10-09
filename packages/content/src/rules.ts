@@ -1,17 +1,18 @@
 import path from 'node:path';
+import { marked } from 'marked';
 import type { Course, Problem } from './load.ts';
 import type { Cast } from './schema.ts';
 
-const HTML_TAG = /<\/?[a-z][^>]*>/i;
 const HTML_MESSAGE =
   'use Markdown: HTML fora de código não é permitido (exemplos de HTML vão entre crases ou em bloco de código; a CSP do site bloqueia estilos e scripts inline)';
 
-// Code is rendered as escaped text and autolinks as plain links, so neither is real HTML.
-function withoutCode(markdown: string): string {
-  return markdown
-    .replace(/^ {0,3}(`{3,}|~{3,})[^\n]*(?:\n[\s\S]*?(?:\n {0,3}\1[`~]*[ \t]*(?=\n|$)|$)|$)/gm, '')
-    .replace(/(`+)(?!`)[\s\S]*?(?<!`)\1(?!`)/g, '')
-    .replace(/<(?:https?:\/\/|mailto:)[^\s<>]+>/gi, '');
+/** True when the Markdown contains raw HTML as the site's renderer (marked) sees it; code and autolinks are not HTML. */
+function containsHtml(markdown: string): boolean {
+  let found = false;
+  marked.walkTokens(marked.lexer(markdown), (token) => {
+    if (token.type === 'html') found = true;
+  });
+  return found;
 }
 
 /** Rules that span several files of a course (the schemas check each file alone). */
@@ -63,7 +64,7 @@ export function checkCourse(course: Course, cast: Cast): Problem[] {
       if (lesson.body.length === 0)
         report(lesson.file, 'escreva o roteiro ou a transcrição no corpo da aula');
       const texts = [lesson.body, ...Object.values(variants ?? {}).map((variant) => variant.steps)];
-      if (texts.some((text) => HTML_TAG.test(withoutCode(text)))) report(lesson.file, HTML_MESSAGE);
+      if (texts.some((text) => containsHtml(text))) report(lesson.file, HTML_MESSAGE);
     }
   }
 
@@ -74,7 +75,7 @@ export function checkCourse(course: Course, cast: Cast): Problem[] {
   if (new Set(ids).size !== ids.length) report(project.file, 'há critérios com o mesmo id');
   if (project.body.length === 0)
     report(project.file, 'descreva o cenário do projeto no corpo do arquivo');
-  if (HTML_TAG.test(withoutCode(project.body))) report(project.file, HTML_MESSAGE);
+  if (containsHtml(project.body)) report(project.file, HTML_MESSAGE);
 
   const hosts = new Set(cast.hosts.map((host) => host.id));
   for (const host of course.meta.hosts) {
