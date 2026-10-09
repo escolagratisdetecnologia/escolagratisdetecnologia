@@ -14,8 +14,14 @@ variable "state_bucket_name" {
 }
 
 variable "zone_name" {
-  description = "Zona DNS hospedada nesta conta."
+  description = "Zona DNS hospedada nesta conta; recebe as delegações de subdomínio."
   type        = string
+}
+
+variable "additional_zone_names" {
+  description = "Outros domínios do site hospedados nesta conta, além de zone_name (ADR 0020)."
+  type        = list(string)
+  default     = []
 }
 
 variable "subdomain_delegations" {

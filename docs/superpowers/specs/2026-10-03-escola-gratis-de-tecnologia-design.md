@@ -2,7 +2,7 @@
 
 - **Status:** aprovado em brainstorming (2026-10-03)
 - **Escopo:** arquitetura e decisões transversais de todas as fases (0–5). Cada fase terá seu próprio plano de implementação derivado deste documento.
-- **Domínio:** `escolagratisdetecnologia.com`
+- **Domínio:** `escolagratisdetecnologia.com.br` (`escolagratisdetecnologia.com` redireciona para ele; ADR 0020)
 - **Repositório:** `github.com/escolagratisdetecnologia/escolagratisdetecnologia` (monorepo público)
 
 ---
@@ -76,6 +76,7 @@ A **Escola Grátis de Tecnologia** é uma escola online, 100% gratuita e benefic
 | D16 | **Licenças: AGPL-3.0-or-later (código), CC BY-SA 4.0 (conteúdo), marca reservada** | MIT/Apache; CC BY-NC | Impede fork comercial fechado; mantém derivados livres |
 | D17 | **Docs em pt-BR; código (identificadores, comentários técnicos) em inglês** | Tudo pt-BR; tudo inglês | Comunidade brasileira + padrão de mercado |
 | D18 | **Entidade que recebe doações parametrizada** (`entidade.yaml`) | — | Decisão jurídica pendente; Fase 4 só vai ao ar com ela definida |
+| D19 | **Domínio principal `escolagratisdetecnologia.com.br`**; `.com` e `www` redirecionam (ADR 0020) | `.com` principal com `.com.br` redirecionando; encaminhamento do GoDaddy | Escolha do mantenedor: domínio brasileiro; a mesma distribuição e o mesmo WAF atendem todos os nomes |
 
 Cada decisão vira um ADR em `docs/adr/` na Fase 0 (§12.3).
 
@@ -89,7 +90,7 @@ Cada decisão vira um ADR em `docs/adr/` na Fase 0 (§12.3).
                           Aluno (celular / app instalado)
                                        │ HTTPS
            ┌───────────────────────────▼────────────────────────────┐
-           │ CloudFront + WAF · escolagratisdetecnologia.com        │  pay-as-you-go
+           │ CloudFront + WAF · escolagratisdetecnologia.com.br     │  pay-as-you-go
            └───────┬───────────────────┬──────────────┬─────────────┘
                 /* │            /api/* │              │ /media/*  /credentials/*
      S3 "site" (Astro estático)  API Gateway HTTP     S3 "media" (HLS, legendas,
@@ -286,7 +287,7 @@ Sem cookies de terceiros nem pixels. Acessos por logs padrão do CloudFront (Clo
 | SMS | Verificação única do celular antes do 1º certificado | A cada login |
 | Vinculação | Gatilho *pre sign-up* vincula Google e e-mail do mesmo endereço (`AdminLinkProviderForUser`) | — |
 | E-mail | SES com domínio próprio (DKIM, SPF, DMARC) | SES |
-| Domínio Cognito | `auth.escolagratisdetecnologia.com` (prod), `auth.dev.escolagratisdetecnologia.com` (dev) — necessário para a federação Google | Nenhum: login pela API do Cognito (`USER_SRP_AUTH` + desafio `SMS_MFA`) em telas próprias |
+| Domínio Cognito | `auth.escolagratisdetecnologia.com.br` (prod), `auth.dev.escolagratisdetecnologia.com` (dev) — necessário para a federação Google | Nenhum: login pela API do Cognito (`USER_SRP_AUTH` + desafio `SMS_MFA`) em telas próprias |
 
 Proteção contra enumeração de usuários ligada; a tela responde igual para conta nova e existente.
 
@@ -335,7 +336,7 @@ Todas as aulas concluídas **e** todos os quizzes acertados (tentativas ilimitad
 
 - **Open Badges 3.0** (`OpenBadgeCredential`, W3C Verifiable Credentials Data Model 2.0), protegido como **VC-JWT** com **ES256**.
 - Chave privada no **AWS KMS** (`ECC_NIST_P256`, `SIGN_VERIFY`); nunca sai do KMS. Localmente, chave P-256 de desenvolvimento. Interface `Signer` única com implementações `KmsSigner` e `LocalSigner`.
-- Emissor: `did:web:escolagratisdetecnologia.com` → `/.well-known/did.json` com as chaves públicas (atuais e aposentadas, para validar certificados antigos após rotação).
+- Emissor: `did:web:escolagratisdetecnologia.com.br` → `/.well-known/did.json` com as chaves públicas (atuais e aposentadas, para validar certificados antigos após rotação).
 - `Achievement` por curso publicado em `/cursos/{slug}/achievement.json` (gerado do `course.yaml`, inclui `skills` e critérios).
 - Revogação: **Bitstring Status List** (W3C) em `/credentials/status/1`, credencial assinada regenerada a cada revogação.
 - ID do certificado: 12 caracteres base32 Crockford aleatórios (~60 bits).
@@ -453,7 +454,7 @@ Por mês:
 ### 11.1 Contas e ambientes
 
 - AWS Organizations: conta de **gerenciamento** (billing, políticas da organização), conta **`dev`** e conta **`prod`**. O bootstrap aceita contas já existentes.
-- Ambientes: `dev` (`dev.escolagratisdetecnologia.com`, zona delegada para a conta dev) e `prod` (apex `escolagratisdetecnologia.com` + redirect de `www`).
+- Ambientes: `dev` (`dev.escolagratisdetecnologia.com`, zona delegada para a conta dev) e `prod` (apex `escolagratisdetecnologia.com.br`, com redirect de `www` e de `escolagratisdetecnologia.com`; ADR 0020).
 - Desenvolvimento local não cria recursos na AWS (§13).
 
 ### 11.2 Layout Terraform

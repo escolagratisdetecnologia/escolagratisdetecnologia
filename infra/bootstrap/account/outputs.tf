@@ -3,6 +3,11 @@ output "zone_name_servers" {
   value       = aws_route53_zone.this.name_servers
 }
 
+output "additional_zone_name_servers" {
+  description = "Name servers das zonas adicionais, por domínio (copiar para o registrador)."
+  value       = { for name, zone in aws_route53_zone.additional : name => zone.name_servers }
+}
+
 output "github_role_arns" {
   description = "ARNs das roles assumidas pelo GitHub Actions."
   value       = { for key, role in aws_iam_role.github : key => role.arn }

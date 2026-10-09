@@ -117,21 +117,23 @@ subdomain_delegations = {
 export AWS_PROFILE=egt-prod
 infra/tf bootstrap/account prod plan
 infra/tf bootstrap/account prod apply   # você executa
-infra/tf bootstrap/account prod output -json zone_name_servers
+infra/tf bootstrap/account prod output -json zone_name_servers             # escolagratisdetecnologia.com
+infra/tf bootstrap/account prod output -json additional_zone_name_servers  # escolagratisdetecnologia.com.br (ADR 0020)
 ```
 
 ## 7. DNS no GoDaddy
 
 Antes de trocar, confira no GoDaddy: (a) registros que precisam ser recriados no Route 53 (MX/TXT, encaminhamento de e-mail), pois a zona nova começa vazia; (b) DNSSEC: se estiver ligado, desligue e remova o registro DS.
 
-GoDaddy → Meus produtos → `escolagratisdetecnologia.com` → DNS → Servidores de nomes → **Alterar** → "Usarei meus próprios servidores de nomes" → cole os 4 name servers da etapa 6. A propagação pode levar algumas horas; confira:
+Faça a troca nos dois domínios: GoDaddy → Meus produtos → domínio → DNS → Servidores de nomes → **Alterar** → "Usarei meus próprios servidores de nomes" → cole os 4 name servers da etapa 6. Em `escolagratisdetecnologia.com.br`, use os de `additional_zone_name_servers`; em `escolagratisdetecnologia.com`, os de `zone_name_servers`. No `.com.br`, o GoDaddy repassa a troca ao Registro.br, que pode recusá-la se os servidores novos ainda não responderem pela zona (por isso a zona é criada antes, na etapa 6). A propagação pode levar algumas horas; confira:
 
 ```bash
+curl -s "https://dns.google/resolve?name=escolagratisdetecnologia.com.br&type=NS" | python3 -m json.tool
 curl -s "https://dns.google/resolve?name=escolagratisdetecnologia.com&type=NS" | python3 -m json.tool
 curl -s "https://dns.google/resolve?name=dev.escolagratisdetecnologia.com&type=NS" | python3 -m json.tool
 ```
 
-**Só siga para o passo 9 quando os dois comandos responderem com os name servers `awsdns`.** Senão a validação do certificado ACM expira.
+**Só siga para o passo 9 quando os três comandos responderem com os name servers `awsdns`.** Senão a validação do certificado ACM expira.
 
 ## 8. GitHub
 
