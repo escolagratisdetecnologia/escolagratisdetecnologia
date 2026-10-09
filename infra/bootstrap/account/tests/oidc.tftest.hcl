@@ -1,4 +1,4 @@
-# OIDC trust and role names: mocked providers, plan-only, no AWS access.
+# OIDC trust, role names and DNS zones: mocked providers, plan-only, no AWS access.
 mock_provider "aws" {}
 
 mock_provider "aws" {
@@ -116,4 +116,34 @@ run "rejects_mutable_subject_prefix" {
   }
 
   expect_failures = [var.github_subject_prefix]
+}
+
+run "has_no_additional_zones_by_default" {
+  command = plan
+
+  assert {
+    condition     = length(aws_route53_zone.additional) == 0
+    error_message = "Sem additional_zone_names, a conta deveria ter só a zona principal."
+  }
+}
+
+run "creates_additional_zones" {
+  command = plan
+
+  variables {
+    environment           = "prod"
+    state_bucket_name     = "escolagratis-tfstate-prod"
+    zone_name             = "escolagratisdetecnologia.com"
+    additional_zone_names = ["escolagratisdetecnologia.com.br"]
+  }
+
+  assert {
+    condition     = aws_route53_zone.additional["escolagratisdetecnologia.com.br"].name == "escolagratisdetecnologia.com.br"
+    error_message = "A zona do escolagratisdetecnologia.com.br deveria ser criada."
+  }
+
+  assert {
+    condition     = aws_route53_zone.additional["escolagratisdetecnologia.com.br"].tags["Component"] == "bootstrap"
+    error_message = "As zonas adicionais precisam da tag Component=bootstrap."
+  }
 }

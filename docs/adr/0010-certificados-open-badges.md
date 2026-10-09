@@ -10,7 +10,7 @@ Os certificados devem ser publicáveis e verificáveis por terceiros (LinkedIn, 
 
 ## Decisão
 
-O `OpenBadgeCredential` (W3C VC 2.0) é emitido como VC-JWT ES256. A chave fica no KMS (`ECC_NIST_P256`) e o emissor é `did:web:escolagratisdetecnologia.com`. A revogação usa Bitstring Status List. Há página pública com Open Graph e botão do LinkedIn.
+O `OpenBadgeCredential` (W3C VC 2.0) é emitido como VC-JWT ES256. A chave fica no KMS (`ECC_NIST_P256`) e o emissor é `did:web:escolagratisdetecnologia.com.br` (domínio principal desde a ADR 0020). A revogação usa Bitstring Status List. Há página pública com Open Graph e botão do LinkedIn.
 
 ## Alternativas consideradas
 

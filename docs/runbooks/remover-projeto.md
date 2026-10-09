@@ -11,7 +11,7 @@ Irreversível. Só com decisão explícita do mantenedor. A tag `Project=escola-
 
 ## 1. Reverter o DNS no GoDaddy
 
-Antes de apagar as zonas, volte os servidores de nomes do GoDaddy para os padrões (Meus produtos → `escolagratisdetecnologia.com` → DNS → Servidores de nomes → Alterar). Assim nenhuma delegação fica apontando para zonas do Route 53 que deixam de existir (risco de alguém recriar a zona e sequestrar o domínio).
+Antes de apagar as zonas, volte os servidores de nomes do GoDaddy para os padrões nos dois domínios (Meus produtos → `escolagratisdetecnologia.com.br` e depois `escolagratisdetecnologia.com` → DNS → Servidores de nomes → Alterar). Assim nenhuma delegação fica apontando para zonas do Route 53 que deixam de existir (risco de alguém recriar a zona e sequestrar o domínio).
 
 ## 2. Aplicação (prod, depois dev)
 
@@ -36,7 +36,7 @@ export AWS_PROFILE=egt-prod
 infra/tf bootstrap/account prod state pull > bootstrap-prod.tfstate   # cópia de segurança; não commitar
 ```
 
-1. Remova **localmente, sem commitar**, os blocos `lifecycle { prevent_destroy = true }` da zona (`aws_route53_zone.this`, em `infra/bootstrap/account/main.tf`) e do bucket (`infra/modules/state-bucket/main.tf`).
+1. Remova **localmente, sem commitar**, os blocos `lifecycle { prevent_destroy = true }` das zonas (`aws_route53_zone.this` e `aws_route53_zone.additional`, em `infra/bootstrap/account/main.tf`) e do bucket (`infra/modules/state-bucket/main.tf`).
 
 2. Destrua:
 
@@ -44,6 +44,7 @@ infra/tf bootstrap/account prod state pull > bootstrap-prod.tfstate   # cópia d
    infra/tf bootstrap/account prod destroy \
      -target=aws_route53_record.delegation \
      -target=aws_route53_zone.this \
+     -target=aws_route53_zone.additional \
      -target=aws_resourceexplorer2_view.all \
      -target=aws_resourceexplorer2_index.aggregator \
      -target=aws_resourceexplorer2_index.us_east_1 \

@@ -201,6 +201,19 @@ resource "aws_route53_zone" "this" {
   }
 }
 
+# Other domains of the site in this account (ADR 0020).
+resource "aws_route53_zone" "additional" {
+  for_each = toset(var.additional_zone_names)
+
+  name    = each.key
+  comment = "Escola Gratis de Tecnologia (${var.environment})"
+  tags    = local.tags
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 resource "aws_route53_record" "delegation" {
   for_each = var.subdomain_delegations
 

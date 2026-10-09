@@ -43,6 +43,7 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 | Estado Terraform versionado com lock nativo                                                  | feito (Fase 0)        |
 | DynamoDB com PITR; SQS com DLQ; workers idempotentes                                         | planejado (Fases 1–2) |
 | Deploys serializados por ambiente e smoke tests só após a invalidação do CloudFront terminar | feito (Fase 0)        |
+| Domínio principal `.com.br`; `.com` e `www` redirecionam com 301 na mesma borda (ADR 0020)   | planejado (Fase 0)    |
 
 ## Eficiência de performance
 
