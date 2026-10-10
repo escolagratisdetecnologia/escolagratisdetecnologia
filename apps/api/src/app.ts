@@ -5,6 +5,7 @@ import { Hono } from 'hono';
 import type { AppConfig } from './config.ts';
 import { apiError } from './errors.ts';
 import type { IdentityProvider } from './identity.ts';
+import { authRoutes } from './routes/auth.ts';
 import { healthRoutes } from './routes/health.ts';
 import { progressRoutes } from './routes/progress.ts';
 import { limitBody, noStore, requireOriginVerify, requireSiteOrigin } from './security.ts';
@@ -28,6 +29,7 @@ export function createApp(deps: AppDeps) {
   app.use(requireSiteOrigin(deps.config.siteOrigin));
   app.use(limitBody);
   app.route('/health', healthRoutes(deps));
+  app.route('/auth', authRoutes(deps));
   app.route('/progress', progressRoutes(deps));
   app.notFound((c) => c.json(apiError('not_found', 'Rota não encontrada.'), 404));
   app.onError((error, c) => {
