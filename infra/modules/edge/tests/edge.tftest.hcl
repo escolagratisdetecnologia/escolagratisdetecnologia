@@ -54,6 +54,8 @@ variables {
   site_bucket_id                   = "egt-test-site-123"
   site_bucket_arn                  = "arn:aws:s3:::egt-test-site-123"
   site_bucket_regional_domain_name = "egt-test-site-123.s3.sa-east-1.amazonaws.com"
+  api_origin_domain                = "abc123.execute-api.sa-east-1.amazonaws.com"
+  api_origin_verify_secret         = "segredo-de-teste"
 }
 
 run "prod_serves_canonical_and_redirect_domains" {
@@ -151,7 +153,7 @@ run "dev_serves_only_its_domain" {
   }
 
   assert {
-    condition     = one(aws_cloudfront_distribution.site.origin).origin_access_control_id == aws_cloudfront_origin_access_control.site.id
+    condition     = one([for o in aws_cloudfront_distribution.site.origin : o if o.origin_id == "site"]).origin_access_control_id == aws_cloudfront_origin_access_control.site.id
     error_message = "A distribuição deveria usar o OAC."
   }
 
@@ -168,5 +170,50 @@ run "dev_serves_only_its_domain" {
   assert {
     condition     = anytrue([for r in aws_wafv2_web_acl.edge.rule : r.name == "rate-limit-ip" && length(r.statement[0].rate_based_statement[0].scope_down_statement) == 1])
     error_message = "O rate limit deveria ter scope-down para ignorar assets imutáveis."
+  }
+}
+
+run "api_on_the_same_distribution" {
+  command = apply
+
+  variables {
+    domain_name = "dev.escolagratisdetecnologia.com"
+  }
+
+  assert {
+    condition = (
+      one([for o in aws_cloudfront_distribution.site.origin : o if o.origin_id == "api"]).domain_name == "abc123.execute-api.sa-east-1.amazonaws.com" &&
+      one(one([for o in aws_cloudfront_distribution.site.origin : o if o.origin_id == "api"]).custom_header).name == "x-origin-verify"
+    )
+    error_message = "A origem api deveria apontar para o API Gateway com o cabeçalho secreto."
+  }
+
+  assert {
+    condition = (
+      one(aws_cloudfront_distribution.site.ordered_cache_behavior).path_pattern == "/api/*" &&
+      one(aws_cloudfront_distribution.site.ordered_cache_behavior).target_origin_id == "api" &&
+      one(aws_cloudfront_distribution.site.ordered_cache_behavior).cache_policy_id == data.aws_cloudfront_cache_policy.disabled.id &&
+      length(one(aws_cloudfront_distribution.site.ordered_cache_behavior).function_association) == 0
+    )
+    error_message = "/api/* deveria ir para a API, sem cache e sem a função de borda."
+  }
+
+  assert {
+    condition     = [for r in aws_cloudfront_distribution.site.custom_error_response : r.error_code] == [403]
+    error_message = "Só o 403 do S3 vira a página 404; erros da API passam intactos (ADR 0022)."
+  }
+
+  assert {
+    condition = anytrue([
+      for r in aws_wafv2_web_acl.edge.rule : r.name == "rate-limit-ip" &&
+      r.action[0].block[0].custom_response[0].response_code == 429 &&
+      r.action[0].block[0].custom_response[0].custom_response_body_key == "rate-limited"
+    ])
+    error_message = "O rate limit deveria responder 429 com corpo JSON."
+  }
+
+  assert {
+    condition     = one(aws_wafv2_web_acl.edge.custom_response_body).content_type == "APPLICATION_JSON"
+    error_message = "A resposta do rate limit deveria ser JSON."
   }
 }

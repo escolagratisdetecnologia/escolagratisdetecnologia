@@ -45,3 +45,14 @@ variable "rate_limit_per_5min" {
   type        = number
   default     = 2000
 }
+
+variable "api_origin_domain" {
+  description = "Domínio do API Gateway (sem https://), origem do caminho /api/*."
+  type        = string
+}
+
+variable "api_origin_verify_secret" {
+  description = "Segredo enviado à API no cabeçalho x-origin-verify (ADR 0022)."
+  type        = string
+  sensitive   = true
+}
