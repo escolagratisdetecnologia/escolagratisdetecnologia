@@ -103,7 +103,8 @@ resource "aws_iam_role" "triggers" {
   tags               = local.tags
 }
 
-# Least privilege: find the account by e-mail, create it when missing, link Google to it.
+# Least privilege: find the account by e-mail, create it when missing (or replace an unconfirmed
+# e-mail sign-up), link Google to it.
 data "aws_iam_policy_document" "triggers" {
   statement {
     sid       = "WriteOwnLogs"
@@ -113,7 +114,7 @@ data "aws_iam_policy_document" "triggers" {
 
   statement {
     sid       = "LinkGoogleAccounts"
-    actions   = ["cognito-idp:ListUsers", "cognito-idp:AdminCreateUser", "cognito-idp:AdminLinkProviderForUser"]
+    actions   = ["cognito-idp:ListUsers", "cognito-idp:AdminCreateUser", "cognito-idp:AdminLinkProviderForUser", "cognito-idp:AdminDeleteUser"]
     resources = [aws_cognito_user_pool.learners.arn]
   }
 }

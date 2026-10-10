@@ -70,6 +70,33 @@ describe('pre sign-up trigger', () => {
     ]);
   });
 
+  it('replaces an unconfirmed e-mail sign-up instead of linking to it', async () => {
+    const { handler, sent } = setup({
+      ListUsers: () => ({ Users: [{ Username: 'uuid-sem-codigo', UserStatus: 'UNCONFIRMED' }] }),
+      AdminDeleteUser: () => ({}),
+      AdminCreateUser: () => ({ User: { Username: 'uuid-nova' } }),
+      AdminLinkProviderForUser: () => ({}),
+    });
+
+    await expect(handler(event('PreSignUp_ExternalProvider', google))).rejects.toThrow(
+      ACCOUNT_LINKED,
+    );
+    expect(sent.map((call) => call.command)).toEqual([
+      'ListUsers',
+      'AdminDeleteUser',
+      'AdminCreateUser',
+      'AdminLinkProviderForUser',
+    ]);
+    expect(sent[1]?.input).toEqual({
+      UserPoolId: 'sa-east-1_Teste123',
+      Username: 'uuid-sem-codigo',
+    });
+    expect(sent[3]?.input.DestinationUser).toEqual({
+      ProviderName: 'Cognito',
+      ProviderAttributeValue: 'uuid-nova',
+    });
+  });
+
   it('creates the e-mail account first when there is none', async () => {
     const { handler, sent } = setup({
       ListUsers: () => ({ Users: [] }),

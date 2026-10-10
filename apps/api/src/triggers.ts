@@ -1,6 +1,7 @@
 import { Logger } from '@aws-lambda-powertools/logger';
 import {
   AdminCreateUserCommand,
+  AdminDeleteUserCommand,
   AdminLinkProviderForUserCommand,
   CognitoIdentityProviderClient,
   ListUsersCommand,
@@ -43,14 +44,20 @@ export function createTriggers(
   client: Pick<CognitoIdentityProviderClient, 'send'>,
   logger: Logger,
 ) {
-  async function findAccount(userPoolId: string, email: string): Promise<string | undefined> {
+  async function findAccount(
+    userPoolId: string,
+    email: string,
+  ): Promise<{ username: string; status: string | undefined } | undefined> {
     const { Users = [] } = await client.send(
       new ListUsersCommand({
         UserPoolId: userPoolId,
         Filter: `email = "${email.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`,
       }),
     );
-    return Users.find((user) => user.UserStatus !== 'EXTERNAL_PROVIDER')?.Username;
+    const user = Users.find((u) => u.UserStatus !== 'EXTERNAL_PROVIDER');
+    return user?.Username === undefined
+      ? undefined
+      : { username: user.Username, status: user.UserStatus };
   }
 
   async function linkGoogle(event: TriggerEvent): Promise<never> {
@@ -62,7 +69,16 @@ export function createTriggers(
     const providerName = event.userName.slice(0, separator);
     const providerUserId = event.userName.slice(separator + 1);
 
-    let username = await findAccount(event.userPoolId, email.toLowerCase());
+    const account = await findAccount(event.userPoolId, email.toLowerCase());
+    let username = account?.username;
+    if (account?.status === 'UNCONFIRMED') {
+      // The API deletes an unconfirmed user on the next e-mail sign-in, which would take the
+      // Google link (and the `sub`) with it. This sign-up never signed in, so it has no data.
+      await client.send(
+        new AdminDeleteUserCommand({ UserPoolId: event.userPoolId, Username: account.username }),
+      );
+      username = undefined;
+    }
     const created = username === undefined;
     if (username === undefined) {
       // Google confirmed the e-mail, so the account is born verified and without a password.

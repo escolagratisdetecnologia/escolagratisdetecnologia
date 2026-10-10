@@ -141,8 +141,9 @@ run "triggers_with_least_privilege" {
       "cognito-idp:ListUsers",
       "cognito-idp:AdminCreateUser",
       "cognito-idp:AdminLinkProviderForUser",
+      "cognito-idp:AdminDeleteUser",
     ])
-    error_message = "Os gatilhos só podem achar, criar e vincular contas (e escrever os próprios logs)."
+    error_message = "Os gatilhos só podem achar, criar, vincular e apagar (cadastro não confirmado) contas (e escrever os próprios logs)."
   }
 
   assert {
