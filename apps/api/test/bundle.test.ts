@@ -47,6 +47,19 @@ function invoke(
   return JSON.parse(output) as { statusCode: number; body: string };
 }
 
+/** Loads the triggers bundle and hands it a Cognito event. */
+function trigger(event: Record<string, unknown>): Record<string, unknown> {
+  const script = `
+    const { handler } = await import(${JSON.stringify(pathToFileURL(join(outdir, 'triggers.mjs')).href)});
+    process.stdout.write(JSON.stringify(await handler(${JSON.stringify(event)})));
+  `;
+  const output = execFileSync(process.execPath, ['--input-type=module', '-e', script], {
+    encoding: 'utf8',
+    env: { PATH: process.env.PATH, AWS_REGION: 'sa-east-1', POWERTOOLS_LOG_LEVEL: 'SILENT' },
+  });
+  return JSON.parse(output) as Record<string, unknown>;
+}
+
 describe('Lambda bundle', () => {
   beforeAll(async () => {
     await buildLambda(outdir);
@@ -63,6 +76,20 @@ describe('Lambda bundle', () => {
 
   it('refuses requests that skip CloudFront', () => {
     expect(invoke('/api/health', {}).statusCode).toBe(403);
+  });
+
+  it('includes the Cognito triggers', () => {
+    const result = trigger({
+      triggerSource: 'CustomMessage_SignUp',
+      userPoolId: 'sa-east-1_Teste123',
+      userName: 'uuid',
+      request: { userAttributes: {}, codeParameter: '{####}' },
+      response: {},
+    });
+
+    expect(result.response).toMatchObject({
+      emailSubject: 'Seu código para entrar na Escola Grátis de Tecnologia',
+    });
   });
 
   it('checks the session with Cognito', () => {

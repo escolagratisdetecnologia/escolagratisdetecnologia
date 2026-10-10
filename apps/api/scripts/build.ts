@@ -5,14 +5,19 @@ import { loadProgressCatalog } from '../src/catalog.ts';
 const CONTENT_DIR = fileURLToPath(new URL('../../../content', import.meta.url));
 
 /**
- * Bundles the Lambda handler with every dependency, AWS SDK included (versions from our lockfile),
- * and the progress catalog read from content/.
+ * Bundles the Lambda handlers with every dependency, AWS SDK included (versions from our
+ * lockfile): the API (lambda.mjs, with the progress catalog read from content/) and the Cognito
+ * triggers (triggers.mjs). Terraform zips the folder for both functions.
  */
 export async function buildLambda(outdir: string): Promise<void> {
   const catalog = await loadProgressCatalog(CONTENT_DIR);
   await build({
-    entryPoints: [fileURLToPath(new URL('../src/lambda.ts', import.meta.url))],
-    outfile: `${outdir}/lambda.mjs`,
+    entryPoints: {
+      lambda: fileURLToPath(new URL('../src/lambda.ts', import.meta.url)),
+      triggers: fileURLToPath(new URL('../src/triggers.ts', import.meta.url)),
+    },
+    outdir,
+    outExtension: { '.js': '.mjs' },
     bundle: true,
     platform: 'node',
     target: 'node24',
