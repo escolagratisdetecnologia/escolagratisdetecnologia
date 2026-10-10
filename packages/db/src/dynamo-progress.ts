@@ -43,7 +43,10 @@ export function createDynamoProgressRepository(db: Database): ProgressRepository
   const entity = courseProgressEntity(db);
 
   async function get(sub: string): Promise<Progress> {
-    const { data } = await entity.query.byUser({ sub }).go({ pages: 'all' });
+    const { data } = await entity.query
+      .byUser({ sub }) // Strongly consistent: PUT and merge answer with get() right after writing,
+      // so the response must reflect the write that just happened.
+      .go({ pages: 'all', consistent: true });
     const courses: Record<string, CourseProgress> = {};
     for (const item of data) {
       courses[item.course] = {
