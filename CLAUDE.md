@@ -29,7 +29,7 @@ Escola online 100% gratuita e beneficente para brasileiros (maioria geração Z,
 - `pnpm install`
 - `pnpm dev` — site em http://localhost:4321 e API em http://localhost:3001 (o site encaminha `/api`)
 - `pnpm lint` · `pnpm format` · `pnpm typecheck` · `pnpm test` · `pnpm test:e2e` · `pnpm build`
-- `pnpm db:up` — sobe o DynamoDB Local no Docker; a API cria a tabela ao iniciar. Sem Docker, o `pnpm dev` guarda o progresso na memória. Testes de integração: `DYNAMODB_ENDPOINT=http://localhost:8000 pnpm test` (na CI, sempre).
+- `pnpm db:up` — sobe no Docker o DynamoDB Local, o Mailpit (códigos de login em http://localhost:8025) e o Google de mentira (mock-oauth2-server, em http://localhost:8080); a API cria a tabela ao iniciar. Sem Docker, o `pnpm dev` guarda tudo na memória e o código de login aparece no terminal da API. Testes de integração: `DYNAMODB_ENDPOINT=http://localhost:8000 pnpm test` (na CI, sempre).
 - `pnpm content:check` — valida os cursos de `content/` (roda na CI); recusa HTML solto no Markdown (HTML dentro de código e autolinks são aceitos), usando o lexer do `marked`, o mesmo renderizador do site
 - `infra/tf <raiz> <ambiente> <comando>` — Terraform com backend e variáveis do ambiente (ex.: `infra/tf live dev plan`)
 
@@ -48,7 +48,7 @@ Escola online 100% gratuita e beneficente para brasileiros (maioria geração Z,
 
 ## Antes de dizer que terminou
 
-`pnpm lint && pnpm typecheck && pnpm test` verdes. Mexeu no site: `pnpm test:e2e`. Mexeu na API ou em `packages/db`: `pnpm db:up` e `DYNAMODB_ENDPOINT=http://localhost:8000 pnpm test`. Mexeu em `infra/`: `terraform fmt -check -recursive infra`, `terraform validate` da raiz afetada, `tflint` e `trivy config`.
+`pnpm lint && pnpm typecheck && pnpm test` verdes. Mexeu no site: `pnpm test:e2e` (os testes de login pedem `pnpm db:up`; sem ele, são pulados localmente). Mexeu na API ou em `packages/db`: `pnpm db:up` e `DYNAMODB_ENDPOINT=http://localhost:8000 pnpm test`. Mexeu em `infra/`: `terraform fmt -check -recursive infra`, `terraform validate` da raiz afetada, `tflint` e `trivy config`.
 
 ## MCP e ações externas
 

@@ -27,12 +27,14 @@ Repositório: `escolagratisdetecnologia/escolagratisdetecnologia` (público), da
 
 ## Variáveis e segredos (Settings → Secrets and variables → Actions)
 
-| Tipo                       | Nome                  | Valor                                         |
-| -------------------------- | --------------------- | --------------------------------------------- |
-| Variable (repositório)     | `AWS_ACCOUNT_ID_DEV`  | ID da conta egt-dev                           |
-| Variable (repositório)     | `AWS_ACCOUNT_ID_PROD` | ID da conta egt-prod                          |
-| Variable (por environment) | `AWS_ACCOUNT_ID`      | ID da conta do environment (ver tabela acima) |
-| Secret (repositório)       | `ALERT_EMAILS`        | lista JSON, ex.: `["voce@exemplo.com"]`       |
+| Tipo                       | Nome                                                    | Valor                                                            |
+| -------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------- |
+| Variable (repositório)     | `AWS_ACCOUNT_ID_DEV`                                    | ID da conta egt-dev                                              |
+| Variable (repositório)     | `AWS_ACCOUNT_ID_PROD`                                   | ID da conta egt-prod                                             |
+| Variable (por environment) | `AWS_ACCOUNT_ID`                                        | ID da conta do environment (ver tabela acima)                    |
+| Secret (repositório)       | `ALERT_EMAILS`                                          | lista JSON, ex.: `["voce@exemplo.com"]`                          |
+| Variable (repositório)     | `GOOGLE_CLIENT_ID_DEV`, `GOOGLE_CLIENT_ID_PROD`         | Client ID do Google de cada ambiente (`docs/runbooks/contas.md`) |
+| Secret (repositório)       | `GOOGLE_CLIENT_SECRET_DEV`, `GOOGLE_CLIENT_SECRET_PROD` | Client secret do Google de cada ambiente                         |
 
 `ALERT_EMAILS` é Secret **do repositório** (não de environment), nunca Variable: os jobs de deploy declaram `environment:`, então um Secret de environment com o mesmo nome `ALERT_EMAILS` sobrescreveria o do repositório e plano/apply poderiam divergir. Se ficar vazio, o Terraform recebe `[]` e o orçamento fica sem notificações por e-mail.
 

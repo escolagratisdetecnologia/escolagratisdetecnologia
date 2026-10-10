@@ -27,3 +27,4 @@ Cada decisão relevante vira um arquivo `NNNN-titulo.md` a partir de `0000-model
 | 0021 | JavaScript no cliente sob CSP estrita                       | aceita               |
 | 0022 | API na mesma distribuição do CloudFront                     | aceita               |
 | 0023 | Chaves da AWS em dados, logs e alertas                      | aceita               |
+| 0024 | Contas de alunos: Cognito sem senha atrás da API            | aceita               |

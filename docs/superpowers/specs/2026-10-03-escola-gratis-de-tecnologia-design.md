@@ -285,11 +285,11 @@ Sem cookies de terceiros nem pixels. Acessos por logs padrão do CloudFront (Clo
 
 | | Alunos — `egt-{env}-learners` (Essentials) | Equipe — `egt-{env}-staff` (Lite) |
 |---|---|---|
-| Login | Google (federação OIDC) e código de 6 dígitos por e-mail (`EMAIL_OTP`, fluxo `USER_AUTH`) | Senha forte + **SMS MFA obrigatório** (TOTP aceito como reserva) |
+| Login | Google (federação OIDC) e código por e-mail (`EMAIL_OTP`, fluxo `USER_AUTH`; 6 dígitos no cadastro, 8 no login) | Senha forte + **SMS MFA obrigatório** (TOTP aceito como reserva) |
 | Cadastro | Livre, sem senha | Fechado (contas criadas por CLI/Terraform) |
 | MFA do pool | Desligado (o Cognito não permite MFA junto com passwordless) | Obrigatório |
 | SMS | Verificação única do celular antes do 1º certificado | A cada login |
-| Vinculação | Gatilho *pre sign-up* vincula Google e e-mail do mesmo endereço (`AdminLinkProviderForUser`) | — |
+| Vinculação | Gatilho *pre sign-up* vincula o Google ao usuário do mesmo e-mail (`AdminLinkProviderForUser`), criado sem senha se ainda não existir: um aluno, uma conta (ADR 0024) | — |
 | E-mail | SES com domínio próprio (DKIM, SPF, DMARC) | SES |
 | Domínio Cognito | `auth.escolagratisdetecnologia.com.br` (prod), `auth.dev.escolagratisdetecnologia.com` (dev) — necessário para a federação Google | Nenhum: login pela API do Cognito (`USER_SRP_AUTH` + desafio `SMS_MFA`) em telas próprias |
 
@@ -299,7 +299,7 @@ Proteção contra enumeração de usuários ligada; a tela responde igual para c
 
 - Telas de login próprias (pt-BR); o backend chama a API do Cognito (app client confidencial). Google redireciona direto ao IdP via `identity_provider=Google` com PKCE e `state`.
 - Cookies: `egt_at` (access token, HttpOnly, Secure, SameSite=Lax, `Path=/api`, 1 h), `egt_rt` (refresh, HttpOnly, `Path=/api/auth`, 30 dias para alunos), `egt_hint` (não sensível, só indica "logado" para a UI). Equipe: cookies separados `egt_staff_*`, sessão de 8 h.
-- Verificação do JWT com `aws-jwt-verify` (em produção) ou verificador genérico JWKS (local), escolhido por variável de ambiente.
+- Verificação do JWT com `aws-jwt-verify` na AWS; localmente, o provedor de identidade local confere os tokens que ele mesmo assina (ADR 0024).
 - Logout revoga o refresh token e limpa cookies.
 
 ### 5.3 Verificação do celular (alunos)
@@ -601,8 +601,8 @@ pnpm workspaces + Turborepo; TypeScript `strict` (6.0, por compatibilidade com t
 
 `pnpm dev` sobe:
 
-- `docker compose` (`pnpm db:up`): DynamoDB Local; `mock-oauth2-server` (emissor OIDC falso) e Mailpit (e-mails) entram com as contas (Fase 1C). Sem Docker, a API guarda o progresso na memória.
-- Criação da tabela ao iniciar a API; seed de usuários de teste com as contas (Fase 1C).
+- `docker compose` (`pnpm db:up`): DynamoDB Local, `mock-oauth2-server` (o Google de mentira) e Mailpit (os e-mails com código). Sem Docker, a API guarda tudo na memória e o código de login aparece no terminal.
+- Criação da tabela ao iniciar a API. Sem seed: localmente, qualquer e-mail entra, com o código no Mailpit e no terminal.
 - API Hono como servidor Node em `:3001`; Astro dev em `:4321` com proxy `/api` → `:3001`.
 - Corretor: Claude real se `ANTHROPIC_API_KEY` existir; senão `FakeGrader`.
 - Certificados assinados com chave local; SMS impresso no console; vídeos de exemplo de `fixtures/media`.

@@ -13,7 +13,7 @@ O provider Terraform AWS (6.67, verificado em 2026-10-03) não gerencia a assina
 
 ## Limites do WAF
 
-O plano Free permite 5 regras de WAF. O web ACL `egt-<env>-edge-waf` usa 4: 3 grupos gerenciados da AWS (Common, Known Bad Inputs, IP Reputation) e o limite de requisições por IP, que ignora `/_astro/`. O limite de requisições usa uma resposta customizada (429 em JSON, ADR 0022), e respostas customizadas exigem o plano Pro. Para assinar o plano Free, primeiro troque, por PR, essa regra para o bloqueio padrão: o visitante bloqueado volta a ver a página 404 do site, e a API recebe essa página em vez do JSON.
+O plano Free permite 5 regras de WAF, e o web ACL `egt-<env>-edge-waf` usa as 5: 3 grupos gerenciados da AWS (Common, Known Bad Inputs, IP Reputation), o limite de requisições do login (`/api/auth/*`, ADR 0024) e o limite geral por IP, que ignora `/_astro/`. Os dois limites usam uma resposta customizada (429 em JSON, ADR 0022), e respostas customizadas exigem o plano Pro. Para assinar o plano Free, primeiro troque, por PR, essas regras para o bloqueio padrão: o visitante bloqueado volta a ver a página 404 do site, e a API recebe essa página em vez do JSON.
 
 ## Depois de assinar
 
@@ -22,6 +22,7 @@ Rode o plano de conferência (o `TF_VAR_alert_emails` é obrigatório: sem ele o
 ```bash
 export AWS_PROFILE=egt-<env>
 export TF_VAR_alert_emails='["<seu-e-mail>"]'
+export TF_VAR_google_client_id='<client ID do ambiente>' TF_VAR_google_client_secret='<client secret do ambiente>'
 pnpm --filter @egt/api build
 infra/tf live <env> plan
 ```

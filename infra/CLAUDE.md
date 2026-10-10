@@ -4,13 +4,14 @@
 
 - `bootstrap/account` — por conta (dev, prod): bucket de estado, OIDC do GitHub, roles `egt-<env>-bootstrap-github-{plan,apply,audit}`, Resource Explorer (view `egt-<env>-bootstrap-all-resources`), zona DNS.
 - `bootstrap/management` — conta de gerenciamento: tag policy, anomalias de custo, cost allocation tags.
-- `modules/*` — blocos reutilizáveis (tags, site, edge, data, api, observability, state-bucket…).
+- `modules/*` — blocos reutilizáveis (tags, site, edge, data, auth, api, observability, state-bucket…). O `auth` cria o user pool dos alunos, o Google, o SES do domínio e os gatilhos do Cognito; o domínio de login `auth.<domínio>` fica no `edge`, que já cuida de certificados e DNS (ADR 0024).
 - `live/` — raiz única da aplicação; `env/<env>.tfvars` e `env/<env>.backend.hcl` por ambiente.
 - `tf` — wrapper: `infra/tf <raiz> <env> <comando>`.
 
 ## Lambdas
 
 - O Terraform empacota o build (`archive_file` de `apps/<app>/dist`): rode `pnpm --filter @egt/api build` antes de `infra/tf live <env> plan` (a CI e o deploy já fazem). O hash do zip só muda quando o código muda.
+- O mesmo build traz os gatilhos do Cognito (`triggers.mjs`), que o módulo `auth` empacota numa Lambda própria (`egt-<env>-auth-triggers`, até 5 segundos, o limite do Cognito).
 - Log group criado pelo Terraform (30 dias) e `logging_config` apontando para ele; nada criado implicitamente.
 - Política IAM só com as ações que o código usa hoje; rota nova que precisa de outra ação atualiza a política no mesmo PR.
 
@@ -49,6 +50,7 @@ Todo recurso AWS tagueável precisa de:
 - Prefira serviços pagos por uso. Se o padrão de uso mudar, atualize `infra/infracost-usage.yml`.
 - Exceções do Trivy só inline, com `#trivy:ignore:<ID>` logo acima do recurso e uma linha de justificativa em inglês (não existe `.trivyignore` global).
 - A variável `alert_emails` é `sensitive` e chega aos workflows pelo Secret `ALERT_EMAILS` (nunca por Variable — Variables aparecem em texto puro nos logs públicos).
+- O Google chega por `TF_VAR_google_client_id` (Variables `GOOGLE_CLIENT_ID_DEV`/`_PROD`) e `TF_VAR_google_client_secret` (Secrets `GOOGLE_CLIENT_SECRET_DEV`/`_PROD`, `sensitive`). Para um `plan` local, exporte os dois (`docs/runbooks/contas.md`).
 - A role de plan dos PRs tem Deny explícito para leitura de dados (objetos S3 fora do estado, itens DynamoDB, usuários Cognito, logs, segredos, `kms:Decrypt`). Se um módulo novo precisar que o `plan` leia conteúdo, registre em ADR antes de afrouxar.
 
 ## Testes

@@ -2,7 +2,7 @@
 
 Aprenda tecnologia de graça, em aulas curtinhas pensadas pro celular, e saia de cada curso resolvendo um problema de verdade — com certificado que qualquer pessoa consegue conferir.
 
-> **Status:** Fase 1 (plataforma) em andamento: aprender sem conta (1A) e API com banco de dados (1B) prontos; próximas: contas (1C) e mídia (1D). Site: https://escolagratisdetecnologia.com.br
+> **Status:** Fase 1 (plataforma) em andamento: aprender sem conta (1A), API com banco de dados (1B) e contas de alunos (1C) prontos; próximas: mídia (1D) e o login da equipe com SMS. Site: https://escolagratisdetecnologia.com.br
 
 ## Por que existe
 
@@ -14,8 +14,8 @@ Aprenda tecnologia de graça, em aulas curtinhas pensadas pro celular, e saia de
 
 1. Instale o [mise](https://mise.jdx.dev) e rode `mise install` (Node 24, pnpm, Terraform e ferramentas). Em shells não interativos, as ferramentas do mise ficam em `$HOME/.local/share/mise/shims`.
 2. `pnpm install`
-3. Opcional, com Docker: `pnpm db:up` sobe o DynamoDB Local. Sem ele, a API guarda o progresso na memória.
-4. `pnpm dev` → site em http://localhost:4321 e API em http://localhost:3001/api/health
+3. Opcional, com Docker: `pnpm db:up` sobe o DynamoDB Local, o Mailpit (os e-mails com código de login, em http://localhost:8025) e um Google de mentira para testar o login. Sem Docker, a API guarda tudo na memória e mostra o código de login no terminal.
+4. `pnpm dev` → site em http://localhost:4321 e API em http://localhost:3001/api/health. Para entrar, use qualquer e-mail: o código chega no Mailpit (e no terminal da API).
 
 Verificações: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`. Os testes com DynamoDB Local rodam com `pnpm db:up` e `DYNAMODB_ENDPOINT=http://localhost:8000` (na CI, sempre).
 
@@ -41,6 +41,7 @@ No Linux/WSL, o WebKit dos testes e2e pode exigir, uma única vez: `sudo env "PA
   - [Bootstrap da AWS](docs/runbooks/bootstrap-aws.md)
   - [Configuração do GitHub](docs/runbooks/configurar-github.md)
   - [Deploy, reexecução e rollback](docs/runbooks/deploy.md)
+  - [Contas de alunos (Google, e-mail e conferências)](docs/runbooks/contas.md)
   - [Plano flat-rate do CloudFront](docs/runbooks/cloudfront-flat-rate.md) (não usado hoje; ADR 0019)
   - [Servidores MCP](docs/runbooks/mcp.md)
   - [Remover 100% do projeto da AWS](docs/runbooks/remover-projeto.md)

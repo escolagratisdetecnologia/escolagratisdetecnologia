@@ -4,6 +4,8 @@ Como a aplicação chega a dev e prod, e o que fazer quando algo dá errado.
 
 ## Como funciona
 
+Antes do primeiro deploy das contas de alunos (Fase 1C), prepare o Google e o GitHub como em `docs/runbooks/contas.md`: sem `GOOGLE_CLIENT_ID_*` e `GOOGLE_CLIENT_SECRET_*`, o plano e o deploy falham.
+
 1. Toda mudança entra por PR na `main`. O merge dispara o workflow `deploy` quando muda algo que vai para a AWS (`apps/web/`, `apps/api/`, `content/`, `packages/`, `infra/`, `tools/deploy-site.sh`, `tools/smoke.sh`, dependências ou os próprios workflows de deploy). Mudança só de documentação não publica nada.
 2. Job `dev` (environment `dev`, sem aprovação): build da API (`apps/api/dist`, que o Terraform empacota na Lambda), `terraform apply` da raiz `live`, build e publicação do site (`tools/deploy-site.sh`, que espera a invalidação do CloudFront terminar; dev mostra os cursos em rascunho, `SITE_DRAFTS=true`, e prod mostra só os publicados) e smoke tests (`tools/smoke.sh`, que também confere a API). Por fim, confere que o endereço direto do API Gateway recusa o acesso (403).
 3. Job `prod`: só começa se o `dev` passou e fica esperando aprovação no environment `prod`. Para aprovar: Actions → execução do `deploy` → **Review deployments** → marque `prod` → **Approve and deploy**. Faz os mesmos passos do dev e ainda confere os redirects de `www.escolagratisdetecnologia.com.br`, `escolagratisdetecnologia.com` e `www.escolagratisdetecnologia.com` (ADR 0020).
@@ -77,6 +79,7 @@ Limitação conhecida: uma página salva para uso offline antes de um deploy de 
 - O plano Terraform de cada PR de infra fica no resumo do job `plan` do workflow `infra`.
 - Na AWS (conta do ambiente): métricas do CloudFront e do WAF (`egt-<env>-edge-waf`) no console.
 - Logs da API (CloudWatch → Log groups): `/aws/lambda/egt-<env>-api-handler` (JSON do Powertools) e `/aws/apigateway/egt-<env>-api-http` (acessos, sem IP). Ficam 30 dias.
+- Logs dos gatilhos do Cognito (vínculo do Google e e-mails com código): `/aws/lambda/egt-<env>-auth-triggers`. Problemas de login: `docs/runbooks/contas.md`.
 
 ## Alarmes da API
 
@@ -92,12 +95,13 @@ O CloudFront envia à API o cabeçalho `x-origin-verify` com um segredo gerado p
 
 ## Se o smoke falhar
 
-O `tools/smoke.sh` confere: a página inicial responde com o nome da Escola (até 6 tentativas, 20 s entre elas), `/nao-existe` devolve 404, `/api/health` responde `status: ok` com a versão do commit publicado, `/api/nao-existe` devolve 404 em JSON e os cabeçalhos HSTS e CSP estão presentes. A mensagem no log diz qual conferência falhou.
+O `tools/smoke.sh` confere: a página inicial responde com o nome da Escola (até 6 tentativas, 20 s entre elas), `/nao-existe` devolve 404, `/api/health` responde `status: ok` com a versão do commit publicado, `/api/nao-existe` devolve 404 em JSON, `/api/me` sem sessão devolve 401 em JSON, `/api/auth/google` redireciona para o `/authorize` do domínio de login e os cabeçalhos HSTS e CSP estão presentes. A mensagem no log diz qual conferência falhou.
 
 Se a falha for na API:
 
 - `/api/health` com `"database":"unavailable"` (503): a Lambda não conseguiu ler a tabela. Veja os logs da API.
 - `/api/nao-existe` em HTML: a borda voltou a trocar erros da API pela página 404 (ADR 0022). Confira o `custom_error_response` do módulo `edge`.
+- `/api/me` ou `/api/auth/google` falhando: a Lambda não recebeu as configurações do Cognito (variáveis `USER_POOL_*` e `AUTH_DOMAIN`) ou o deploy rodou sem os valores do Google (`docs/runbooks/contas.md`).
 
 1. Abra a URL no navegador ou rode `tools/smoke.sh https://dev.escolagratisdetecnologia.com` (ou a de prod) no seu terminal.
 2. Falha passageira (rede, timeout)? **Re-run failed jobs** uma vez.

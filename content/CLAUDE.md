@@ -24,6 +24,10 @@ Conteúdo como código (spec §4.1, decisão D2). Tudo aqui é validado por `pnp
 - Só Markdown: HTML solto no texto é recusado (a CSP do site bloqueia estilos e scripts inline). Exemplos de HTML vão entre crases ou em bloco de código, e links automáticos como `<https://…>` são aceitos.
 - Rubrica do projeto com pesos somando 100 e `passScore` de 0 a 100.
 
+## Renomear aulas
+
+O nome do arquivo (sem o número) é o slug da aula, e a API só guarda progresso de aulas do catálogo (ADR 0024). Renomear uma aula publicada faz o progresso antigo dela sumir das telas: renomeie só enquanto o curso estiver em rascunho.
+
 ## Tom
 
 Fale com "você", frases curtas, exemplos brasileiros (Pix, MEI, WhatsApp, comércio do bairro), jargão sempre explicado. Ferramentas grátis e no navegador primeiro. O guia de estilo completo chega na Fase 3 (`docs/conteudo/guia-de-estilo.md`).

@@ -15,21 +15,24 @@ Antes de apagar as zonas, volte os servidores de nomes do GoDaddy para os padrõ
 
 ## 2. Aplicação (prod, depois dev)
 
-A tabela DynamoDB de prod tem proteção contra exclusão: desligue-a antes do `destroy` de prod. A AWS guarda um backup de sistema da tabela apagada por 35 dias, sem custo, e o apaga sozinha.
+A tabela DynamoDB e o user pool dos alunos de prod têm proteção contra exclusão: desligue as duas antes do `destroy` de prod. A AWS guarda um backup de sistema da tabela apagada por 35 dias, sem custo, e o apaga sozinha. O pool, apagado, some com todas as contas.
 
-O Terraform lê o pacote da Lambda em `apps/api/dist`, então gere o build antes, mesmo para destruir.
+O Terraform lê o pacote das Lambdas em `apps/api/dist`, então gere o build antes, mesmo para destruir. As variáveis do Google são obrigatórias no `destroy`, mas qualquer valor serve.
 
 Após esperar o ciclo de cobrança, a sessão SSO expirou. Um login serve aos três perfis:
 
 ```bash
 aws sso login --profile egt-management
 pnpm install && pnpm --filter @egt/api build
+export TF_VAR_google_client_id=remover TF_VAR_google_client_secret=remover
 export AWS_PROFILE=egt-prod
 aws dynamodb update-table --table-name egt-prod-data-main --no-deletion-protection-enabled
 infra/tf live prod destroy
 export AWS_PROFILE=egt-dev
 infra/tf live dev destroy
 ```
+
+O `destroy` de prod falha no user pool enquanto a proteção estiver ligada. Antes dele, desligue-a no console da conta de prod: Cognito → User pools → `egt-prod-auth-learners` → **Settings** → **Deletion protection** → **Deactivate**. Não use `aws cognito-idp update-user-pool` para isso: o comando volta ao padrão tudo o que não for informado.
 
 O bucket do site tem `force_destroy`, então é esvaziado automaticamente.
 

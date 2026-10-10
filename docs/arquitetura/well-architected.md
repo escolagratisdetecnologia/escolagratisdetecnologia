@@ -4,20 +4,21 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 
 ## Excelência operacional
 
-| Prática                                                                                           | Status                |
-| ------------------------------------------------------------------------------------------------- | --------------------- |
-| Toda infraestrutura em Terraform, mudanças por PR com plano e delta de custo                      | feito (Fase 0)        |
-| Decisões registradas em ADRs                                                                      | feito (Fase 0)        |
-| Deploy automatizado dev → aprovação → prod com smoke tests                                        | feito (Fase 0)        |
-| Runbooks de bootstrap, GitHub, deploy e rollback, flat-rate, remoção total e MCP                  | feito (Fase 0)        |
-| Logs estruturados (Powertools) e alarmes de erro da API por e-mail (ADR 0023)                     | feito (Fase 1B)       |
-| Ambiente local com DynamoDB Local (`pnpm db:up`) e testes de integração com ele na CI             | feito (Fase 1B)       |
-| Operações (conteúdo, social, transparência) via skills do Claude Code terminando em PR            | planejado (Fases 3–5) |
-| Concorrência de deploy por ambiente e espera pela invalidação do CloudFront antes dos smoke tests | feito (Fase 0)        |
-| Permissões mínimas por job nos workflows                                                          | feito (Fase 0)        |
-| GitHub Actions fixadas por digest, atualizadas pelo Renovate                                      | feito (Fase 0)        |
-| Conteúdo validado na CI (`pnpm content:check`) e rascunhos só em dev                              | feito (Fase 1A)       |
-| Exceções do Trivy documentadas inline, por recurso                                                | feito (Fase 0)        |
+| Prática                                                                                             | Status                |
+| --------------------------------------------------------------------------------------------------- | --------------------- |
+| Toda infraestrutura em Terraform, mudanças por PR com plano e delta de custo                        | feito (Fase 0)        |
+| Decisões registradas em ADRs                                                                        | feito (Fase 0)        |
+| Deploy automatizado dev → aprovação → prod com smoke tests                                          | feito (Fase 0)        |
+| Runbooks de bootstrap, GitHub, deploy e rollback, flat-rate, remoção total e MCP                    | feito (Fase 0)        |
+| Logs estruturados (Powertools) e alarmes de erro da API por e-mail (ADR 0023)                       | feito (Fase 1B)       |
+| Ambiente local com DynamoDB Local (`pnpm db:up`) e testes de integração com ele na CI               | feito (Fase 1B)       |
+| Login testável sem AWS: provedor local, Mailpit e Google de mentira no `pnpm db:up`, na CI e no e2e | feito (Fase 1C)       |
+| Operações (conteúdo, social, transparência) via skills do Claude Code terminando em PR              | planejado (Fases 3–5) |
+| Concorrência de deploy por ambiente e espera pela invalidação do CloudFront antes dos smoke tests   | feito (Fase 0)        |
+| Permissões mínimas por job nos workflows                                                            | feito (Fase 0)        |
+| GitHub Actions fixadas por digest, atualizadas pelo Renovate                                        | feito (Fase 0)        |
+| Conteúdo validado na CI (`pnpm content:check`) e rascunhos só em dev                                | feito (Fase 1A)       |
+| Exceções do Trivy documentadas inline, por recurso                                                  | feito (Fase 0)        |
 
 ## Segurança
 
@@ -29,7 +30,10 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 | S3 privado com OAC, política só-TLS e criptografia em repouso                                                                              | feito (Fase 0)            |
 | WAF com regras gerenciadas e rate limit; CSP, HSTS e cabeçalhos de segurança                                                               | feito (Fase 0)            |
 | Tag policy e auditoria semanal de tags                                                                                                     | feito (Fase 0)            |
-| Cognito, BFF com cookies HttpOnly, SMS MFA da equipe                                                                                       | planejado (Fase 1)        |
+| Contas de alunos no Cognito (Essentials) sem senha; tokens só em cookies HttpOnly, sem `Domain` (ADR 0024)                                 | feito (Fase 1C)           |
+| Login com limite próprio no WAF (50 requisições por IP a cada 5 minutos em `/api/auth/*`)                                                  | feito (Fase 1C)           |
+| Idade mínima no cadastro e autoatendimento da LGPD (baixar e excluir os dados)                                                             | feito (Fase 1C)           |
+| SMS MFA da equipe                                                                                                                          | planejado (Fase 1)        |
 | Proteções contra SSRF e injeção de prompt no corretor                                                                                      | planejado (Fase 2)        |
 | Chave de assinatura de certificados no KMS                                                                                                 | planejado (Fase 2)        |
 | Permissions boundary na role de apply                                                                                                      | planejado (fim da Fase 2) |
@@ -40,6 +44,7 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 | API só pelo CloudFront: cabeçalho secreto de origem, WAF e cabeçalhos de segurança também na API (ADR 0022)                                | feito (Fase 1B)           |
 | Mudanças na API só com `Origin` do site (CSRF); corpo até 8 KB; respostas `no-store`                                                       | feito (Fase 1B)           |
 | IAM de menor privilégio na Lambda da API; logs de acesso sem IP                                                                            | feito (Fase 1B)           |
+| E-mail do domínio com DKIM, MAIL FROM próprio e DMARC (SES)                                                                                | feito (Fase 1C)           |
 
 ## Confiabilidade
 
@@ -50,6 +55,8 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 | DynamoDB com PITR (35 dias) e proteção contra exclusão em prod                               | feito (Fase 1B)    |
 | Mescla de progresso sem ler-e-regravar: conjuntos com `ADD` e `SET` condicional              | feito (Fase 1B)    |
 | `/api/health` confere o banco; o smoke confere a versão publicada e os erros da API em JSON  | feito (Fase 1B)    |
+| Progresso sincronizado um curso por pedido; o que falha fica pendente no aparelho            | feito (Fase 1C)    |
+| Progresso limitado às aulas do catálogo (tamanho dos dados por aluno)                        | feito (Fase 1C)    |
 | SQS com DLQ; workers idempotentes                                                            | planejado (Fase 2) |
 | Deploys serializados por ambiente e smoke tests só após a invalidação do CloudFront terminar | feito (Fase 0)     |
 | Domínio principal `.com.br`; `.com` e `www` redirecionam com 301 na mesma borda (ADR 0020)   | feito (Fase 0)     |
@@ -74,7 +81,7 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 | Budgets por conta e detecção de anomalias por conta-membro                 | feito (Fase 0)              |
 | Tags de custo (Project, Environment, Component)                            | feito (Fase 0)              |
 | CloudFront pay-as-you-go no free tier; WAF à parte (ADR 0019)              | feito (Fase 0)              |
-| Gatilho de revisão do Cognito em 30 mil MAU                                | planejado (Fase 1)          |
+| Cognito Essentials gratuito até 10 mil MAU; revisão em 30 mil (ADR 0007)   | feito (Fase 1C)             |
 | API, banco e alarmes pagos por uso; chaves da AWS em vez de CMK (ADR 0023) | feito (Fase 1B)             |
 
 ## Sustentabilidade

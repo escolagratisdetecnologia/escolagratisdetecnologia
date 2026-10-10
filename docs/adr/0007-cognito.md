@@ -27,6 +27,7 @@ O pool de alunos usa o plano Essentials (Google + código por e-mail, com telas 
   - O custo cresce (US$ 0,015/MAU acima de 10 mil; cerca de US$ 600/mês com 50 mil MAU).
   - Não roda localmente; usamos um emissor OIDC falso.
   - O MFA do Cognito não se aplica a usuários federados nem ao login sem senha.
+- Detalhes do login dos alunos (código por e-mail, vínculo com o Google, sessão, idade mínima): ADR 0024.
 
 ## Pilares Well-Architected
 
