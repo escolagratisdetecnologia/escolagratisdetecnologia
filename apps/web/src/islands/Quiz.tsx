@@ -1,7 +1,8 @@
 import type { QuizQuestion } from '@egt/content';
 import { recordCorrectAnswer } from '@egt/core';
 import { useState } from 'preact/hooks';
-import { readProgress, writeProgress } from '../lib/progress-store.ts';
+import { readProgress } from '../lib/progress-store.ts';
+import { saveProgress } from '../lib/progress-sync.ts';
 
 interface Props {
   course: string;
@@ -14,7 +15,7 @@ interface Answer {
   result?: 'correct' | 'wrong';
 }
 
-/** Formative quiz: checks each answer on the spot and remembers the right ones on this device. */
+/** Formative quiz: checks each answer on the spot and remembers the right ones (device and account). */
 export default function Quiz({ course, lesson, questions }: Props) {
   const [answers, setAnswers] = useState<Answer[]>(() => questions.map(() => ({})));
   const update = (index: number, answer: Answer) =>
@@ -27,7 +28,7 @@ export default function Quiz({ course, lesson, questions }: Props) {
     const correct = selected === question.answer;
     update(index, { selected, result: correct ? 'correct' : 'wrong' });
     if (correct)
-      writeProgress(recordCorrectAnswer(readProgress(), course, lesson, index, new Date()));
+      saveProgress(recordCorrectAnswer(readProgress(), course, lesson, index, new Date()), course);
   };
 
   return (
