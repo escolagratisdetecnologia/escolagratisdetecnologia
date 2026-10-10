@@ -12,6 +12,7 @@ const outdir = mkdtempSync(join(tmpdir(), 'egt-api-bundle-'));
 function invoke(
   path: string,
   headers: Record<string, string>,
+  method = 'GET',
 ): { statusCode: number; body: string } {
   const event = {
     version: '2.0',
@@ -19,7 +20,7 @@ function invoke(
     rawPath: path,
     rawQueryString: '',
     headers: { host: 'api.example', ...headers },
-    requestContext: { http: { method: 'GET', path, sourceIp: '127.0.0.1' } },
+    requestContext: { http: { method, path, sourceIp: '127.0.0.1' } },
     isBase64Encoded: false,
   };
   const script = `
@@ -73,6 +74,22 @@ describe('Lambda bundle', () => {
       error: { code: 'not_found', message: 'Rota não encontrada.' },
     });
   });
+
+  it.each(['/api/./auth/email/start', '/api/%61uth/email/start'])(
+    'answers 404 JSON for the non-canonical path %s',
+    (path) => {
+      const response = invoke(
+        path,
+        { 'x-origin-verify': 'segredo', 'content-type': 'application/json' },
+        'POST',
+      );
+
+      expect(response.statusCode).toBe(404);
+      expect(JSON.parse(response.body)).toEqual({
+        error: { code: 'not_found', message: 'Rota não encontrada.' },
+      });
+    },
+  );
 
   it('refuses requests that skip CloudFront', () => {
     expect(invoke('/api/health', {}).statusCode).toBe(403);

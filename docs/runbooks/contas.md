@@ -63,6 +63,7 @@ Confira:
 10. **Excluir com Google vinculado:** exclua uma conta que tem o Google vinculado e entre com "Entrar com Google" de novo: a página pede o cadastro outra vez, sem erros.
 11. **Aparelho compartilhado:** entre com o Google, clique em "Sair" e em "Entrar com Google" de novo no mesmo navegador: a escolha de conta do Google deve aparecer, sem entrar sozinho na conta anterior. Se entrar sozinho, abra uma issue antes do lançamento.
 12. **Cadastro incompleto:** entre por e-mail e não termine o cadastro. Na aba Eu e em `/entrar/cadastro/`, "Sair" e "Cancelar cadastro" funcionam, e o progresso do aparelho continua.
+13. **Limite do login e caminhos estranhos:** `curl --path-as-is -s -o /dev/null -w '%{http_code}' -X POST https://dev.escolagratisdetecnologia.com/api/./auth/email/start` responde 404 (vindo da API) e conta para o limite do login.
 
 Se algo falhar, veja os problemas comuns abaixo e os logs (CloudWatch, conta do ambiente): `/aws/lambda/egt-<env>-api-handler` (a API) e `/aws/lambda/egt-<env>-auth-triggers` (os gatilhos do Cognito).
 

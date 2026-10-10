@@ -280,11 +280,12 @@ run "sign_in_domain_and_limits" {
       r.priority == 35 &&
       r.statement[0].rate_based_statement[0].aggregate_key_type == "IP" &&
       r.action[0].block[0].custom_response[0].custom_response_body_key == "rate-limited" &&
-      length(r.statement[0].rate_based_statement[0].scope_down_statement[0].byte_match_statement[0].text_transformation) == 2 &&
+      length(r.statement[0].rate_based_statement[0].scope_down_statement[0].byte_match_statement[0].text_transformation) == 3 &&
       anytrue([for t in r.statement[0].rate_based_statement[0].scope_down_statement[0].byte_match_statement[0].text_transformation : t.priority == 0 && t.type == "URL_DECODE"]) &&
-      anytrue([for t in r.statement[0].rate_based_statement[0].scope_down_statement[0].byte_match_statement[0].text_transformation : t.priority == 1 && t.type == "LOWERCASE"])
+      anytrue([for t in r.statement[0].rate_based_statement[0].scope_down_statement[0].byte_match_statement[0].text_transformation : t.priority == 1 && t.type == "NORMALIZE_PATH"]) &&
+      anytrue([for t in r.statement[0].rate_based_statement[0].scope_down_statement[0].byte_match_statement[0].text_transformation : t.priority == 2 && t.type == "LOWERCASE"])
     ])
-    error_message = "O limite do login decodifica o caminho (URL_DECODE) e depois põe em minúsculas, por IP, prioridade 35."
+    error_message = "O limite do login decodifica o caminho (URL_DECODE), normaliza (NORMALIZE_PATH) e põe em minúsculas, nesta ordem, por IP, prioridade 35."
   }
 
   assert {

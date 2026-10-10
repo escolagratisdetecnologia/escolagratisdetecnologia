@@ -135,7 +135,8 @@ resource "aws_wafv2_web_acl" "edge" {
               uri_path {}
             }
 
-            # Hono decodes the path (/api/%61uth/ reaches the auth routes), so decode before comparing.
+            # Hono decodes and normalizes the path (/api/%61uth/ and /api/./auth/ reach the auth
+            # routes), so decode, normalize and lowercase before comparing.
             text_transformation {
               priority = 0
               type     = "URL_DECODE"
@@ -143,6 +144,11 @@ resource "aws_wafv2_web_acl" "edge" {
 
             text_transformation {
               priority = 1
+              type     = "NORMALIZE_PATH"
+            }
+
+            text_transformation {
+              priority = 2
               type     = "LOWERCASE"
             }
           }

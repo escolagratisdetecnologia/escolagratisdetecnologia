@@ -7,6 +7,7 @@ import {
 } from '@egt/db';
 import { handle } from 'hono/aws-lambda';
 import { createApp } from './app.ts';
+import { apiError } from './errors.ts';
 import { loadConfig } from './config.ts';
 import { createCognitoIdentity } from './identity/cognito.ts';
 import { createLogger } from './logger.ts';
@@ -30,7 +31,31 @@ const handleRequest = handle(
   }),
 );
 
+/**
+ * The WAF login limit compares the raw path, but these forms would reach other routes after
+ * normalization (/api/./auth/..., /api/%61uth/...). No legitimate path has them (slugs are
+ * [a-z0-9-]), so refuse them before routing.
+ */
+function isNonCanonicalPath(path: string): boolean {
+  return (
+    path.includes('%') ||
+    path.includes('/./') ||
+    path.includes('/../') ||
+    path.endsWith('/.') ||
+    path.endsWith('/..')
+  );
+}
+
 export const handler: typeof handleRequest = async (event, context) => {
   logger.addContext(context);
+  // HTTP API (payload v2) events carry rawPath.
+  if ('rawPath' in event && isNonCanonicalPath(event.rawPath)) {
+    return {
+      statusCode: 404,
+      headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
+      body: JSON.stringify(apiError('not_found', 'Rota não encontrada.')),
+      isBase64Encoded: false,
+    } as Awaited<ReturnType<typeof handleRequest>>;
+  }
   return handleRequest(event, context);
 };
