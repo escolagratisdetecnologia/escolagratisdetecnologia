@@ -103,6 +103,18 @@ describe('Cognito e-mail sign-in', () => {
     });
   });
 
+  it('fails loudly when sign-in answers a challenge other than the e-mail code', async () => {
+    const { identity } = provider({
+      SignUp: failure('UsernameExistsException'),
+      AdminInitiateAuth: () => ({ ChallengeName: 'PASSWORD', Session: 's2' }),
+    });
+
+    const attempt = identity.startEmailLogin('ana@example.com');
+
+    await expect(attempt).rejects.toThrow('PASSWORD');
+    await expect(attempt).rejects.not.toThrow('ana@example.com');
+  });
+
   it('starts over a sign-up that was never confirmed', async () => {
     let signUps = 0;
     const { identity, sent } = provider({

@@ -28,6 +28,15 @@ export default function CompleteProfile() {
       method: 'PATCH',
       body: { birthYear: Number(birthYear), acceptTerms: accepted },
     });
+    if (!res.ok && res.error.code === 'profile_exists') {
+      // Another tab finished the sign-up meanwhile: carry on as signed in.
+      await finishSignIn(true, nextPath(location.search));
+      return;
+    }
+    if (!res.ok && res.status === 401) {
+      location.assign(`/entrar/?next=${encodeURIComponent(nextPath(location.search))}`);
+      return;
+    }
     if (!res.ok) {
       setBusy(false);
       setError(res.error.message);

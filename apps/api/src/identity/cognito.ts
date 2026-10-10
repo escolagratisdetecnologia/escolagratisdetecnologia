@@ -136,6 +136,9 @@ export function createCognitoIdentity(
         },
       }),
     );
+    if (out.ChallengeName !== 'EMAIL_OTP') {
+      throw new Error(`Cognito sign-in answered the unexpected challenge ${out.ChallengeName}`);
+    }
     if (out.Session === undefined) throw new Error('Cognito sign-in answered without a session');
     // Cognito may answer with the internal user name; the code check must use the same one.
     const username = out.ChallengeParameters?.USERNAME ?? email;

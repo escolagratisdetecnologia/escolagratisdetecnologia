@@ -6,7 +6,12 @@ import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { z } from 'zod';
 import type { AppConfig } from '../config.ts';
 import { apiError } from '../errors.ts';
-import { RateLimitedError, type IdentityProvider, type Tokens } from '../identity.ts';
+import {
+  ACCOUNT_LINKED,
+  RateLimitedError,
+  type IdentityProvider,
+  type Tokens,
+} from '../identity.ts';
 import { clearSession, COOKIES, cookieOptions, setSession } from '../session.ts';
 
 const LOGIN_MINUTES = 15;
@@ -145,7 +150,7 @@ export function authRoutes({ config, logger, identity, profiles }: AuthDeps) {
       if (error !== undefined) {
         // The first Google sign-in of someone who already has an account links the two and
         // fails once on purpose (pre sign-up trigger): try again, only once (ADR 0024).
-        if (!pending.retried && c.req.query('error_description')?.includes('PreSignUp')) {
+        if (!pending.retried && c.req.query('error_description')?.includes(ACCOUNT_LINKED)) {
           return startGoogle(c, pending.next, true);
         }
         logger.warn('google_sign_in_failed', { error });

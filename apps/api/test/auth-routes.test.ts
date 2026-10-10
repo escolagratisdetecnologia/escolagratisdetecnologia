@@ -234,6 +234,19 @@ describe('Google sign-in', () => {
     expect(giveUp.headers.get('location')).toBe('/entrar/?erro=google');
   });
 
+  it('does not retry a PreSignUp failure that is not the account link', async () => {
+    const app = testApp();
+    const { location, cookie } = await goToGoogle(app);
+    const failure = `error=invalid_request&error_description=${encodeURIComponent('PreSignUp failed with error Google account without a verified e-mail')}`;
+
+    const res = await app.request(
+      `/api/auth/callback?${failure}&state=${location.searchParams.get('state')}`,
+      { headers: { cookie } },
+    );
+
+    expect(res.headers.get('location')).toBe('/entrar/?erro=google');
+  });
+
   it('does not retry other Google errors', async () => {
     const app = testApp();
     const { location, cookie } = await goToGoogle(app);

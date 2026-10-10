@@ -6,6 +6,7 @@ import {
   CognitoIdentityProviderClient,
   ListUsersCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
+import { ACCOUNT_LINKED } from './identity.ts';
 
 /** The fields of the Cognito trigger events these handlers read and write. */
 export interface TriggerEvent {
@@ -16,8 +17,7 @@ export interface TriggerEvent {
   response: Record<string, unknown>;
 }
 
-/** Error text Cognito passes on to /api/auth/callback; the API then signs in again once. */
-export const ACCOUNT_LINKED = 'ACCOUNT_LINKED';
+export { ACCOUNT_LINKED };
 
 const CODE_MESSAGES = new Set([
   'CustomMessage_SignUp',

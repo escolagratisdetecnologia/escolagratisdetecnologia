@@ -11,6 +11,9 @@ export interface Tokens {
   expiresIn: number;
 }
 
+/** Error text Cognito passes on to /api/auth/callback; the API then signs in again once. */
+export const ACCOUNT_LINKED = 'ACCOUNT_LINKED';
+
 /** `invalid_code` covers wrong and expired codes alike. */
 export type CodeCheck = { tokens: Tokens } | { error: 'invalid_code' };
 
