@@ -5,3 +5,11 @@ packages:
 onlyBuiltDependencies:
   - esbuild
   - sharp
+# Patched versions for Dependabot alerts in Lighthouse CI's dependencies (@lhci/cli 0.15.1 is
+# the latest release and pins the vulnerable ranges). CI-only tooling, never shipped to the site
+# or the API. Remove each entry once @lhci/cli depends on a fixed version.
+overrides:
+  '@lhci/cli>tmp': ^0.2.6
+  'external-editor>tmp': ^0.2.6
+  '@lhci/cli>uuid': ^11.1.1
+  'get-uri>basic-ftp': ^6.2.1
