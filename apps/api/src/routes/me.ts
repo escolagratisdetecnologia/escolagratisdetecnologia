@@ -59,6 +59,10 @@ export function meRoutes({
       }
       const { sub } = c.var.identity;
       if ((await identity.email(sub)) === null) return accountGone(c);
+      // A finished sign-up is never undone here, whatever the birth year says.
+      if ((await profiles.get(sub)) !== null) {
+        return c.json(apiError('profile_exists', 'Seu cadastro já está completo.'), 409);
+      }
 
       const limit = latestBirthYear(today);
       if (body.data.birthYear > limit) {

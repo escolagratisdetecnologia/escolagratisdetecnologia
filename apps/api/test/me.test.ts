@@ -50,6 +50,21 @@ describe('GET /api/me', () => {
 });
 
 describe('PATCH /api/me', () => {
+  it('never deletes a finished sign-up, whatever the birth year', async () => {
+    const identity = createFakeIdentity({ 'ana@example.com': 'ana', 'bia@example.com': 'bia' });
+    const profiles = createMemoryProfileRepository({ ana: PROFILE });
+    const app = testApp({ identity, profiles });
+
+    const res = await app.request('/api/me', patch({ birthYear: 2020, acceptTerms: true }, 'ana'));
+
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({
+      error: { code: 'profile_exists', message: 'Seu cadastro já está completo.' },
+    });
+    expect(identity.accounts.has('ana@example.com')).toBe(true);
+    expect(await profiles.get('ana')).toEqual(PROFILE);
+  });
+
   it('finishes sign-up with the birth year and the accepted terms', async () => {
     const { app, profiles } = appWithCris();
 
