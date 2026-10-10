@@ -17,3 +17,18 @@ resource_type_default_usage:
       storage_gb: 1
       monthly_tier_1_requests: 10000
       monthly_tier_2_requests: 100000
+  # API (Phase 1B): a few hundred learners syncing progress.
+  aws_lambda_function:
+    monthly_requests: 300000
+    request_duration_ms: 100
+  aws_apigatewayv2_api:
+    monthly_requests: 300000
+  aws_dynamodb_table:
+    storage_gb: 1
+    pitr_backup_storage_gb: 1
+    monthly_write_request_units: 200000
+    monthly_read_request_units: 600000
+  aws_cloudwatch_log_group:
+    storage_gb: 1
+    monthly_data_ingested_gb: 1
+    monthly_data_scanned_gb: 1

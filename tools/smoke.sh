@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Checks a published environment. Usage: tools/smoke.sh <base-url>
+# Checks a published environment. Usage: tools/smoke.sh <base-url> [expected-api-version]
 set -euo pipefail
 
-url="${1:?Uso: tools/smoke.sh <url-base>}"
+url="${1:?Uso: tools/smoke.sh <url-base> [versão-esperada-da-api]}"
 url="${url%/}"
+expected_version="${2:-}"
 
 body=""
 ok=0
@@ -33,6 +34,28 @@ if ! status="$(curl -s -o /dev/null -w '%{http_code}' --retry 3 --retry-all-erro
 fi
 if [[ "$status" != "404" ]]; then
   echo "Esperado 404 em rota inexistente, recebido $status." >&2
+  exit 1
+fi
+
+# The API shares the distribution: its errors must reach the client as JSON (ADR 0022).
+if ! health="$(curl -fsS --retry 3 --retry-all-errors --max-time 10 "$url/api/health")"; then
+  echo "A API não respondeu em $url/api/health." >&2
+  exit 1
+fi
+if ! grep -q '"status":"ok"' <<<"$health"; then
+  echo "A API não está saudável: $health" >&2
+  exit 1
+fi
+if [[ -n "$expected_version" ]] && ! grep -q "\"version\":\"$expected_version\"" <<<"$health"; then
+  echo "A API publicada não é a versão $expected_version: $health" >&2
+  exit 1
+fi
+if ! api_404="$(curl -s -o /dev/null -w '%{http_code} %{content_type}' --retry 3 --retry-all-errors --max-time 10 "$url/api/nao-existe")"; then
+  echo "Falha de rede ao verificar o 404 da API." >&2
+  exit 1
+fi
+if [[ "$api_404" != "404 application/json"* ]]; then
+  echo "Esperado 404 em JSON da API, recebido '$api_404'." >&2
   exit 1
 fi
 

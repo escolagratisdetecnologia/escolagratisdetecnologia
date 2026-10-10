@@ -17,6 +17,28 @@ module "site" {
   name_prefix = module.tags.name_prefix
 }
 
+module "data" {
+  source              = "../modules/data"
+  name_prefix         = module.tags.name_prefix
+  deletion_protection = var.data_deletion_protection
+}
+
+module "api" {
+  source = "../modules/api"
+
+  name_prefix     = module.tags.name_prefix
+  environment     = var.environment
+  package_dir     = "${path.root}/../../apps/api/dist"
+  app_version     = var.app_version
+  site_origin     = "https://${var.domain_name}"
+  table_name      = module.data.table_name
+  table_arn       = module.data.table_arn
+  alarm_topic_arn = module.observability.alerts_topic_arn
+
+  # Rotation of the CloudFront → API secret: bump and merge (docs/runbooks/deploy.md).
+  origin_verify_version = 1
+}
+
 module "edge" {
   source = "../modules/edge"
 
@@ -33,6 +55,8 @@ module "edge" {
   site_bucket_id                   = module.site.bucket_id
   site_bucket_arn                  = module.site.bucket_arn
   site_bucket_regional_domain_name = module.site.bucket_regional_domain_name
+  api_origin_domain                = module.api.origin_domain
+  api_origin_verify_secret         = module.api.origin_verify_secret
 }
 
 module "observability" {
