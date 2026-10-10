@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { lessonUrl, lessonsOf } from '../src/lib/urls.ts';
 import {
   codeFor,
@@ -83,6 +83,7 @@ test('signs in with Google', async ({ page }) => {
 test('signing out leaves nothing on the device', async ({ page }) => {
   await signInWithEmail(page, newEmail());
   await completeSignUp(page);
+  await expect(page).toHaveURL('/eu/');
   await expect(page.getByRole('button', { name: 'Sair' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Sair' }).click();
@@ -92,6 +93,62 @@ test('signing out leaves nothing on the device', async ({ page }) => {
     page.getByText('Você saiu da conta. O progresso continua salvo nela.'),
   ).toBeVisible();
   expect(await page.evaluate(() => Object.keys(localStorage))).not.toContain('egt:progress:v1');
+});
+
+/** Completes one lesson on this device (nothing reaches an account), and returns the stored progress. */
+async function seedDeviceProgress(page: Page): Promise<string> {
+  const course = await pilotCourse();
+  const lessons = lessonsOf(course);
+  await page.goto(lessonUrl(course, lessons[0]!));
+  await expect(page.locator('[data-lesson]')).toHaveAttribute('data-ready', 'true');
+  await page.getByRole('link', { name: 'Concluir e continuar' }).click();
+  await expect(page).toHaveURL(lessonUrl(course, lessons[1]!));
+  const stored = await page.evaluate(() => localStorage.getItem('egt:progress:v1'));
+  expect(stored).not.toBeNull();
+  return stored ?? '';
+}
+
+test('an unfinished sign-up can sign out and keeps the device progress', async ({ page }) => {
+  const before = await seedDeviceProgress(page);
+  await signInWithEmail(page, newEmail());
+  await expect(page).toHaveURL(/\/entrar\/cadastro\//);
+  await page.goto('/eu/');
+  await expect(page.getByRole('link', { name: 'Completar cadastro' })).toBeVisible();
+  await expectNoA11yViolations(page);
+
+  await page.getByRole('button', { name: 'Sair' }).click();
+
+  await expect(page).toHaveURL('/eu/?conta=saiu-cadastro');
+  await expect(
+    page.getByText('Você saiu. O progresso deste aparelho continua aqui.'),
+  ).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('egt:progress:v1'))).toBe(before);
+});
+
+test('an unfinished sign-up can be cancelled and starts over next time', async ({ page }) => {
+  const before = await seedDeviceProgress(page);
+  const email = newEmail();
+  await signInWithEmail(page, email);
+  await expect(page).toHaveURL(/\/entrar\/cadastro\//);
+  await expect(page.locator('[data-island="complete-profile"]')).toHaveAttribute(
+    'data-hydrated',
+    'true',
+  );
+
+  await page.getByRole('button', { name: 'Cancelar cadastro' }).click();
+  await expect(page.getByRole('button', { name: 'Cancelar cadastro' })).toBeFocused();
+  await page.getByRole('button', { name: 'Cancelar cadastro' }).click();
+
+  await expect(page).toHaveURL('/eu/?conta=cadastro-cancelado');
+  await expect(
+    page.getByText(
+      'Cadastro cancelado: apagamos a conta que você começou. O progresso deste aparelho continua aqui.',
+    ),
+  ).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('egt:progress:v1'))).toBe(before);
+  // The account is gone: the same e-mail asks for sign-up again.
+  await signInWithEmail(page, email);
+  await expect(page).toHaveURL(/\/entrar\/cadastro\//);
 });
 
 test.describe('with the service worker blocked', () => {
@@ -178,6 +235,7 @@ test('the account pages have no accessibility violations', async ({ page }) => {
   );
   await expectNoA11yViolations(page);
   await completeSignUp(page);
+  await expect(page).toHaveURL('/eu/');
   await expect(page.getByRole('button', { name: 'Sair' })).toBeVisible();
   await expectNoA11yViolations(page);
 });

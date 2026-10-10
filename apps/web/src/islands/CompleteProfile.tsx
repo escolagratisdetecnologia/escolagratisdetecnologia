@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { api } from '../lib/api.ts';
 import { finishSignIn, nextPath } from '../lib/sign-in.ts';
+import LeaveSignUp from './LeaveSignUp.tsx';
 
 /** Last step of sign-up: birth year (under 12 cannot have an account) and the terms (spec §5.5). */
 export default function CompleteProfile() {
@@ -94,6 +95,7 @@ export default function CompleteProfile() {
           Concluir cadastro
         </button>
       </form>
+      <LeaveSignUp onError={setError} />
       <p class="form-error" role="alert">
         {error}
       </p>

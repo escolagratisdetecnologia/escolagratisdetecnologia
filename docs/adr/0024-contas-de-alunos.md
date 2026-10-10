@@ -26,7 +26,7 @@ A Fase 1C liga o login de verdade (spec §5): código por e-mail e Google no poo
 
   Todos são `Secure` e `SameSite=Lax`, e só o `egt_hint` não é `HttpOnly`. Nenhum tem `Domain`, então `www` e o `.com` não recebem a sessão: eles só redirecionam para o domínio principal. A API ainda responde nesses nomes, mas sem sessão e, nas mudanças, com o `Origin` errado (ADR 0022).
 
-- **Cadastro completo antes dos dados de estudo.** Depois do primeiro login, o aluno informa o ano de nascimento e aceita os termos (`PATCH /api/me`).
+- **Cadastro completo antes dos dados de estudo.** Depois do primeiro login, o aluno informa o ano de nascimento e aceita os termos (`PATCH /api/me`). Quem entrou e não terminou o cadastro pode sair ou cancelar (a conta começada é apagada), na aba Eu e na página do cadastro, sempre mantendo o progresso do aparelho, que nunca chegou à conta.
   - Só entra quem nasceu até `ano atual − 13`. Com só o ano, alguém nascido em `ano atual − 12` ainda pode ter 11 anos (regra conservadora, decisão do mantenedor).
   - Abaixo disso, a conta recém-criada é apagada.
   - As rotas de progresso respondem 409 até o cadastro ficar completo.

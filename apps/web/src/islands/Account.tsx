@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { api } from '../lib/api.ts';
 import { forgetProgress } from '../lib/progress-sync.ts';
 import { hasSession } from '../lib/session.ts';
+import LeaveSignUp from './LeaveSignUp.tsx';
 
 type State =
   | { kind: 'signed-out'; notice?: string }
@@ -12,6 +13,9 @@ type State =
 const NOTICES: Record<string, string> = {
   saiu: 'Você saiu da conta. O progresso continua salvo nela.',
   excluida: 'Sua conta foi excluída e apagamos os seus dados.',
+  'saiu-cadastro': 'Você saiu. O progresso deste aparelho continua aqui.',
+  'cadastro-cancelado':
+    'Cadastro cancelado: apagamos a conta que você começou. O progresso deste aparelho continua aqui.',
 };
 
 /** Eu tab: sign in, or the account with data export, logout and deletion (spec §5.5). */
@@ -106,6 +110,7 @@ export default function Account() {
           <a class="button button-block" href="/entrar/cadastro/?next=%2Feu%2F">
             Completar cadastro
           </a>
+          <LeaveSignUp onError={setError} />
         </>
       )}
       {state.kind === 'signed-in' && (
