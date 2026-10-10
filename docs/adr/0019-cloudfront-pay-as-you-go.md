@@ -31,7 +31,7 @@ Custo esperado na Fase 0, por ambiente:
 - Positivas:
   - Toda a borda é gerenciada pelo Terraform, sem passo manual no console.
   - Sem os limites do plano: real-time logs e rule groups próprios ficam disponíveis.
-  - Respostas customizadas do WAF ficam disponíveis sem trocar de plano. Hoje o bloqueio ainda mostra a página 404 do site.
+  - Respostas customizadas do WAF ficam disponíveis sem trocar de plano. O rate limit usa isso desde a ADR 0022 (429 em JSON); os bloqueios das regras gerenciadas ainda mostram a página 404 do site.
   - O Infracost estima CloudFront e WAF diretamente.
 - Negativas:
   - Custo fixo de cerca de US$ 18 por mês (WAF dos dois ambientes).

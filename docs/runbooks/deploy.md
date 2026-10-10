@@ -82,7 +82,7 @@ Limitação conhecida: uma página salva para uso offline antes de um deploy de 
 
 Os alarmes `egt-<env>-api-5xx`, `egt-<env>-api-lambda-errors` e `egt-<env>-api-lambda-throttles` disparam com uma ocorrência em 5 minutos e avisam por e-mail os endereços do Secret `ALERT_EMAILS` (tópico SNS `egt-<env>-observability-alerts`, ADR 0023).
 
-Depois do primeiro deploy da Fase 1B, e sempre que o Secret mudar, cada endereço recebe da AWS um e-mail "AWS Notification - Subscription Confirmation" por conta (dev e prod). Clique em **Confirm subscription**: sem isso, nenhum alarme chega. Para conferir, no console da conta: SNS → Topics → `egt-<env>-observability-alerts` → Subscriptions (status **Confirmed**).
+Depois do primeiro deploy da Fase 1B, e sempre que o Secret mudar, cada endereço recebe da AWS dois e-mails "AWS Notification - Subscription Confirmation": um da conta de dev e um da de prod. Clique em **Confirm subscription**: sem isso, nenhum alarme chega. Para conferir, no console da conta: SNS → Topics → `egt-<env>-observability-alerts` → Subscriptions (status **Confirmed**).
 
 Chegou um alarme? Abra os logs da Lambda no horário do alarme (CloudWatch → Logs Insights, log group `/aws/lambda/egt-<env>-api-handler`, filtro `level = "ERROR"`), corrija por PR e, se for urgente, faça o rollback.
 
@@ -93,6 +93,8 @@ O CloudFront envia à API o cabeçalho `x-origin-verify` com um segredo gerado p
 ## Se o smoke falhar
 
 O `tools/smoke.sh` confere: a página inicial responde com o nome da Escola (até 6 tentativas, 20 s entre elas), `/nao-existe` devolve 404, `/api/health` responde `status: ok` com a versão do commit publicado, `/api/nao-existe` devolve 404 em JSON e os cabeçalhos HSTS e CSP estão presentes. A mensagem no log diz qual conferência falhou.
+
+Se a falha for na API:
 
 - `/api/health` com `"database":"unavailable"` (503): a Lambda não conseguiu ler a tabela. Veja os logs da API.
 - `/api/nao-existe` em HTML: a borda voltou a trocar erros da API pela página 404 (ADR 0022). Confira o `custom_error_response` do módulo `edge`.

@@ -17,7 +17,7 @@ Aprenda tecnologia de graça, em aulas curtinhas pensadas pro celular, e saia de
 3. Opcional, com Docker: `pnpm db:up` sobe o DynamoDB Local. Sem ele, a API guarda o progresso na memória.
 4. `pnpm dev` → site em http://localhost:4321 e API em http://localhost:3001/api/health
 
-Verificações: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`.
+Verificações: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`. Os testes com DynamoDB Local rodam com `pnpm db:up` e `DYNAMODB_ENDPOINT=http://localhost:8000` (na CI, sempre).
 
 No Linux/WSL, o WebKit dos testes e2e pode exigir, uma única vez: `sudo env "PATH=$HOME/.local/share/mise/shims:$PATH" pnpm --filter @egt/web exec playwright install-deps webkit chromium`.
 

@@ -17,10 +17,13 @@ Antes de apagar as zonas, volte os servidores de nomes do GoDaddy para os padrõ
 
 A tabela DynamoDB de prod tem proteção contra exclusão: desligue-a antes do `destroy` de prod. A AWS guarda um backup de sistema da tabela apagada por 35 dias, sem custo, e o apaga sozinha.
 
+O Terraform lê o pacote da Lambda em `apps/api/dist`, então gere o build antes, mesmo para destruir.
+
 Após esperar o ciclo de cobrança, a sessão SSO expirou. Um login serve aos três perfis:
 
 ```bash
 aws sso login --profile egt-management
+pnpm install && pnpm --filter @egt/api build
 export AWS_PROFILE=egt-prod
 aws dynamodb update-table --table-name egt-prod-data-main --no-deletion-protection-enabled
 infra/tf live prod destroy

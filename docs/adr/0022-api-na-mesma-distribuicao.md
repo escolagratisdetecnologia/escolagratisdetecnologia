@@ -31,7 +31,7 @@ A API (API Gateway HTTP + Lambda, ADR 0005) fica atrás da mesma distribuição 
 ## Consequências
 
 - Positivas: uma origem só para o navegador (sem CORS; cookies `SameSite=Lax` simples na Fase 1C); WAF e cabeçalhos de segurança valem para a API; erros da API chegam sempre em JSON.
-- Negativas: bloqueios das regras gerenciadas do WAF (403) chegam ao app como a página 404 em HTML, então o cliente da API trata resposta sem JSON como erro genérico. Trocar o segredo de origem causa alguns minutos de erro na API enquanto o CloudFront propaga (runbook de deploy).
+- Negativas: bloqueios das regras gerenciadas do WAF (403) chegam ao app como a página 404 em HTML, então o cliente da API trata resposta sem JSON como erro genérico. Trocar o segredo de origem causa alguns minutos de erro na API enquanto o CloudFront propaga (runbook de deploy). O 429 em JSON depende de continuar no CloudFront pay-as-you-go (ADR 0019): nos planos flat-rate, respostas customizadas exigem o plano Pro. Pelo CloudFront, um corpo acima de 8 KB é barrado antes pelo WAF (403, que vira a página 404); o 413 da API aparece no ambiente local e em acesso direto e serve de rede de proteção. Por isso o cliente da API (Fase 1C) manda a mescla do progresso um curso por vez: cada curso mescla de forma independente, e o pedido fica bem abaixo do limite. O endereço `execute-api` do API Gateway não passa pelo WAF: sem o segredo, a API responde 403, mas cada chamada ainda invoca a Lambda; o throttling do estágio (`throttling_rate_limit` e `throttling_burst_limit` no módulo `api`) limita o custo de um abuso.
 
 ## Pilares Well-Architected
 
