@@ -1,5 +1,6 @@
 import { serve } from '@hono/node-server';
 import { createApp } from './app.ts';
+import { createDevAuthenticator } from './auth.ts';
 import { loadConfig } from './config.ts';
 import { connectLocalStorage } from './local.ts';
 import { createLogger } from './logger.ts';
@@ -16,7 +17,9 @@ if (storage.mode === 'memory') {
 const app = createApp({
   config,
   logger: createLogger(config),
+  progress: storage.progress,
   checkDatabase: storage.checkDatabase,
+  authenticate: createDevAuthenticator(config),
 });
 
 serve({ fetch: app.fetch, port }, (info) => {
