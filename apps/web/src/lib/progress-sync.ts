@@ -46,26 +46,46 @@ function adopt(account: Progress): void {
   writeProgress({ version: 1, courses });
 }
 
+function forget(course: string): void {
+  writePending(readPending().filter((item) => item !== course));
+}
+
+/**
+ * Errors that mean this course's data will never be accepted, however many times it is sent.
+ * Decided by the error code, not the status: a 400 `invalid_origin` is a deployment problem and
+ * must not cost the learner their progress.
+ */
+const REFUSED_FOR_GOOD = new Set(['invalid_request', 'payload_too_large']);
+
 /**
  * Sends the pending courses to the account, one course per request (small bodies, far below the
- * 8 KB limit). Stops at the first failure and keeps the rest for the next page.
+ * 8 KB limit). A course refused for good is dropped and the next one goes on; any other failure
+ * stops here and keeps the rest for the next page.
  */
 export async function syncPending(options: { keepalive?: boolean } = {}): Promise<boolean> {
   if (!hasSession()) return false;
   for (const course of readPending()) {
     const progress = readProgress().courses[course];
-    if (progress !== undefined) {
-      const res = await api<Progress>('/api/progress/merge', {
-        method: 'POST',
-        body: { version: 1, courses: { [course]: progress } },
-        keepalive: options.keepalive ?? false,
-      });
-      if (!res.ok) return false;
-      writePending(readPending().filter((item) => item !== course));
-      adopt(res.data);
-    } else {
-      writePending(readPending().filter((item) => item !== course));
+    if (progress === undefined) {
+      forget(course);
+      continue;
     }
+    const res = await api<Progress>('/api/progress/merge', {
+      method: 'POST',
+      body: { version: 1, courses: { [course]: progress } },
+      keepalive: options.keepalive ?? false,
+    });
+    if (!res.ok) {
+      // Retrying a refused course would fail forever and block every course after it.
+      if (!REFUSED_FOR_GOOD.has(res.error.code)) return false;
+      forget(course);
+      continue;
+    }
+    // The learner may have saved this course again while the request was in flight. Then the
+    // account only has the older state: keep it pending (`adopt` keeps the local copy) so the
+    // newer change is sent next. Both sides come from `readProgress`, so key order is stable.
+    if (JSON.stringify(readProgress().courses[course]) === JSON.stringify(progress)) forget(course);
+    adopt(res.data);
   }
   return true;
 }

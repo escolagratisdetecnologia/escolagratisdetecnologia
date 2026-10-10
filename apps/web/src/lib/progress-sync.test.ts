@@ -83,6 +83,63 @@ describe('progress sync', () => {
     expect(readPending()).toEqual(['site']);
   });
 
+  it('keeps a course pending when it changed while it was being sent', async () => {
+    const first = completeLesson(emptyProgress(), 'site', 'a', T1);
+    saveProgress(first, 'site');
+    signIn();
+    vi.stubGlobal('fetch', async () => {
+      // The learner finishes another lesson while the request is in flight.
+      writeProgress(completeLesson(first, 'site', 'b', T2));
+      return Response.json(first);
+    });
+
+    expect(await syncPending()).toBe(true);
+
+    expect(readPending()).toEqual(['site']);
+    expect(readProgress().courses.site?.completedLessons).toEqual(['a', 'b']);
+  });
+
+  it('drops a course the API refuses for good and keeps syncing the others', async () => {
+    let progress = completeLesson(emptyProgress(), 'site', 'a', T1);
+    progress = completeLesson(progress, 'planilhas', 'x', T1);
+    saveProgress(progress, 'site');
+    saveProgress(progress, 'planilhas');
+    signIn();
+    const sent: string[] = [];
+    vi.stubGlobal('fetch', async (_path: string, init: RequestInit) => {
+      const body = JSON.parse(String(init.body)) as Progress;
+      sent.push(...Object.keys(body.courses));
+      if (sent.length === 1) {
+        return Response.json(
+          { error: { code: 'invalid_request', message: 'Dados inválidos.' } },
+          { status: 400 },
+        );
+      }
+      return Response.json(body);
+    });
+
+    expect(await syncPending()).toBe(true);
+
+    expect(sent).toEqual(['site', 'planilhas']);
+    expect(readPending()).toEqual([]);
+  });
+
+  it('keeps everything pending when the sign-up is missing or the origin is refused', async () => {
+    saveProgress(completeLesson(emptyProgress(), 'site', 'a', T1), 'site');
+    signIn();
+    for (const [status, code] of [
+      [409, 'profile_required'],
+      [400, 'invalid_origin'],
+    ] as const) {
+      vi.stubGlobal('fetch', async () =>
+        Response.json({ error: { code, message: 'Não deu.' } }, { status }),
+      );
+
+      expect(await syncPending()).toBe(false);
+      expect(readPending()).toEqual(['site']);
+    }
+  });
+
   it('after signing in, sends each course of this device in its own request', async () => {
     signIn();
     let progress = completeLesson(emptyProgress(), 'site', 'a', T1);
