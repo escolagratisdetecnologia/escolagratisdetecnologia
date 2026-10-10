@@ -30,4 +30,4 @@ Custo, performance e confiabilidade.
 
 ## Revisar quando
 
-Consultas ad hoc frequentes não couberem em índices secundários.
+Consultas ad hoc frequentes não couberem em índices secundários, ou o tráfego ficar alto e estável, quando a capacidade provisionada (que o Infracost sugere nos PRs que mexem na tabela) pode sair mais barata que on-demand.

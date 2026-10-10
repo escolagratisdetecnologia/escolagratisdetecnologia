@@ -54,6 +54,9 @@ O delta de custo dos PRs de infra vem do app do Infracost no GitHub, não de um 
 2. Settings → Org Settings → Integrations → GitHub: siga o assistente autorizando com a conta do GitHub `escolagratisdetecnologia` (dona do repositório) e dê acesso **só a este repositório**. Se ele oferecer o **Infracost (Limited)**, prefira-o: só comenta nos PRs e lê o código. O app completo também pede escrita no conteúdo do repositório, para o AutoFix, que não usamos.
 3. Não defina configuração de repositório no painel: ela tem precedência sobre o `infracost.yml` da raiz, que define os projetos dev e prod e as premissas de uso (`infra/infracost-usage.yml`).
 4. No próximo PR que tocar em `infra/`, confira se o comentário traz os dois projetos (`live-dev` e `live-prod`).
+5. O Infracost Cloud liga políticas próprias, que marcam o check `Infracost` como falho. Esse check não é obrigatório para o merge, mas o X vermelho em todo PR de infra esconde falhas de verdade. Duas delas contradizem decisões do projeto:
+   - **FinOps tags** (Governance → Tagging policies): a política de exemplo exige `Service` e `Environment` em `Dev`/`Stage`/`Prod`. As nossas tags seguem a ADR 0015 e já são conferidas por `tools/check-tags`, tflint e tag policy da AWS. Apague a política de exemplo e clique em **Re-run policies**.
+   - **DynamoDB provisionado** (Governance → FinOps policies): a tabela é on-demand por decisão (ADR 0006). Comente `@infracost help` no PR e use o comando de dispensa (_dismiss_) do recurso `module.data.aws_dynamodb_table.main`, citando a ADR. Assim as outras políticas de FinOps continuam valendo.
 
 ## Opcional: PRs abertos pelo Claude
 
