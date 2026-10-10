@@ -124,6 +124,11 @@ run "confidential_client_with_rotation" {
     condition     = aws_cognito_identity_provider.google.attribute_mapping["email_verified"] == "email_verified" && aws_cognito_identity_provider.google.provider_details["client_id"] == "cliente.apps.googleusercontent.com"
     error_message = "Sem email_verified, o Google nunca seria vinculado."
   }
+
+  assert {
+    condition     = aws_cognito_identity_provider.google.provider_details["authorize_scopes"] == "openid email"
+    error_message = "O Google só precisa de openid e email (minimização de dados)."
+  }
 }
 
 run "triggers_with_least_privilege" {

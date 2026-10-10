@@ -107,9 +107,10 @@ export function meRoutes({
     })
     .delete('/', async (c) => {
       const { sub } = c.var.identity;
-      // Data first: if the account deletion fails, a retry finds the account and finishes.
-      await progress.deleteAll(sub);
+      // Profile first, so requireProfile blocks new learning writes from other tabs or devices;
+      // then the progress, then the account. If a step fails, a retry finds the account and finishes.
       await profiles.delete(sub);
+      await progress.deleteAll(sub);
       await identity.deleteUser(sub);
       clearSession(c, secure);
       logger.info('account_deleted');

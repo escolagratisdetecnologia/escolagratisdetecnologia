@@ -91,7 +91,7 @@ export function createDynamoProgressRepository(db: Database): ProgressRepository
     async deleteAll(sub) {
       const { data } = await entity.query
         .byUser({ sub })
-        .go({ pages: 'all', attributes: ['course'] });
+        .go({ pages: 'all', attributes: ['course'], consistent: true });
       await Promise.all(data.map(({ course }) => entity.delete({ sub, course }).go()));
     },
   };

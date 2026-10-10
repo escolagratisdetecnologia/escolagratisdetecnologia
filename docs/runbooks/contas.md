@@ -10,7 +10,7 @@ Faça uma vez, antes de abrir o PR da Fase 1C: o plano Terraform do PR já preci
 
 1. Em https://console.cloud.google.com, crie o projeto `Escola Gratis de Tecnologia` (um projeto serve aos dois ambientes).
 2. Google Auth Platform → **Branding**: nome do app `Escola Grátis de Tecnologia`, e-mail de suporte e domínios autorizados `escolagratisdetecnologia.com.br` e `escolagratisdetecnologia.com`.
-3. **Audience**: tipo **External**, depois **Publish app**. Em "Testing", só os usuários de teste conseguem entrar. Os escopos usados (`openid`, `email` e `profile`) não exigem a verificação do app; a verificação da tela de consentimento é um portão do lançamento (spec §20).
+3. **Audience**: tipo **External**, depois **Publish app**. Em "Testing", só os usuários de teste conseguem entrar. Os escopos usados (`openid` e `email`) não exigem a verificação do app; a verificação da tela de consentimento é um portão do lançamento (spec §20).
 4. **Clients** → **Create client** → **Web application**, um por ambiente, cada um com uma única URI de redirecionamento autorizada:
 
    | Cliente    | URI de redirecionamento autorizada                                 |

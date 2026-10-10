@@ -220,7 +220,7 @@ resource "aws_cognito_identity_provider" "google" {
   provider_details = {
     client_id        = var.google_client_id
     client_secret    = var.google_client_secret
-    authorize_scopes = "openid email profile"
+    authorize_scopes = "openid email"
   }
 
   # Without email_verified the e-mail counts as unverified and is never linked.

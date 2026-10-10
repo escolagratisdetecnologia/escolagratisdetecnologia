@@ -187,6 +187,36 @@ describe('DELETE /api/me', () => {
     expect(res.headers.getSetCookie().every((cookie) => cookie.includes('Max-Age=0'))).toBe(true);
   });
 
+  it('deletes the profile first, then the progress, then the account', async () => {
+    const calls: string[] = [];
+    const identity = createFakeIdentity({ 'ana@example.com': 'ana' });
+    const deleteUser = identity.deleteUser;
+    identity.deleteUser = async (sub) => {
+      calls.push('identity');
+      await deleteUser(sub);
+    };
+    const profiles = createMemoryProfileRepository({ ana: PROFILE });
+    const deleteProfile = profiles.delete;
+    profiles.delete = async (sub) => {
+      calls.push('profile');
+      await deleteProfile(sub);
+    };
+    const progress = createMemoryProgressRepository();
+    const deleteAll = progress.deleteAll;
+    progress.deleteAll = async (sub) => {
+      calls.push('progress');
+      await deleteAll(sub);
+    };
+
+    const res = await testApp({ identity, profiles, progress }).request('/api/me', {
+      method: 'DELETE',
+      headers: learner('ana'),
+    });
+
+    expect(res.status).toBe(200);
+    expect(calls).toEqual(['profile', 'progress', 'identity']);
+  });
+
   it('needs the request to come from the site', async () => {
     const identity = createFakeIdentity({ 'ana@example.com': 'ana' });
 
