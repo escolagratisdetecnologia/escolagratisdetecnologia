@@ -1,6 +1,6 @@
 import { connect, deleteTable } from '@egt/db';
 import { describe, expect, it } from 'vitest';
-import { connectLocalStorage } from '../src/local.ts';
+import { connectLocalStorage, requireLocal } from '../src/local.ts';
 import { config } from './helpers.ts';
 
 const endpoint =
@@ -27,5 +27,20 @@ describe('connectLocalStorage', () => {
     } finally {
       await deleteTable(connect({ table: tableName, endpoint }));
     }
+  });
+});
+
+describe('requireLocal', () => {
+  it('lets the local server start only with APP_ENV=local', () => {
+    const local = {
+      mailpitUrl: 'http://localhost:8025',
+      googleIssuer: 'http://localhost:8080/google',
+    };
+
+    expect(requireLocal({ ...config, local })).toEqual(local);
+    expect(() => requireLocal({ ...config, environment: 'dev', local })).toThrow(
+      'The local server only runs with APP_ENV=local.',
+    );
+    expect(() => requireLocal(config)).toThrow('The local server only runs with APP_ENV=local.');
   });
 });

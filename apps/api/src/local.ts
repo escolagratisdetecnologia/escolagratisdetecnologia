@@ -10,6 +10,18 @@ import {
   type ProgressRepository,
 } from '@egt/db';
 import type { AppConfig } from './config.ts';
+import type { LocalIdentitySettings } from './identity/local.ts';
+
+/**
+ * The local server signs anyone in with codes it prints: it must never run against AWS. Called
+ * before anything connects (ADR 0024).
+ */
+export function requireLocal(config: AppConfig): LocalIdentitySettings {
+  if (config.environment !== 'local' || config.local === undefined) {
+    throw new Error('The local server only runs with APP_ENV=local.');
+  }
+  return config.local;
+}
 
 export interface LocalStorage {
   mode: 'dynamodb' | 'memory';

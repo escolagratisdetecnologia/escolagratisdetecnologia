@@ -11,3 +11,15 @@ services:
       interval: 2s
       timeout: 2s
       retries: 15
+
+  # Inbox for the sign-in codes: http://localhost:8025.
+  mailpit:
+    image: axllent/mailpit:v1.31.2@sha256:74d609a42ec279aa63c6b4622a6fa9b5408d1ad5b1d76a1c4be40a265ce0863d
+    ports:
+      - '127.0.0.1:8025:8025'
+
+  # Fake Google (issuer http://localhost:8080/google): type any e-mail as the user.
+  google:
+    image: ghcr.io/navikt/mock-oauth2-server:6.0.3@sha256:250e04413e2fc7877d4cb38ecd74d3ecb1a40aae3a9bdad96d1c593e59fee95e
+    ports:
+      - '127.0.0.1:8080:8080'

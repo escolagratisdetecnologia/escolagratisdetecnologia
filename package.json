@@ -16,7 +16,7 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "content:check": "node packages/content/src/cli.ts content",
-    "db:up": "docker compose up -d --wait dynamodb"
+    "db:up": "docker compose up -d --wait"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -9,6 +9,10 @@ describe('loadConfig', () => {
       tableName: 'egt-local-data-main',
       dynamodbEndpoint: 'http://localhost:8000',
       siteOrigin: 'http://localhost:4321',
+      local: {
+        mailpitUrl: 'http://localhost:8025',
+        googleIssuer: 'http://localhost:8080/google',
+      },
     });
   });
 

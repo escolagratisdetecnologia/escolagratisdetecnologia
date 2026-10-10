@@ -1,4 +1,5 @@
 import type { CognitoSettings } from './identity/cognito.ts';
+import type { LocalIdentitySettings } from './identity/local.ts';
 
 export type Environment = 'local' | 'dev' | 'prod';
 
@@ -15,6 +16,8 @@ export interface AppConfig {
   originVerifySecret?: string;
   /** Learner user pool (ADR 0024); absent locally. */
   cognito?: CognitoSettings;
+  /** Mailpit and the fake Google (docker compose); only locally. */
+  local?: LocalIdentitySettings;
 }
 
 const ENVIRONMENTS: readonly string[] = ['local', 'dev', 'prod'];
@@ -31,6 +34,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       tableName: env.TABLE_NAME ?? 'egt-local-data-main',
       dynamodbEndpoint: env.DYNAMODB_ENDPOINT ?? 'http://localhost:8000',
       siteOrigin: env.SITE_ORIGIN ?? 'http://localhost:4321',
+      local: {
+        mailpitUrl: env.MAILPIT_URL ?? 'http://localhost:8025',
+        googleIssuer: env.FAKE_GOOGLE_ISSUER ?? 'http://localhost:8080/google',
+      },
     };
   }
   return {

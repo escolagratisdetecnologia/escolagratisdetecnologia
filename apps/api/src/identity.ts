@@ -56,22 +56,3 @@ export interface IdentityProvider {
   /** Deletes the account, Google link included. */
   deleteUser(sub: string): Promise<void>;
 }
-
-const unavailable = async (): Promise<never> => {
-  throw new Error('No identity provider wired yet');
-};
-
-/** No accounts yet: every token is refused. Replaced when the Cognito and local providers are wired. */
-export const noAccounts: IdentityProvider = {
-  startEmailLogin: unavailable,
-  finishEmailLogin: unavailable,
-  googleAuthorizeUrl: () => {
-    throw new Error('No identity provider wired yet');
-  },
-  finishGoogleLogin: unavailable,
-  refresh: async () => null,
-  revoke: async () => {},
-  verifyAccessToken: async () => null,
-  email: async () => null,
-  deleteUser: unavailable,
-};
