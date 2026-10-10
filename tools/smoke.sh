@@ -59,6 +59,24 @@ if [[ "$api_404" != "404 application/json"* ]]; then
   exit 1
 fi
 
+# Accounts (ADR 0024): personal routes ask for a session in JSON, and the Google sign-in starts.
+if ! me="$(curl -s -o /dev/null -w '%{http_code} %{content_type}' --retry 3 --retry-all-errors --max-time 10 "$url/api/me")"; then
+  echo "Falha de rede ao verificar /api/me." >&2
+  exit 1
+fi
+if [[ "$me" != "401 application/json"* ]]; then
+  echo "Esperado 401 em JSON em /api/me sem sessão, recebido '$me'." >&2
+  exit 1
+fi
+if ! google="$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' --retry 3 --retry-all-errors --max-time 10 "$url/api/auth/google")"; then
+  echo "Falha de rede ao verificar o início do login com Google." >&2
+  exit 1
+fi
+if [[ ! "$google" =~ ^302\ .+/authorize\? ]]; then
+  echo "O login com Google deveria redirecionar para o /authorize, recebido '$google'." >&2
+  exit 1
+fi
+
 if [[ "$url" == https://* ]]; then
   if ! headers="$(curl -fsSI --retry 3 --retry-all-errors --max-time 10 "$url/")"; then
     echo "Falha de rede ao ler os cabeçalhos de $url/." >&2

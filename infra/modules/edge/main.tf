@@ -99,6 +99,55 @@ resource "aws_wafv2_web_acl" "edge" {
     }
   }
 
+  # Sign-in: far fewer tries per IP than the rest of the site (spec §5.4). Same 429 in JSON.
+  rule {
+    name     = "rate-limit-auth"
+    priority = 35
+
+    action {
+      block {
+        custom_response {
+          response_code            = 429
+          custom_response_body_key = "rate-limited"
+
+          response_header {
+            name  = "retry-after"
+            value = "300"
+          }
+        }
+      }
+    }
+
+    statement {
+      rate_based_statement {
+        limit              = var.auth_rate_limit_per_5min
+        aggregate_key_type = "IP"
+
+        scope_down_statement {
+          byte_match_statement {
+            positional_constraint = "STARTS_WITH"
+            search_string         = "/api/auth/"
+
+            field_to_match {
+              uri_path {}
+            }
+
+            text_transformation {
+              priority = 0
+              type     = "LOWERCASE"
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.name_prefix}-rate-limit-auth"
+      sampled_requests_enabled   = true
+    }
+  }
+
   rule {
     name     = "rate-limit-ip"
     priority = 40
@@ -338,6 +387,56 @@ resource "aws_route53_record" "alias" {
   alias {
     name                   = aws_cloudfront_distribution.site.domain_name
     zone_id                = aws_cloudfront_distribution.site.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+# --- Sign-in domain (auth.<domain>): Cognito's own CloudFront, for Google sign-in (ADR 0024) ---
+
+resource "aws_acm_certificate" "auth" {
+  provider          = aws.us_east_1
+  domain_name       = var.auth_domain
+  validation_method = "DNS"
+  tags              = local.tags
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_route53_record" "auth_certificate_validation" {
+  zone_id         = var.zone_id
+  name            = one(aws_acm_certificate.auth.domain_validation_options).resource_record_name
+  type            = one(aws_acm_certificate.auth.domain_validation_options).resource_record_type
+  records         = [one(aws_acm_certificate.auth.domain_validation_options).resource_record_value]
+  ttl             = 300
+  allow_overwrite = true
+}
+
+resource "aws_acm_certificate_validation" "auth" {
+  provider                = aws.us_east_1
+  certificate_arn         = aws_acm_certificate.auth.arn
+  validation_record_fqdns = [aws_route53_record.auth_certificate_validation.fqdn]
+}
+
+# Cognito refuses auth.<domain> until the site's own name resolves.
+resource "aws_cognito_user_pool_domain" "auth" {
+  domain                = var.auth_domain
+  user_pool_id          = var.auth_user_pool_id
+  certificate_arn       = aws_acm_certificate_validation.auth.certificate_arn
+  managed_login_version = 1
+
+  depends_on = [aws_route53_record.alias]
+}
+
+resource "aws_route53_record" "auth" {
+  zone_id = var.zone_id
+  name    = var.auth_domain
+  type    = "A"
+
+  alias {
+    name                   = aws_cognito_user_pool_domain.auth.cloudfront_distribution
+    zone_id                = aws_cognito_user_pool_domain.auth.cloudfront_distribution_zone_id
     evaluate_target_health = false
   }
 }

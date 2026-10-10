@@ -56,3 +56,19 @@ variable "api_origin_verify_secret" {
   type        = string
   sensitive   = true
 }
+
+variable "auth_domain" {
+  description = "Domínio de login do Cognito (auth.<domínio>), usado no login com Google."
+  type        = string
+}
+
+variable "auth_user_pool_id" {
+  description = "User pool dos alunos, dono do domínio de login."
+  type        = string
+}
+
+variable "auth_rate_limit_per_5min" {
+  description = "Requisições a /api/auth/* aceitas por IP a cada 5 minutos (spec §5.4)."
+  type        = number
+  default     = 50
+}

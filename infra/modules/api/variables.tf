@@ -33,6 +33,32 @@ variable "table_arn" {
   type        = string
 }
 
+variable "user_pool_id" {
+  description = "User pool dos alunos (login, ADR 0024)."
+  type        = string
+}
+
+variable "user_pool_arn" {
+  description = "ARN do user pool, para a política de menor privilégio."
+  type        = string
+}
+
+variable "user_pool_client_id" {
+  description = "Cliente da API no user pool."
+  type        = string
+}
+
+variable "user_pool_client_secret" {
+  description = "Segredo do cliente da API no user pool."
+  type        = string
+  sensitive   = true
+}
+
+variable "auth_domain" {
+  description = "Domínio de login do Cognito (auth.<domínio>), por onde passa o login com Google."
+  type        = string
+}
+
 variable "alarm_topic_arn" {
   description = "Tópico SNS que recebe os alarmes."
   type        = string

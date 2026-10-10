@@ -77,9 +77,29 @@ data "aws_iam_policy_document" "handler" {
   }
 
   statement {
-    sid       = "ReadWriteTable"
-    actions   = ["dynamodb:GetItem", "dynamodb:Query", "dynamodb:UpdateItem"]
+    sid = "ReadWriteTable"
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:Query",
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:DeleteItem",
+    ]
     resources = [var.table_arn]
+  }
+
+  # Sign-in with e-mail codes, the e-mail on the Eu page, and account deletion. SignUp,
+  # ConfirmSignUp, token refresh and revocation are public Cognito APIs (no IAM).
+  statement {
+    sid = "LearnerAccounts"
+    actions = [
+      "cognito-idp:AdminInitiateAuth",
+      "cognito-idp:AdminRespondToAuthChallenge",
+      "cognito-idp:AdminGetUser",
+      "cognito-idp:AdminDeleteUser",
+      "cognito-idp:AdminDisableProviderForUser",
+    ]
+    resources = [var.user_pool_arn]
   }
 }
 
@@ -104,12 +124,16 @@ resource "aws_lambda_function" "handler" {
 
   environment {
     variables = {
-      APP_ENV              = var.environment
-      APP_VERSION          = var.app_version
-      TABLE_NAME           = var.table_name
-      SITE_ORIGIN          = var.site_origin
-      ORIGIN_VERIFY_SECRET = random_password.origin_verify.result
-      NODE_OPTIONS         = "--enable-source-maps"
+      APP_ENV                 = var.environment
+      APP_VERSION             = var.app_version
+      TABLE_NAME              = var.table_name
+      SITE_ORIGIN             = var.site_origin
+      ORIGIN_VERIFY_SECRET    = random_password.origin_verify.result
+      USER_POOL_ID            = var.user_pool_id
+      USER_POOL_CLIENT_ID     = var.user_pool_client_id
+      USER_POOL_CLIENT_SECRET = var.user_pool_client_secret
+      AUTH_DOMAIN             = var.auth_domain
+      NODE_OPTIONS            = "--enable-source-maps"
     }
   }
 

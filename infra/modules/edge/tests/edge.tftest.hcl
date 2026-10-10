@@ -18,6 +18,27 @@ mock_provider "aws" {
       hosted_zone_id = "Z2FDTNDATAQYW2"
     }
   }
+
+  mock_resource "aws_cognito_user_pool_domain" {
+    defaults = {
+      cloudfront_distribution         = "d222222abcdef8.cloudfront.net"
+      cloudfront_distribution_zone_id = "Z2FDTNDATAQYW2"
+    }
+  }
+}
+
+# The sign-in certificate covers one name only.
+override_resource {
+  target = aws_acm_certificate.auth
+  values = {
+    arn = "arn:aws:acm:us-east-1:123456789012:certificate/11111111-1111-1111-1111-111111111111"
+    domain_validation_options = [{
+      domain_name           = "auth.dev.escolagratisdetecnologia.com"
+      resource_record_name  = "_validacao.auth.dev.escolagratisdetecnologia.com."
+      resource_record_type  = "CNAME"
+      resource_record_value = "_valor.acm-validations.aws."
+    }]
+  }
 }
 
 mock_provider "aws" {
@@ -56,6 +77,8 @@ variables {
   site_bucket_regional_domain_name = "egt-test-site-123.s3.sa-east-1.amazonaws.com"
   api_origin_domain                = "abc123.execute-api.sa-east-1.amazonaws.com"
   api_origin_verify_secret         = "segredo-de-teste"
+  auth_domain                      = "auth.dev.escolagratisdetecnologia.com"
+  auth_user_pool_id                = "sa-east-1_Teste123"
 }
 
 run "prod_serves_canonical_and_redirect_domains" {
@@ -133,7 +156,7 @@ run "dev_serves_only_its_domain" {
   }
 
   assert {
-    condition     = length(aws_wafv2_web_acl.edge.rule) == 4
+    condition     = length(aws_wafv2_web_acl.edge.rule) == 5
     error_message = "O WAF deveria ter 3 grupos gerenciados e o rate limit."
   }
 
@@ -215,5 +238,44 @@ run "api_on_the_same_distribution" {
   assert {
     condition     = one(aws_wafv2_web_acl.edge.custom_response_body).content_type == "APPLICATION_JSON"
     error_message = "A resposta do rate limit deveria ser JSON."
+  }
+}
+
+run "sign_in_domain_and_limits" {
+  command = apply
+
+  variables {
+    domain_name = "dev.escolagratisdetecnologia.com"
+  }
+
+  assert {
+    condition     = aws_cognito_user_pool_domain.auth.domain == "auth.dev.escolagratisdetecnologia.com" && aws_cognito_user_pool_domain.auth.user_pool_id == "sa-east-1_Teste123"
+    error_message = "O login com Google passa por auth.<domínio>, do pool dos alunos."
+  }
+
+  assert {
+    condition     = aws_cognito_user_pool_domain.auth.certificate_arn == aws_acm_certificate_validation.auth.certificate_arn && aws_cognito_user_pool_domain.auth.managed_login_version == 1
+    error_message = "O domínio de login usa o próprio certificado (us-east-1), já validado."
+  }
+
+  assert {
+    condition     = one(aws_route53_record.auth.alias).name == "d222222abcdef8.cloudfront.net" && aws_route53_record.auth.type == "A"
+    error_message = "auth.<domínio> aponta para o CloudFront do Cognito."
+  }
+
+  assert {
+    condition = anytrue([
+      for r in aws_wafv2_web_acl.edge.rule : r.name == "rate-limit-auth" &&
+      r.priority < one([for other in aws_wafv2_web_acl.edge.rule : other.priority if other.name == "rate-limit-ip"]) &&
+      r.statement[0].rate_based_statement[0].limit == 50 &&
+      r.statement[0].rate_based_statement[0].scope_down_statement[0].byte_match_statement[0].search_string == "/api/auth/" &&
+      r.action[0].block[0].custom_response[0].response_code == 429
+    ])
+    error_message = "Login: no máximo 50 requisições por IP a cada 5 minutos, com 429 em JSON."
+  }
+
+  assert {
+    condition     = one(aws_cloudfront_distribution.site.ordered_cache_behavior).allowed_methods == toset(["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"])
+    error_message = "A API recebe todos os métodos (PATCH e DELETE da conta incluídos)."
   }
 }

@@ -22,3 +22,8 @@ output "api_gateway_endpoint" {
   description = "URL direta do API Gateway; o deploy confere que ela responde 403."
   value       = module.api.endpoint
 }
+
+output "auth_domain" {
+  description = "Domínio de login do Cognito; o Google Cloud precisa de https://<auth_domain>/oauth2/idpresponse."
+  value       = local.auth_domain
+}

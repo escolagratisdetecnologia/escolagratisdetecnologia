@@ -32,3 +32,13 @@ resource_type_default_usage:
     storage_gb: 1
     monthly_data_ingested_gb: 1
     monthly_data_scanned_gb: 1
+# Accounts (Phase 1C): Cognito Essentials is free up to 10,000 MAU and Infracost does not price
+# it; the triggers run once per sign-up and per code e-mail.
+resource_usage:
+  module.auth.aws_lambda_function.triggers:
+    monthly_requests: 5000
+    request_duration_ms: 300
+  module.auth.aws_cloudwatch_log_group.triggers:
+    storage_gb: 0.1
+    monthly_data_ingested_gb: 0.1
+    monthly_data_scanned_gb: 0.1

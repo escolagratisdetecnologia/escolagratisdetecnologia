@@ -43,8 +43,19 @@ variable "app_version" {
   default     = "local"
 }
 
+variable "google_client_id" {
+  description = "ID do cliente OAuth do Google deste ambiente (GitHub Variable GOOGLE_CLIENT_ID_<AMBIENTE>, via TF_VAR_google_client_id)."
+  type        = string
+}
+
+variable "google_client_secret" {
+  description = "Segredo do cliente OAuth do Google (GitHub Secret GOOGLE_CLIENT_SECRET_<AMBIENTE>, via TF_VAR_google_client_secret)."
+  type        = string
+  sensitive   = true
+}
+
 variable "data_deletion_protection" {
-  description = "Proteção contra exclusão da tabela DynamoDB (ligada em prod)."
+  description = "Proteção contra exclusão da tabela DynamoDB e do user pool dos alunos (ligada em prod)."
   type        = bool
   default     = true
 }

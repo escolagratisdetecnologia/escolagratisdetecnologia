@@ -20,6 +20,9 @@ on:
       ALERT_EMAILS:
         description: Lista JSON de e-mails de alerta de orçamento
         required: false
+      GOOGLE_CLIENT_SECRET:
+        description: Segredo do cliente OAuth do Google deste ambiente
+        required: true
 
 permissions:
   contents: read
@@ -60,6 +63,8 @@ jobs:
         env:
           TF_VAR_alert_emails: ${{ secrets.ALERT_EMAILS || '[]' }}
           TF_VAR_app_version: ${{ github.sha }}
+          TF_VAR_google_client_id: ${{ inputs.environment == 'prod' && vars.GOOGLE_CLIENT_ID_PROD || vars.GOOGLE_CLIENT_ID_DEV }}
+          TF_VAR_google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       - run: tools/deploy-site.sh "$ENVIRONMENT"
       - run: tools/smoke.sh "$SITE_URL" "$GITHUB_SHA"
       - name: API recusa acesso direto (sem CloudFront)

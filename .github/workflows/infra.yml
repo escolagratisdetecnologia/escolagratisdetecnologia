@@ -95,6 +95,8 @@ jobs:
         env:
           TF_VAR_alert_emails: ${{ secrets.ALERT_EMAILS || '[]' }}
           TF_VAR_app_version: ${{ github.sha }}
+          TF_VAR_google_client_id: ${{ matrix.env == 'prod' && vars.GOOGLE_CLIENT_ID_PROD || vars.GOOGLE_CLIENT_ID_DEV }}
+          TF_VAR_google_client_secret: ${{ matrix.env == 'prod' && secrets.GOOGLE_CLIENT_SECRET_PROD || secrets.GOOGLE_CLIENT_SECRET_DEV }}
       # plan.json holds sensitive values (such as alert_emails) in plain text: never upload it as an artifact.
       - run: terraform -chdir=infra/live show -json tfplan > plan.json
       - name: check-tags

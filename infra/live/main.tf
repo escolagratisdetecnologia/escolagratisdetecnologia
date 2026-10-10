@@ -1,3 +1,8 @@
+locals {
+  # Cognito's sign-in domain, used by the Google sign-in (ADR 0024).
+  auth_domain = "auth.${var.domain_name}"
+}
+
 module "tags" {
   source      = "../modules/tags"
   environment = var.environment
@@ -23,6 +28,18 @@ module "data" {
   deletion_protection = var.data_deletion_protection
 }
 
+module "auth" {
+  source = "../modules/auth"
+
+  name_prefix          = module.tags.name_prefix
+  domain_name          = var.domain_name
+  zone_id              = data.aws_route53_zone.site.zone_id
+  package_dir          = "${path.root}/../../apps/api/dist"
+  google_client_id     = var.google_client_id
+  google_client_secret = var.google_client_secret
+  deletion_protection  = var.data_deletion_protection
+}
+
 module "api" {
   source = "../modules/api"
 
@@ -34,6 +51,12 @@ module "api" {
   table_name      = module.data.table_name
   table_arn       = module.data.table_arn
   alarm_topic_arn = module.observability.alerts_topic_arn
+
+  user_pool_id            = module.auth.user_pool_id
+  user_pool_arn           = module.auth.user_pool_arn
+  user_pool_client_id     = module.auth.client_id
+  user_pool_client_secret = module.auth.client_secret
+  auth_domain             = local.auth_domain
 
   # Rotation of the CloudFront → API secret: bump and merge (docs/runbooks/deploy.md).
   origin_verify_version = 1
@@ -57,6 +80,8 @@ module "edge" {
   site_bucket_regional_domain_name = module.site.bucket_regional_domain_name
   api_origin_domain                = module.api.origin_domain
   api_origin_verify_secret         = module.api.origin_verify_secret
+  auth_domain                      = local.auth_domain
+  auth_user_pool_id                = module.auth.user_pool_id
 }
 
 module "observability" {

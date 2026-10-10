@@ -52,6 +52,12 @@ variables {
   table_name      = "egt-test-data-main"
   table_arn       = "arn:aws:dynamodb:sa-east-1:123456789012:table/egt-test-data-main"
   alarm_topic_arn = "arn:aws:sns:sa-east-1:123456789012:egt-test-observability-alerts"
+
+  user_pool_id            = "sa-east-1_Teste123"
+  user_pool_arn           = "arn:aws:cognito-idp:sa-east-1:123456789012:userpool/sa-east-1_Teste123"
+  user_pool_client_id     = "cliente-teste"
+  user_pool_client_secret = "segredo-do-cliente"
+  auth_domain             = "auth.dev.example.com"
 }
 
 run "lambda_behind_http_api" {
@@ -70,6 +76,32 @@ run "lambda_behind_http_api" {
   assert {
     condition     = aws_lambda_function.handler.environment[0].variables["APP_ENV"] == "dev" && aws_lambda_function.handler.environment[0].variables["TABLE_NAME"] == "egt-test-data-main" && aws_lambda_function.handler.environment[0].variables["SITE_ORIGIN"] == "https://dev.example.com"
     error_message = "Variáveis de ambiente da API incompletas."
+  }
+
+  assert {
+    condition = (
+      aws_lambda_function.handler.environment[0].variables["USER_POOL_ID"] == "sa-east-1_Teste123" &&
+      aws_lambda_function.handler.environment[0].variables["USER_POOL_CLIENT_ID"] == "cliente-teste" &&
+      aws_lambda_function.handler.environment[0].variables["USER_POOL_CLIENT_SECRET"] == "segredo-do-cliente" &&
+      aws_lambda_function.handler.environment[0].variables["AUTH_DOMAIN"] == "auth.dev.example.com"
+    )
+    error_message = "A Lambda recebe o pool, o cliente e o domínio de login."
+  }
+
+  assert {
+    condition = (
+      toset(one([for statement in data.aws_iam_policy_document.handler.statement : statement.actions if statement.sid == "ReadWriteTable"])) == toset(["dynamodb:GetItem", "dynamodb:Query", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem"]) &&
+      toset(one([for statement in data.aws_iam_policy_document.handler.statement : statement.resources if statement.sid == "ReadWriteTable"])) == toset(["arn:aws:dynamodb:sa-east-1:123456789012:table/egt-test-data-main"])
+    )
+    error_message = "Na tabela, só as ações que os repositórios usam."
+  }
+
+  assert {
+    condition = (
+      toset(one([for statement in data.aws_iam_policy_document.handler.statement : statement.actions if statement.sid == "LearnerAccounts"])) == toset(["cognito-idp:AdminInitiateAuth", "cognito-idp:AdminRespondToAuthChallenge", "cognito-idp:AdminGetUser", "cognito-idp:AdminDeleteUser", "cognito-idp:AdminDisableProviderForUser"]) &&
+      toset(one([for statement in data.aws_iam_policy_document.handler.statement : statement.resources if statement.sid == "LearnerAccounts"])) == toset(["arn:aws:cognito-idp:sa-east-1:123456789012:userpool/sa-east-1_Teste123"])
+    )
+    error_message = "No Cognito, só login por código, ler o e-mail e excluir a conta, neste pool."
   }
 
   assert {
