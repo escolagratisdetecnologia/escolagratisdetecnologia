@@ -4,11 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --watch src/server.ts",
+    "dev": "node --watch --env-file-if-exists=../../.env src/server.ts",
     "build": "esbuild src/lambda.ts --bundle --platform=node --target=node24 --format=esm --sourcemap --outfile=dist/lambda.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@aws-lambda-powertools/logger": "^2.36.0",
+    "@egt/db": "workspace:*",
     "@hono/node-server": "^2.1.3",
     "hono": "^4.13.13"
   },
