@@ -8,4 +8,5 @@ export const islands: IslandRegistry = {
   quiz: () => import('./Quiz.tsx'),
   login: () => import('./Login.tsx'),
   'complete-profile': () => import('./CompleteProfile.tsx'),
+  account: () => import('./Account.tsx'),
 };

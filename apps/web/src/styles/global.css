@@ -782,7 +782,7 @@ progress::-moz-progress-bar {
   min-height: calc(2 * 1.6em);
 }
 
-[data-island='my-progress'] ~ .card {
+[data-island='my-progress'] ~ [data-island='account'] {
   margin-top: var(--space-5);
 }
 
@@ -891,4 +891,13 @@ progress::-moz-progress-bar {
   border: 2px solid var(--color-accent);
   border-radius: var(--radius);
   background: var(--color-surface);
+}
+
+.account-note {
+  /* two lines reserved: every account state has the same height */
+  min-height: calc(2 * 1.6em);
+}
+
+.account-delete {
+  margin-top: var(--space-3);
 }
