@@ -1,0 +1,13 @@
+# Local services (spec §13). `pnpm db:up` starts them; the API creates its table on startup.
+# In memory: data lasts while the container runs (`docker compose down` erases it).
+services:
+  dynamodb:
+    image: amazon/dynamodb-local:3.3.1@sha256:ff89bd48ff32cd8d9be5fee8873b65b8854dc408f1afe881be6eb00247bc0dab
+    command: ['-jar', 'DynamoDBLocal.jar', '-inMemory', '-sharedDb']
+    ports:
+      - '127.0.0.1:8000:8000'
+    healthcheck:
+      test: ['CMD-SHELL', 'bash -c "exec 3<>/dev/tcp/127.0.0.1/8000"']
+      interval: 2s
+      timeout: 2s
+      retries: 15

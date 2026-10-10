@@ -15,6 +15,12 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    services:
+      # Same image as docker-compose.yml: repository and route integration tests.
+      dynamodb:
+        image: amazon/dynamodb-local:3.3.1@sha256:ff89bd48ff32cd8d9be5fee8873b65b8854dc408f1afe881be6eb00247bc0dab
+        ports:
+          - 8000:8000
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
@@ -27,6 +33,8 @@ jobs:
       - run: pnpm content:check
       - run: pnpm typecheck
       - run: pnpm test
+        env:
+          DYNAMODB_ENDPOINT: http://localhost:8000
       - run: pnpm build
         env:
           SITE_ENV: prod

@@ -15,7 +15,8 @@
     "test:e2e": "turbo run test:e2e",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "content:check": "node packages/content/src/cli.ts content"
+    "content:check": "node packages/content/src/cli.ts content",
+    "db:up": "docker compose up -d --wait dynamodb"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
