@@ -20,7 +20,21 @@ export function requireLocal(config: AppConfig): LocalIdentitySettings {
   if (config.environment !== 'local' || config.local === undefined) {
     throw new Error('The local server only runs with APP_ENV=local.');
   }
+  const endpoint = config.dynamodbEndpoint;
+  if (endpoint !== undefined && !LOOPBACK_HOSTS.has(hostOf(endpoint))) {
+    throw new Error('The local server only talks to a DynamoDB on this machine.');
+  }
   return config.local;
+}
+
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return '';
+  }
 }
 
 export interface LocalStorage {

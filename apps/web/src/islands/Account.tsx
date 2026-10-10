@@ -86,7 +86,8 @@ export default function Account() {
     link.href = url;
     link.download = 'meus-dados-escola-gratis.json';
     link.click();
-    URL.revokeObjectURL(url);
+    // Safari/iOS can cancel the download if the URL is revoked right away.
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
   };
 
   return (

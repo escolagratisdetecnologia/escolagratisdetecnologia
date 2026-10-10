@@ -30,7 +30,8 @@ const app = createApp({
   identity: await createLocalIdentity(localSettings),
 });
 
-serve({ fetch: app.fetch, port }, (info) => {
+// Loopback only: the local server signs anyone in, so the network must not reach it.
+serve({ fetch: app.fetch, port, hostname: 'localhost' }, (info) => {
   console.log(`API local em http://localhost:${info.port}/api/health`);
   console.log(
     `Códigos de login: ${localSettings.mailpitUrl} (Mailpit) e aqui no terminal. Google de mentira: ${localSettings.googleIssuer}.`,
