@@ -275,6 +275,27 @@ run "sign_in_domain_and_limits" {
   }
 
   assert {
+    condition = anytrue([
+      for r in aws_wafv2_web_acl.edge.rule : r.name == "rate-limit-auth" &&
+      r.priority == 35 &&
+      r.statement[0].rate_based_statement[0].aggregate_key_type == "IP" &&
+      r.action[0].block[0].custom_response[0].custom_response_body_key == "rate-limited" &&
+      length(r.statement[0].rate_based_statement[0].scope_down_statement[0].byte_match_statement[0].text_transformation) == 2 &&
+      anytrue([for t in r.statement[0].rate_based_statement[0].scope_down_statement[0].byte_match_statement[0].text_transformation : t.priority == 0 && t.type == "URL_DECODE"]) &&
+      anytrue([for t in r.statement[0].rate_based_statement[0].scope_down_statement[0].byte_match_statement[0].text_transformation : t.priority == 1 && t.type == "LOWERCASE"])
+    ])
+    error_message = "O limite do login decodifica o caminho (URL_DECODE) e depois põe em minúsculas, por IP, prioridade 35."
+  }
+
+  assert {
+    condition = (
+      !one(aws_wafv2_web_acl.edge.visibility_config).sampled_requests_enabled &&
+      alltrue([for r in aws_wafv2_web_acl.edge.rule : !one(r.visibility_config).sampled_requests_enabled])
+    )
+    error_message = "Amostras do WAF desligadas: guardariam os cookies de sessão."
+  }
+
+  assert {
     condition     = one(aws_cloudfront_distribution.site.ordered_cache_behavior).allowed_methods == toset(["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"])
     error_message = "A API recebe todos os métodos (PATCH e DELETE da conta incluídos)."
   }

@@ -61,6 +61,9 @@ resource "aws_wafv2_web_acl" "edge" {
     allow {}
   }
 
+  # Sampled requests are off in every visibility_config below: WAF would keep them, headers
+  # included (the session cookies egt_at and egt_rt), for 3 hours. Per-rule CloudWatch metrics stay.
+
   # JSON, like every API error: the site's pages and the API share the rate limit.
   custom_response_body {
     key          = "rate-limited"
@@ -94,7 +97,7 @@ resource "aws_wafv2_web_acl" "edge" {
       visibility_config {
         cloudwatch_metrics_enabled = true
         metric_name                = "${var.name_prefix}-${rule.key}"
-        sampled_requests_enabled   = true
+        sampled_requests_enabled   = false
       }
     }
   }
@@ -132,8 +135,14 @@ resource "aws_wafv2_web_acl" "edge" {
               uri_path {}
             }
 
+            # Hono decodes the path (/api/%61uth/ reaches the auth routes), so decode before comparing.
             text_transformation {
               priority = 0
+              type     = "URL_DECODE"
+            }
+
+            text_transformation {
+              priority = 1
               type     = "LOWERCASE"
             }
           }
@@ -144,7 +153,7 @@ resource "aws_wafv2_web_acl" "edge" {
     visibility_config {
       cloudwatch_metrics_enabled = true
       metric_name                = "${var.name_prefix}-rate-limit-auth"
-      sampled_requests_enabled   = true
+      sampled_requests_enabled   = false
     }
   }
 
@@ -198,14 +207,14 @@ resource "aws_wafv2_web_acl" "edge" {
     visibility_config {
       cloudwatch_metrics_enabled = true
       metric_name                = "${var.name_prefix}-rate-limit-ip"
-      sampled_requests_enabled   = true
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = true
     metric_name                = "${var.name_prefix}-edge-waf"
-    sampled_requests_enabled   = true
+    sampled_requests_enabled   = false
   }
 }
 

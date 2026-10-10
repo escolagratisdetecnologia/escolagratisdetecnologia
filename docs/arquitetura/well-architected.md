@@ -32,6 +32,7 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 | Tag policy e auditoria semanal de tags                                                                                                     | feito (Fase 0)            |
 | Contas de alunos no Cognito (Essentials) sem senha; tokens só em cookies HttpOnly, sem `Domain` (ADR 0024)                                 | feito (Fase 1C)           |
 | Login com limite próprio no WAF (50 requisições por IP a cada 5 minutos em `/api/auth/*`)                                                  | feito (Fase 1C)           |
+| Amostras do WAF desligadas: guardariam os cookies de sessão                                                                                | feito (Fase 1C)           |
 | Idade mínima no cadastro e autoatendimento da LGPD (baixar e excluir os dados)                                                             | feito (Fase 1C)           |
 | SMS MFA da equipe                                                                                                                          | planejado (Fase 1)        |
 | Proteções contra SSRF e injeção de prompt no corretor                                                                                      | planejado (Fase 2)        |
