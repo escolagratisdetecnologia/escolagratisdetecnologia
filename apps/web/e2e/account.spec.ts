@@ -94,6 +94,36 @@ test('signing out leaves nothing on the device', async ({ page }) => {
   expect(await page.evaluate(() => Object.keys(localStorage))).not.toContain('egt:progress:v1');
 });
 
+test.describe('with the service worker blocked', () => {
+  // WebKit routes requests through the service worker, where `page.route` cannot see them.
+  test.use({ serviceWorkers: 'block' });
+  test('a failed sign-out keeps the learner and the device progress', async ({ page }) => {
+    const course = await pilotCourse();
+    const lessons = lessonsOf(course);
+    await page.goto(lessonUrl(course, lessons[0]!));
+    await expect(page.locator('[data-lesson]')).toHaveAttribute('data-ready', 'true');
+    await page.getByRole('link', { name: 'Concluir e continuar' }).click();
+    await expect(page).toHaveURL(lessonUrl(course, lessons[1]!));
+    await signInWithEmail(page, newEmail());
+    await completeSignUp(page);
+    await expect(page).toHaveURL('/eu/');
+    const signOut = page.getByRole('button', { name: 'Sair' });
+    await expect(signOut).toBeVisible();
+    const before = await page.evaluate(() => localStorage.getItem('egt:progress:v1'));
+    expect(before).not.toBeNull();
+
+    await page.route('**/api/auth/logout', (route) => route.abort());
+    await signOut.click();
+
+    await expect(page.getByRole('alert')).toHaveText(
+      'Não conseguimos falar com a Escola agora. Confira sua internet e tente de novo.',
+    );
+    await expect(page).toHaveURL('/eu/');
+    await expect(signOut).toBeEnabled();
+    expect(await page.evaluate(() => localStorage.getItem('egt:progress:v1'))).toBe(before);
+  });
+});
+
 test('the learner downloads everything the school keeps', async ({ page }) => {
   const email = newEmail();
   await signInWithEmail(page, email);

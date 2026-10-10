@@ -46,7 +46,13 @@ export default function Account() {
 
   const signOut = async () => {
     setBusy(true);
-    await api('/api/auth/logout', { method: 'POST' });
+    setError('');
+    const res = await api('/api/auth/logout', { method: 'POST' });
+    if (!res.ok) {
+      setBusy(false);
+      setError(res.error.message);
+      return;
+    }
     leave('saiu');
   };
 
