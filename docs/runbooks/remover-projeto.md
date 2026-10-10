@@ -15,11 +15,14 @@ Antes de apagar as zonas, volte os servidores de nomes do GoDaddy para os padrõ
 
 ## 2. Aplicação (prod, depois dev)
 
+A tabela DynamoDB de prod tem proteção contra exclusão: desligue-a antes do `destroy` de prod. A AWS guarda um backup de sistema da tabela apagada por 35 dias, sem custo, e o apaga sozinha.
+
 Após esperar o ciclo de cobrança, a sessão SSO expirou. Um login serve aos três perfis:
 
 ```bash
 aws sso login --profile egt-management
 export AWS_PROFILE=egt-prod
+aws dynamodb update-table --table-name egt-prod-data-main --no-deletion-protection-enabled
 infra/tf live prod destroy
 export AWS_PROFILE=egt-dev
 infra/tf live dev destroy

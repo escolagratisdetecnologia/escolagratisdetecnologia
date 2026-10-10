@@ -10,7 +10,8 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 | Decisões registradas em ADRs                                                                      | feito (Fase 0)        |
 | Deploy automatizado dev → aprovação → prod com smoke tests                                        | feito (Fase 0)        |
 | Runbooks de bootstrap, GitHub, deploy e rollback, flat-rate, remoção total e MCP                  | feito (Fase 0)        |
-| Logs estruturados (Powertools) e alarmes de erro                                                  | planejado (Fase 1)    |
+| Logs estruturados (Powertools) e alarmes de erro da API por e-mail (ADR 0023)                     | feito (Fase 1B)       |
+| Ambiente local com DynamoDB Local (`pnpm db:up`) e testes de integração com ele na CI             | feito (Fase 1B)       |
 | Operações (conteúdo, social, transparência) via skills do Claude Code terminando em PR            | planejado (Fases 3–5) |
 | Concorrência de deploy por ambiente e espera pela invalidação do CloudFront antes dos smoke tests | feito (Fase 0)        |
 | Permissões mínimas por job nos workflows                                                          | feito (Fase 0)        |
@@ -36,42 +37,51 @@ Atualize este documento em todo PR que mudar a arquitetura (veja `infra/CLAUDE.m
 | E-mails de alerta como Secret e `alert_emails` marcada como `sensitive`                                                                    | feito (Fase 0)            |
 | Rate limit do WAF que ignora assets imutáveis (`/_astro/`)                                                                                 | feito (Fase 0)            |
 | Nenhum script ou estilo inline no HTML (`check:csp` na CI, ADR 0021)                                                                       | feito (Fase 1A)           |
+| API só pelo CloudFront: cabeçalho secreto de origem, WAF e cabeçalhos de segurança também na API (ADR 0022)                                | feito (Fase 1B)           |
+| Mudanças na API só com `Origin` do site (CSRF); corpo até 8 KB; respostas `no-store`                                                       | feito (Fase 1B)           |
+| IAM de menor privilégio na Lambda da API; logs de acesso sem IP                                                                            | feito (Fase 1B)           |
 
 ## Confiabilidade
 
-| Prática                                                                                      | Status                |
-| -------------------------------------------------------------------------------------------- | --------------------- |
-| Serviços gerenciados multi-AZ (S3, CloudFront)                                               | feito (Fase 0)        |
-| Estado Terraform versionado com lock nativo                                                  | feito (Fase 0)        |
-| DynamoDB com PITR; SQS com DLQ; workers idempotentes                                         | planejado (Fases 1–2) |
-| Deploys serializados por ambiente e smoke tests só após a invalidação do CloudFront terminar | feito (Fase 0)        |
-| Domínio principal `.com.br`; `.com` e `www` redirecionam com 301 na mesma borda (ADR 0020)   | feito (Fase 0)        |
-| Páginas visitadas disponíveis offline (service worker)                                       | feito (Fase 1A)       |
+| Prática                                                                                      | Status             |
+| -------------------------------------------------------------------------------------------- | ------------------ |
+| Serviços gerenciados multi-AZ (S3, CloudFront)                                               | feito (Fase 0)     |
+| Estado Terraform versionado com lock nativo                                                  | feito (Fase 0)     |
+| DynamoDB com PITR (35 dias) e proteção contra exclusão em prod                               | feito (Fase 1B)    |
+| Mescla de progresso sem ler-e-regravar: conjuntos com `ADD` e `SET` condicional              | feito (Fase 1B)    |
+| `/api/health` confere o banco; o smoke confere a versão publicada e os erros da API em JSON  | feito (Fase 1B)    |
+| SQS com DLQ; workers idempotentes                                                            | planejado (Fase 2) |
+| Deploys serializados por ambiente e smoke tests só após a invalidação do CloudFront terminar | feito (Fase 0)     |
+| Domínio principal `.com.br`; `.com` e `www` redirecionam com 301 na mesma borda (ADR 0020)   | feito (Fase 0)     |
+| Páginas visitadas disponíveis offline (service worker)                                       | feito (Fase 1A)    |
 
 ## Eficiência de performance
 
-| Prática                                                  | Status             |
-| -------------------------------------------------------- | ------------------ |
-| Site estático na borda, HTTP/3, compressão               | feito (Fase 0)     |
-| Orçamentos de desempenho na CI (Lighthouse, 30 KB de JS) | feito (Fase 0)     |
-| Vídeo HLS adaptativo; Lambda arm64                       | planejado (Fase 1) |
-| Ilhas Preact sob demanda; JS medido em gzip no e2e       | feito (Fase 1A)    |
+| Prática                                                  | Status              |
+| -------------------------------------------------------- | ------------------- |
+| Site estático na borda, HTTP/3, compressão               | feito (Fase 0)      |
+| Orçamentos de desempenho na CI (Lighthouse, 30 KB de JS) | feito (Fase 0)      |
+| Lambda arm64 com bundle único minificado                 | feito (Fase 1B)     |
+| Vídeo HLS adaptativo                                     | planejado (Fase 1D) |
+| Ilhas Preact sob demanda; JS medido em gzip no e2e       | feito (Fase 1A)     |
 
 ## Otimização de custos
 
-| Prática                                                       | Status                      |
-| ------------------------------------------------------------- | --------------------------- |
-| Serverless pago por uso; nada ocioso                          | feito (Fase 0)              |
-| Infracost em todo PR de infra (app do GitHub)                 | feito (Fase 0, via runbook) |
-| Budgets por conta e detecção de anomalias por conta-membro    | feito (Fase 0)              |
-| Tags de custo (Project, Environment, Component)               | feito (Fase 0)              |
-| CloudFront pay-as-you-go no free tier; WAF à parte (ADR 0019) | feito (Fase 0)              |
-| Gatilho de revisão do Cognito em 30 mil MAU                   | planejado (Fase 1)          |
+| Prática                                                                    | Status                      |
+| -------------------------------------------------------------------------- | --------------------------- |
+| Serverless pago por uso; nada ocioso                                       | feito (Fase 0)              |
+| Infracost em todo PR de infra (app do GitHub)                              | feito (Fase 0, via runbook) |
+| Budgets por conta e detecção de anomalias por conta-membro                 | feito (Fase 0)              |
+| Tags de custo (Project, Environment, Component)                            | feito (Fase 0)              |
+| CloudFront pay-as-you-go no free tier; WAF à parte (ADR 0019)              | feito (Fase 0)              |
+| Gatilho de revisão do Cognito em 30 mil MAU                                | planejado (Fase 1)          |
+| API, banco e alarmes pagos por uso; chaves da AWS em vez de CMK (ADR 0023) | feito (Fase 1B)             |
 
 ## Sustentabilidade
 
-| Prática                                                         | Status             |
-| --------------------------------------------------------------- | ------------------ |
-| Conteúdo estático com cache longo para assets imutáveis         | feito (Fase 0)     |
-| Ciclo de vida para versões antigas no S3                        | feito (Fase 0)     |
-| Graviton (arm64) nas Lambdas; originais de vídeo em camada fria | planejado (Fase 1) |
+| Prática                                                 | Status              |
+| ------------------------------------------------------- | ------------------- |
+| Conteúdo estático com cache longo para assets imutáveis | feito (Fase 0)      |
+| Ciclo de vida para versões antigas no S3                | feito (Fase 0)      |
+| Graviton (arm64) na Lambda da API                       | feito (Fase 1B)     |
+| Originais de vídeo em camada fria                       | planejado (Fase 1D) |

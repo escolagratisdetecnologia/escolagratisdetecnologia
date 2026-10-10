@@ -4,9 +4,15 @@
 
 - `bootstrap/account` — por conta (dev, prod): bucket de estado, OIDC do GitHub, roles `egt-<env>-bootstrap-github-{plan,apply,audit}`, Resource Explorer (view `egt-<env>-bootstrap-all-resources`), zona DNS.
 - `bootstrap/management` — conta de gerenciamento: tag policy, anomalias de custo, cost allocation tags.
-- `modules/*` — blocos reutilizáveis (tags, site, edge, observability, state-bucket…).
+- `modules/*` — blocos reutilizáveis (tags, site, edge, data, api, observability, state-bucket…).
 - `live/` — raiz única da aplicação; `env/<env>.tfvars` e `env/<env>.backend.hcl` por ambiente.
 - `tf` — wrapper: `infra/tf <raiz> <env> <comando>`.
+
+## Lambdas
+
+- O Terraform empacota o build (`archive_file` de `apps/<app>/dist`): rode `pnpm --filter @egt/api build` antes de `infra/tf live <env> plan` (a CI e o deploy já fazem). O hash do zip só muda quando o código muda.
+- Log group criado pelo Terraform (30 dias) e `logging_config` apontando para ele; nada criado implicitamente.
+- Política IAM só com as ações que o código usa hoje; rota nova que precisa de outra ação atualiza a política no mesmo PR.
 
 ## Regiões
 

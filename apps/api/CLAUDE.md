@@ -1,9 +1,13 @@
 # apps/api — API Hono
 
-- **Composição:** `createApp(config)` em `src/app.ts` monta as rotas. Cada recurso fica em `src/routes/<recurso>.ts`, exportando uma função que recebe dependências e devolve um `Hono`.
-- **Entradas finas:** `src/lambda.ts` (handler AWS) e `src/server.ts` (servidor local) não têm lógica.
-- **Configuração:** só `src/config.ts` lê `process.env` (`loadConfig`). O resto recebe `AppConfig` por parâmetro.
-- **Erros:** sempre `{ error: { code, message } }` — `code` em snake_case inglês, `message` em pt-BR no tom da Escola. 404 `not_found`, 500 `internal_error`; validação (zod, Fase 1) → 400 `invalid_request`.
-- **Testes:** Vitest com `app.request()`; um arquivo por rota em `test/`; nada de rede real.
-- **Logs:** JSON estruturado em inglês (Powertools for AWS Lambda a partir da Fase 1).
-- **Bundle:** esbuild → `dist/lambda.mjs` (Node 24, ESM, arm64). Mantenha dependências enxutas — tamanho do bundle afeta o cold start.
+- **Composição:** `createApp(deps)` em `src/app.ts` recebe `AppDeps` (config, logger, repositórios, `checkDatabase`, `authenticate`, `now`) e monta middlewares e rotas. Cada recurso fica em `src/routes/<recurso>.ts`, exportando uma função que recebe só as dependências que usa e devolve um `Hono`.
+- **Entradas finas:** `src/lambda.ts` (AWS: DynamoDB, sem login até a Fase 1C) e `src/server.ts` (local: DynamoDB Local ou memória, via `src/local.ts`; login falso pelo cabeçalho `x-dev-user`) só montam as dependências.
+- **Configuração:** só `src/config.ts` lê `process.env` (`loadConfig`). Fora do local, `APP_VERSION`, `TABLE_NAME`, `SITE_ORIGIN` e `ORIGIN_VERIFY_SECRET` são obrigatórias. O resto recebe `AppConfig` por parâmetro.
+- **Erros:** sempre `{ error: { code, message } }` (`apiError` em `src/errors.ts`), com `code` em snake_case inglês e `message` em pt-BR no tom da Escola. 400 `invalid_request` (zod) e `invalid_origin`, 401 `unauthenticated`, 404 `not_found`, 413 `payload_too_large`, 500 `internal_error`; o health responde 503 quando o banco não responde.
+- **Nunca 403 pelo CloudFront:** a borda troca qualquer 403 pela página 404 do site (ADR 0022). Só o acesso direto sem `x-origin-verify` recebe 403. Para recusar algo, use 400, 401 ou 404.
+- **Segurança:** mudanças (tudo que não é GET, HEAD ou OPTIONS) exigem `Origin` igual ao site (CSRF); corpo até 8 KB, o limite do WAF; respostas com `Cache-Control: no-store`.
+- **Login:** rotas pessoais usam `requireIdentity(authenticate)` e leem `c.var.identity.sub`. `createDevAuthenticator` só existe localmente.
+- **Dados:** pelos repositórios de `@egt/db` (ElectroDB), nunca o SDK do DynamoDB direto nas rotas. Precisa de outra ação no DynamoDB? Atualize a política da Lambda em `infra/modules/api/main.tf` no mesmo PR.
+- **Testes:** Vitest com `app.request()` e `testApp()` de `test/helpers.ts` (memória; `x-test-user` faz o papel do login), um arquivo por rota em `test/`, nada de rede real. `test/bundle.test.ts` carrega o bundle de verdade num Node separado. Os testes com DynamoDB Local rodam com `DYNAMODB_ENDPOINT` (sempre na CI).
+- **Logs:** Powertools Logger (`src/logger.ts`), JSON em inglês. Nunca registre corpo de requisição, e-mail ou IP.
+- **Bundle:** `node scripts/build.ts` (esbuild) gera `dist/lambda.mjs` (Node 24, ESM, minificado, com source map) **incluindo o AWS SDK**, na versão do lockfile. O banner com `createRequire` existe porque o ElectroDB é CommonJS. O Terraform empacota `dist/`. Mantenha as dependências enxutas, porque o tamanho do bundle afeta o cold start (hoje ~1,3 MB, ~320 KB em gzip; a ADR 0005 manda revisar acima de 5 MB).
