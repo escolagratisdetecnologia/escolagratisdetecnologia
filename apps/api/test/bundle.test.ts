@@ -36,6 +36,10 @@ function invoke(
       TABLE_NAME: 'egt-test-data-main',
       SITE_ORIGIN: 'https://example.com',
       ORIGIN_VERIFY_SECRET: 'segredo',
+      USER_POOL_ID: 'sa-east-1_Teste123',
+      USER_POOL_CLIENT_ID: 'cliente',
+      USER_POOL_CLIENT_SECRET: 'segredo-do-cliente',
+      AUTH_DOMAIN: 'auth.example.com',
       AWS_REGION: 'sa-east-1',
       POWERTOOLS_LOG_LEVEL: 'SILENT',
     },
@@ -59,5 +63,11 @@ describe('Lambda bundle', () => {
 
   it('refuses requests that skip CloudFront', () => {
     expect(invoke('/api/health', {}).statusCode).toBe(403);
+  });
+
+  it('checks the session with Cognito', () => {
+    const response = invoke('/api/me', { 'x-origin-verify': 'segredo', cookie: 'egt_at=lixo' });
+
+    expect(response.statusCode).toBe(401);
   });
 });

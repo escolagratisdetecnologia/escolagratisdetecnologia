@@ -1,3 +1,5 @@
+import type { CognitoSettings } from './identity/cognito.ts';
+
 export type Environment = 'local' | 'dev' | 'prod';
 
 export interface AppConfig {
@@ -11,6 +13,8 @@ export interface AppConfig {
   siteOrigin: string;
   /** Value CloudFront sends in x-origin-verify (ADR 0022); absent locally. */
   originVerifySecret?: string;
+  /** Learner user pool (ADR 0024); absent locally. */
+  cognito?: CognitoSettings;
 }
 
 const ENVIRONMENTS: readonly string[] = ['local', 'dev', 'prod'];
@@ -35,6 +39,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     tableName: required(env, 'TABLE_NAME'),
     siteOrigin: required(env, 'SITE_ORIGIN'),
     originVerifySecret: required(env, 'ORIGIN_VERIFY_SECRET'),
+    cognito: {
+      userPoolId: required(env, 'USER_POOL_ID'),
+      clientId: required(env, 'USER_POOL_CLIENT_ID'),
+      clientSecret: required(env, 'USER_POOL_CLIENT_SECRET'),
+      domain: required(env, 'AUTH_DOMAIN'),
+    },
   };
 }
 

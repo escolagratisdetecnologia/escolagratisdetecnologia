@@ -20,6 +20,10 @@ describe('loadConfig', () => {
         TABLE_NAME: 'egt-prod-data-main',
         SITE_ORIGIN: 'https://escolagratisdetecnologia.com.br',
         ORIGIN_VERIFY_SECRET: 'segredo',
+        USER_POOL_ID: 'sa-east-1_Abc',
+        USER_POOL_CLIENT_ID: 'cliente',
+        USER_POOL_CLIENT_SECRET: 'segredo-do-cliente',
+        AUTH_DOMAIN: 'auth.escolagratisdetecnologia.com.br',
       }),
     ).toEqual({
       environment: 'prod',
@@ -27,6 +31,12 @@ describe('loadConfig', () => {
       tableName: 'egt-prod-data-main',
       siteOrigin: 'https://escolagratisdetecnologia.com.br',
       originVerifySecret: 'segredo',
+      cognito: {
+        userPoolId: 'sa-east-1_Abc',
+        clientId: 'cliente',
+        clientSecret: 'segredo-do-cliente',
+        domain: 'auth.escolagratisdetecnologia.com.br',
+      },
     });
   });
 
@@ -34,6 +44,18 @@ describe('loadConfig', () => {
     expect(() =>
       loadConfig({ APP_ENV: 'dev', APP_VERSION: '1', SITE_ORIGIN: 'x', ORIGIN_VERIFY_SECRET: 'y' }),
     ).toThrow('Missing TABLE_NAME (required when APP_ENV is dev).');
+    expect(() =>
+      loadConfig({
+        APP_ENV: 'dev',
+        APP_VERSION: '1',
+        TABLE_NAME: 't',
+        SITE_ORIGIN: 'x',
+        ORIGIN_VERIFY_SECRET: 'y',
+        USER_POOL_ID: 'p',
+        USER_POOL_CLIENT_ID: 'c',
+        AUTH_DOMAIN: 'auth.example.com',
+      }),
+    ).toThrow('Missing USER_POOL_CLIENT_SECRET (required when APP_ENV is dev).');
   });
 
   it('rejects unknown environments', () => {
