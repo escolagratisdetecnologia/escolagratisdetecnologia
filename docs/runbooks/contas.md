@@ -44,7 +44,12 @@ Antes do lançamento público (spec §20), peça a saída do sandbox na conta de
 
 ## Depois do deploy: conferir no dev
 
-Alguns comportamentos só a AWS mostra (ADR 0024). Depois do primeiro deploy, confira em https://dev.escolagratisdetecnologia.com, com um e-mail verificado no SES do dev. Os itens 4 e 5 usam outros endereços: verifique cada um no SES do dev antes, do mesmo jeito que o seu (seção 3), senão o código não chega. Confira:
+Alguns comportamentos só a AWS mostra (ADR 0024). Depois do primeiro deploy, **segure a aprovação do `prod` até estas conferências passarem**. Confira em https://dev.escolagratisdetecnologia.com, com um e-mail verificado no SES do dev. Os itens 4 e 5 usam outros endereços: verifique cada um no SES do dev antes, do mesmo jeito que o seu (seção 3), senão o código não chega. Antes de tudo:
+
+- **Plano sem mudanças:** logo depois do primeiro apply, rode `infra/tf live dev plan` de novo. Ele deve mostrar zero mudanças; se mostrar alguma, abra uma issue.
+- **Domínio de login:** `https://auth.dev.escolagratisdetecnologia.com` precisa responder com TLS antes das conferências do Google (o domínio do Cognito pode demorar um pouco depois do primeiro apply).
+
+Confira:
 
 1. **E-mail novo:** chega um código de 6 dígitos, com o e-mail em português. Depois do código, a página pede o ano de nascimento e o aceite dos termos, e a aba Eu mostra o seu e-mail.
 2. **Login de novo:** saia e entre com o mesmo e-mail. Desta vez chega um código de 8 dígitos.
@@ -53,6 +58,11 @@ Alguns comportamentos só a AWS mostra (ADR 0024). Depois do primeiro deploy, co
 5. **Google sobre cadastro não confirmado:** comece o cadastro por e-mail com um terceiro endereço, sem digitar o código. Depois entre com o Google usando esse endereço: o cadastro deve terminar e o próximo código por e-mail deve entrar na mesma conta (a aba Eu não pede cadastro de novo).
 6. **Dois aparelhos:** conclua uma aula num navegador e veja o progresso aparecer em outro (ou numa janela anônima) com a mesma conta.
 7. **Seus dados:** na aba Eu, baixe os dados (JSON) e exclua a conta. Depois disso, entrar com o mesmo e-mail pede o cadastro de novo.
+8. **Reenviar o código:** com um e-mail novo, clique em "Receber código" e, antes de digitar, em "Enviar outro código": chega um código novo.
+9. **Sessão com mais de 1 hora:** deixe uma aba aberta por mais de uma hora, conclua uma aula nela e veja o progresso salvar, sem pedir login de novo.
+10. **Excluir com Google vinculado:** exclua uma conta que tem o Google vinculado e entre com "Entrar com Google" de novo: a página pede o cadastro outra vez, sem erros.
+11. **Aparelho compartilhado:** entre com o Google, clique em "Sair" e em "Entrar com Google" de novo no mesmo navegador: a escolha de conta do Google deve aparecer, sem entrar sozinho na conta anterior. Se entrar sozinho, abra uma issue antes do lançamento.
+12. **Cadastro incompleto:** entre por e-mail e não termine o cadastro. Na aba Eu e em `/entrar/cadastro/`, "Sair" e "Cancelar cadastro" funcionam, e o progresso do aparelho continua.
 
 Se algo falhar, veja os problemas comuns abaixo e os logs (CloudWatch, conta do ambiente): `/aws/lambda/egt-<env>-api-handler` (a API) e `/aws/lambda/egt-<env>-auth-triggers` (os gatilhos do Cognito).
 
@@ -74,5 +84,7 @@ Se algo falhar, veja os problemas comuns abaixo e os logs (CloudWatch, conta do 
 
 Se alguém pedir a exclusão sem conseguir entrar (por exemplo, perdeu o acesso ao e-mail), confirme a identidade da pessoa pelo canal de atendimento e então, no console da conta de prod:
 
-1. Cognito → User pools → `egt-prod-auth-learners` → **Users** → busque o e-mail → anote o `sub` → **Delete user**.
-2. DynamoDB → Tables → `egt-prod-data-main` → **Explore items** → consulta com `PK = USER#<sub>` → selecione todos os itens → **Delete items**.
+1. Cognito → User pools → `egt-prod-auth-learners` → **Users** → busque o e-mail → anote o `sub`. Se o atributo `identities` lista o Google, anote também o `userId` dele e desvincule antes de apagar:
+   `aws cognito-idp admin-disable-provider-for-user --user-pool-id <id do pool> --user ProviderName=Google,ProviderAttributeName=Cognito_Subject,ProviderAttributeValue=<userId do Google em identities>`
+2. DynamoDB → Tables → `egt-prod-data-main` → **Explore items** → consulta com `PK = USER#<sub>` → selecione todos os itens → **Delete items** (o perfil e o progresso saem primeiro, como na API).
+3. Por último, no Cognito, **Delete user**.
