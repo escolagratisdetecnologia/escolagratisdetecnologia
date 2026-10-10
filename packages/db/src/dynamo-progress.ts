@@ -1,6 +1,7 @@
 import type { CourseProgress, Progress } from '@egt/core';
 import { Entity } from 'electrodb';
 import type { Database } from './client.ts';
+import { isConditionalCheckFailure } from './errors.ts';
 import {
   normalizeTimestamp,
   sortedUnique,
@@ -30,10 +31,6 @@ function courseProgressEntity(db: Database) {
     { client: db.document, table: db.table },
   );
 }
-
-const isConditionalCheckFailure = (error: unknown): boolean =>
-  error instanceof Error &&
-  (error.cause as { name?: string } | undefined)?.name === 'ConditionalCheckFailedException';
 
 /**
  * Two writes per course, both safe to run concurrently from several devices: ADD unions the
@@ -90,6 +87,12 @@ export function createDynamoProgressRepository(db: Database): ProgressRepository
         }
       }
       return get(sub);
+    },
+    async deleteAll(sub) {
+      const { data } = await entity.query
+        .byUser({ sub })
+        .go({ pages: 'all', attributes: ['course'] });
+      await Promise.all(data.map(({ course }) => entity.delete({ sub, course }).go()));
     },
   };
 }

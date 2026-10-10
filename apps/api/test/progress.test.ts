@@ -13,7 +13,7 @@ describe('progress routes', () => {
     const broken = async () => {
       throw new Error('boom');
     };
-    const app = testApp({ progress: { get: broken, merge: broken } });
+    const app = testApp({ progress: { get: broken, merge: broken, deleteAll: broken } });
 
     const res = await app.request('/api/progress', { headers: learner() });
 

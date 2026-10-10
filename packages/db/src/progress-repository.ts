@@ -9,6 +9,8 @@ export interface ProgressRepository {
    * Returns the learner's whole progress.
    */
   merge(sub: string, courses: Record<string, CourseProgress>, now: Date): Promise<Progress>;
+  /** Removes every course of the learner (account deletion). */
+  deleteAll(sub: string): Promise<void>;
 }
 
 export const sortedUnique = (values: Iterable<string>): string[] => [...new Set(values)].sort();

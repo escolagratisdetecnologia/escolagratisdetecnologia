@@ -1,12 +1,15 @@
 import { randomUUID } from 'node:crypto';
+import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   checkDatabase,
   connect,
+  createDynamoProfileRepository,
   createDynamoProgressRepository,
   deleteTable,
   ensureTable,
 } from '../src/index.ts';
+import { describeProfileRepository } from './profile-contract.ts';
 import { describeProgressRepository } from './progress-contract.ts';
 
 // DynamoDB Local: `pnpm db:up` locally (export DYNAMODB_ENDPOINT=http://localhost:8000); the CI
@@ -35,4 +38,30 @@ describe.skipIf(endpoint === undefined)('DynamoDB Local', () => {
   });
 
   describeProgressRepository('dynamodb', () => createDynamoProgressRepository(db));
+  describeProfileRepository('dynamodb', () => createDynamoProfileRepository(db));
+
+  it('keeps a learner profile and progress under the same partition', async () => {
+    const sub = `learner-${randomUUID()}`;
+    await createDynamoProfileRepository(db).create(sub, {
+      birthYear: 2008,
+      termsVersion: '2026-10-10',
+      termsAcceptedAt: '2026-10-10T12:00:00.000Z',
+      createdAt: '2026-10-10T12:00:00.000Z',
+    });
+    await createDynamoProgressRepository(db).merge(
+      sub,
+      { site: { completedLessons: ['a'], correctAnswers: [], updatedAt: '2026-10-10T12:00:00Z' } },
+      new Date('2026-10-10T12:00:00.000Z'),
+    );
+
+    const { Items } = await db.document.send(
+      new QueryCommand({
+        TableName: db.table,
+        KeyConditionExpression: 'PK = :pk',
+        ExpressionAttributeValues: { ':pk': `USER#${sub}` },
+      }),
+    );
+
+    expect(Items?.map((item) => item.SK).sort()).toEqual(['COURSE#site', 'PROFILE']);
+  });
 });

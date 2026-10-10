@@ -44,5 +44,8 @@ export function createMemoryProgressRepository(): ProgressRepository {
       }
       return read(sub);
     },
+    async deleteAll(sub) {
+      learners.delete(sub);
+    },
   };
 }

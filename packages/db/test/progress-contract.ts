@@ -169,5 +169,24 @@ export function describeProgressRepository(name: string, create: () => ProgressR
       ]);
       expect((await repository.get(bia)).courses).toEqual({ site: lesson('b') });
     });
+
+    it('deleteAll removes every course of one learner only', async () => {
+      const repository = create();
+      const ana = learner();
+      const bia = learner();
+      const lesson = (slug: string) => ({
+        completedLessons: [slug],
+        correctAnswers: [],
+        updatedAt: '2026-10-09T10:00:00.000Z',
+      });
+      await repository.merge(ana, { site: lesson('a'), planilhas: lesson('x') }, NOW);
+      await repository.merge(bia, { site: lesson('b') }, NOW);
+
+      await repository.deleteAll(ana);
+      await repository.deleteAll(learner());
+
+      expect(await repository.get(ana)).toEqual({ version: 1, courses: {} });
+      expect((await repository.get(bia)).courses).toEqual({ site: lesson('b') });
+    });
   });
 }
