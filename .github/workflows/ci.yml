@@ -16,11 +16,20 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     services:
-      # Same image as docker-compose.yml: repository and route integration tests.
+      # Same images as docker-compose.yml: repository and route integration tests, and the
+      # e2e sign-in (codes in Mailpit, fake Google).
       dynamodb:
         image: amazon/dynamodb-local:3.3.1@sha256:ff89bd48ff32cd8d9be5fee8873b65b8854dc408f1afe881be6eb00247bc0dab
         ports:
           - 8000:8000
+      mailpit:
+        image: axllent/mailpit:v1.31.2@sha256:74d609a42ec279aa63c6b4622a6fa9b5408d1ad5b1d76a1c4be40a265ce0863d
+        ports:
+          - 8025:8025
+      google:
+        image: ghcr.io/navikt/mock-oauth2-server:6.0.3@sha256:250e04413e2fc7877d4cb38ecd74d3ecb1a40aae3a9bdad96d1c593e59fee95e
+        ports:
+          - 8080:8080
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
@@ -42,6 +51,8 @@ jobs:
           SITE_URL: https://escolagratisdetecnologia.com.br
       - run: pnpm --filter @egt/web check:csp
       - run: pnpm --filter @egt/web exec playwright install --with-deps chromium webkit
+      # The fake Google has no healthcheck: wait for it before the sign-in tests.
+      - run: curl -fsS --retry 30 --retry-delay 1 --retry-all-errors http://localhost:8080/google/.well-known/openid-configuration > /dev/null
       - run: pnpm --filter @egt/web test:e2e
       - run: pnpm --filter @egt/web lighthouse
       - name: Build de prod (sem rascunhos) e guardas
