@@ -43,6 +43,18 @@ describe('progress routes', () => {
     }
   });
 
+  it('refuse changes without the site Origin, even from a logged-in learner', async () => {
+    const { origin: _origin, ...withoutOrigin } = learner();
+
+    const res = await testApp().request('/api/progress/site/lessons/a', {
+      method: 'PUT',
+      headers: withoutOrigin,
+    });
+
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { error: { code: string } }).error.code).toBe('invalid_origin');
+  });
+
   it('GET starts empty', async () => {
     const res = await testApp().request('/api/progress', { headers: learner() });
 

@@ -1,31 +1,34 @@
 import { describe, expect, it } from 'vitest';
-import { createDevAuthenticator, noAuthentication } from '../src/auth.ts';
-import { config } from './helpers.ts';
+import { learner, SITE, testApp } from './helpers.ts';
 
-const request = (headers: Record<string, string> = {}) =>
-  new Request('http://localhost/api/progress', { headers });
+describe('personal routes', () => {
+  it('know the learner by the egt_at cookie', async () => {
+    const res = await testApp().request('/api/progress', { headers: learner('ana') });
 
-describe('createDevAuthenticator', () => {
-  const authenticate = createDevAuthenticator(config);
-
-  it('uses x-dev-user as the learner', async () => {
-    expect(await authenticate(request({ 'x-dev-user': 'ana-1' }))).toEqual({ sub: 'ana-1' });
+    expect(res.status).toBe(200);
   });
 
-  it('ignores missing or odd values', async () => {
-    expect(await authenticate(request())).toBeNull();
-    expect(await authenticate(request({ 'x-dev-user': 'Ana Maria' }))).toBeNull();
+  it('answer 401 without a valid access token', async () => {
+    for (const cookie of [undefined, 'egt_at=lixo', 'egt_rt=refresh.ana.1']) {
+      const headers: Record<string, string> = cookie === undefined ? {} : { cookie };
+
+      const res = await testApp().request('/api/progress', { headers });
+
+      expect(res.status).toBe(401);
+      expect(await res.json()).toEqual({
+        error: { code: 'unauthenticated', message: 'Entre na sua conta para continuar.' },
+      });
+    }
   });
 
-  it('only exists locally', () => {
-    expect(() => createDevAuthenticator({ ...config, environment: 'dev' })).toThrow(
-      'The dev authenticator only runs locally.',
-    );
-  });
-});
+  it('answer 409 until the learner finishes sign-up', async () => {
+    const res = await testApp().request('/api/progress', {
+      headers: { cookie: 'egt_at=access.cris', origin: SITE },
+    });
 
-describe('noAuthentication', () => {
-  it('never finds a learner (AWS until Phase 1C)', async () => {
-    expect(await noAuthentication(request({ 'x-dev-user': 'ana' }))).toBeNull();
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({
+      error: { code: 'profile_required', message: 'Complete seu cadastro para continuar.' },
+    });
   });
 });

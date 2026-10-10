@@ -1,39 +1,31 @@
+import type { ProfileRepository } from '@egt/db';
 import type { MiddlewareHandler } from 'hono';
-import type { AppConfig } from './config.ts';
+import { getCookie } from 'hono/cookie';
 import { apiError } from './errors.ts';
-
-export interface Identity {
-  /** Stable learner id (Cognito `sub` from Phase 1C). */
-  sub: string;
-}
-
-/** Finds out who is calling. Phase 1C plugs in the Cognito session; until then AWS has none. */
-export type Authenticate = (request: Request) => Promise<Identity | null>;
-
-export const noAuthentication: Authenticate = async () => null;
-
-const DEV_USER = /^[a-z0-9-]{1,64}$/;
-
-/** Fake login for local development: the x-dev-user header names the learner. */
-export function createDevAuthenticator(config: AppConfig): Authenticate {
-  if (config.environment !== 'local') {
-    throw new Error('The dev authenticator only runs locally.');
-  }
-  return async (request) => {
-    const sub = request.headers.get('x-dev-user');
-    return sub !== null && DEV_USER.test(sub) ? { sub } : null;
-  };
-}
+import type { Identity, IdentityProvider } from './identity.ts';
+import { COOKIES } from './session.ts';
 
 export type AuthEnv = { Variables: { identity: Identity } };
 
-export function requireIdentity(authenticate: Authenticate): MiddlewareHandler<AuthEnv> {
+/** Personal routes: the access token cookie must be valid. */
+export function requireIdentity(identity: IdentityProvider): MiddlewareHandler<AuthEnv> {
   return async (c, next) => {
-    const identity = await authenticate(c.req.raw);
-    if (identity === null) {
+    const token = getCookie(c, COOKIES.access);
+    const found = token === undefined ? null : await identity.verifyAccessToken(token);
+    if (found === null) {
       return c.json(apiError('unauthenticated', 'Entre na sua conta para continuar.'), 401);
     }
-    c.set('identity', identity);
+    c.set('identity', found);
+    await next();
+  };
+}
+
+/** Learning data only after sign-up is complete (age check and terms, spec §5.5). */
+export function requireProfile(profiles: ProfileRepository): MiddlewareHandler<AuthEnv> {
+  return async (c, next) => {
+    if ((await profiles.get(c.var.identity.sub)) === null) {
+      return c.json(apiError('profile_required', 'Complete seu cadastro para continuar.'), 409);
+    }
     await next();
   };
 }

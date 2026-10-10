@@ -1,9 +1,9 @@
 import { fileURLToPath } from 'node:url';
 import { serve } from '@hono/node-server';
 import { createApp } from './app.ts';
-import { createDevAuthenticator } from './auth.ts';
 import { loadProgressCatalog } from './catalog.ts';
 import { loadConfig } from './config.ts';
+import { noAccounts } from './identity.ts';
 import { connectLocalStorage } from './local.ts';
 import { createLogger } from './logger.ts';
 
@@ -23,9 +23,10 @@ const app = createApp({
   config,
   logger: createLogger(config),
   progress: storage.progress,
+  profiles: storage.profiles,
   catalog,
   checkDatabase: storage.checkDatabase,
-  authenticate: createDevAuthenticator(config),
+  identity: noAccounts,
 });
 
 serve({ fetch: app.fetch, port }, (info) => {

@@ -1,9 +1,12 @@
 import {
   checkDatabase,
   connect,
+  createDynamoProfileRepository,
   createDynamoProgressRepository,
+  createMemoryProfileRepository,
   createMemoryProgressRepository,
   ensureTable,
+  type ProfileRepository,
   type ProgressRepository,
 } from '@egt/db';
 import type { AppConfig } from './config.ts';
@@ -11,6 +14,7 @@ import type { AppConfig } from './config.ts';
 export interface LocalStorage {
   mode: 'dynamodb' | 'memory';
   progress: ProgressRepository;
+  profiles: ProfileRepository;
   checkDatabase: () => Promise<void>;
 }
 
@@ -22,12 +26,14 @@ export async function connectLocalStorage(config: AppConfig): Promise<LocalStora
     return {
       mode: 'dynamodb',
       progress: createDynamoProgressRepository(db),
+      profiles: createDynamoProfileRepository(db),
       checkDatabase: () => checkDatabase(db),
     };
   } catch {
     return {
       mode: 'memory',
       progress: createMemoryProgressRepository(),
+      profiles: createMemoryProfileRepository(),
       checkDatabase: async () => {},
     };
   }

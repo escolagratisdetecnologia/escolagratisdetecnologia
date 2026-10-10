@@ -1,9 +1,10 @@
 import { isKnownLesson, keepKnownProgress, type ProgressCatalog } from '@egt/core';
-import type { ProgressRepository } from '@egt/db';
+import type { ProfileRepository, ProgressRepository } from '@egt/db';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { requireIdentity, type Authenticate, type AuthEnv } from '../auth.ts';
+import { requireIdentity, requireProfile, type AuthEnv } from '../auth.ts';
 import { apiError } from '../errors.ts';
+import type { IdentityProvider } from '../identity.ts';
 
 // Same slug rule as packages/content (course folders and lesson files).
 const slug = z
@@ -36,19 +37,22 @@ const invalidRequest = apiError(
 
 export interface ProgressDeps {
   progress: ProgressRepository;
-  authenticate: Authenticate;
+  profiles: ProfileRepository;
+  identity: IdentityProvider;
   catalog: ProgressCatalog;
   now?: () => Date;
 }
 
 export function progressRoutes({
   progress,
-  authenticate,
+  profiles,
+  identity,
   catalog,
   now = () => new Date(),
 }: ProgressDeps) {
   return new Hono<AuthEnv>()
-    .use(requireIdentity(authenticate))
+    .use(requireIdentity(identity))
+    .use(requireProfile(profiles))
     .get('/', async (c) => c.json(await progress.get(c.var.identity.sub)))
     .put('/:course/lessons/:lesson', async (c) => {
       const params = lessonParams.safeParse(c.req.param());

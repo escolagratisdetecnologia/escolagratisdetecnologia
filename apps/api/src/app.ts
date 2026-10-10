@@ -1,10 +1,10 @@
 import type { Logger } from '@aws-lambda-powertools/logger';
 import type { ProgressCatalog } from '@egt/core';
-import type { ProgressRepository } from '@egt/db';
+import type { ProfileRepository, ProgressRepository } from '@egt/db';
 import { Hono } from 'hono';
-import type { Authenticate } from './auth.ts';
 import type { AppConfig } from './config.ts';
 import { apiError } from './errors.ts';
+import type { IdentityProvider } from './identity.ts';
 import { healthRoutes } from './routes/health.ts';
 import { progressRoutes } from './routes/progress.ts';
 import { limitBody, noStore, requireOriginVerify, requireSiteOrigin } from './security.ts';
@@ -13,10 +13,11 @@ export interface AppDeps {
   config: AppConfig;
   logger: Logger;
   progress: ProgressRepository;
+  profiles: ProfileRepository;
   /** Courses and lessons the progress may hold (built from content/). */
   catalog: ProgressCatalog;
   checkDatabase: () => Promise<void>;
-  authenticate: Authenticate;
+  identity: IdentityProvider;
   now?: () => Date;
 }
 
