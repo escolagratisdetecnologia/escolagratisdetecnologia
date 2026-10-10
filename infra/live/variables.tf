@@ -36,3 +36,15 @@ variable "alert_emails" {
   default     = []
   sensitive   = true
 }
+
+variable "app_version" {
+  description = "Versão publicada da API (o commit do deploy, via TF_VAR_app_version)."
+  type        = string
+  default     = "local"
+}
+
+variable "data_deletion_protection" {
+  description = "Proteção contra exclusão da tabela DynamoDB (ligada em prod)."
+  type        = bool
+  default     = true
+}

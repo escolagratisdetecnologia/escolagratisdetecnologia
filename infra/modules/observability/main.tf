@@ -30,3 +30,21 @@ resource "aws_budgets_budget" "monthly" {
     }
   }
 }
+
+# Alarm notifications by e-mail; each address confirms its subscription once (link in the e-mail).
+# Without a CMK: CloudWatch alarms cannot publish to topics encrypted with the AWS managed key,
+# the messages carry only alarm metadata (no personal data), and a CMK would cost US$ 1/month
+# per environment (ADR 0023).
+#trivy:ignore:AWS-0095
+resource "aws_sns_topic" "alerts" {
+  name = "${var.name_prefix}-observability-alerts"
+  tags = local.tags
+}
+
+# count (not for_each) keeps the addresses out of the plan: they stay sensitive.
+resource "aws_sns_topic_subscription" "alert_email" {
+  count     = nonsensitive(length(var.alert_emails))
+  topic_arn = aws_sns_topic.alerts.arn
+  protocol  = "email"
+  endpoint  = var.alert_emails[count.index]
+}

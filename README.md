@@ -2,7 +2,7 @@
 
 Aprenda tecnologia de graça, em aulas curtinhas pensadas pro celular, e saia de cada curso resolvendo um problema de verdade — com certificado que qualquer pessoa consegue conferir.
 
-> **Status:** Fase 0 (fundação) concluída; próxima: Fase 1 (plataforma). Site: https://escolagratisdetecnologia.com.br
+> **Status:** Fase 1 (plataforma) em andamento: aprender sem conta (1A) e API com banco de dados (1B) prontos; próximas: contas (1C) e mídia (1D). Site: https://escolagratisdetecnologia.com.br
 
 ## Por que existe
 
@@ -14,21 +14,23 @@ Aprenda tecnologia de graça, em aulas curtinhas pensadas pro celular, e saia de
 
 1. Instale o [mise](https://mise.jdx.dev) e rode `mise install` (Node 24, pnpm, Terraform e ferramentas). Em shells não interativos, as ferramentas do mise ficam em `$HOME/.local/share/mise/shims`.
 2. `pnpm install`
-3. `pnpm dev` → site em http://localhost:4321 e API em http://localhost:3001/api/health
+3. Opcional, com Docker: `pnpm db:up` sobe o DynamoDB Local. Sem ele, a API guarda o progresso na memória.
+4. `pnpm dev` → site em http://localhost:4321 e API em http://localhost:3001/api/health
 
-Verificações: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`.
+Verificações: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`. Os testes com DynamoDB Local rodam com `pnpm db:up` e `DYNAMODB_ENDPOINT=http://localhost:8000` (na CI, sempre).
 
 No Linux/WSL, o WebKit dos testes e2e pode exigir, uma única vez: `sudo env "PATH=$HOME/.local/share/mise/shims:$PATH" pnpm --filter @egt/web exec playwright install-deps webkit chromium`.
 
 ## Estrutura
 
-| Caminho    | O que é                                                                  |
-| ---------- | ------------------------------------------------------------------------ |
-| `apps/web` | Site (Astro, static-first)                                               |
-| `apps/api` | API (Hono; roda localmente nesta fase, deploy na AWS a partir da Fase 1) |
-| `tools/`   | CLIs e scripts do repositório                                            |
-| `infra/`   | Infraestrutura como código (Terraform, AWS)                              |
-| `docs/`    | Design, decisões (ADRs), arquitetura e runbooks                          |
+| Caminho     | O que é                                                       |
+| ----------- | ------------------------------------------------------------- |
+| `apps/web`  | Site (Astro, static-first)                                    |
+| `apps/api`  | API (Hono em Lambda, atrás do CloudFront em `/api`)           |
+| `packages/` | Bibliotecas compartilhadas: conteúdo, regras e banco de dados |
+| `tools/`    | CLIs e scripts do repositório                                 |
+| `infra/`    | Infraestrutura como código (Terraform, AWS)                   |
+| `docs/`     | Design, decisões (ADRs), arquitetura e runbooks               |
 
 ## Documentação
 

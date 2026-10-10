@@ -9,7 +9,7 @@ variable "monthly_budget_usd" {
 }
 
 variable "alert_emails" {
-  description = "E-mails que recebem alertas de orçamento. Vazio desliga as notificações."
+  description = "E-mails que recebem alertas de orçamento e alarmes. Vazio desliga as notificações."
   type        = list(string)
   default     = []
   sensitive   = true

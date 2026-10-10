@@ -61,6 +61,18 @@ resource "aws_wafv2_web_acl" "edge" {
     allow {}
   }
 
+  # JSON, like every API error: the site's pages and the API share the rate limit.
+  custom_response_body {
+    key          = "rate-limited"
+    content_type = "APPLICATION_JSON"
+    content = jsonencode({
+      error = {
+        code    = "rate_limited"
+        message = "Muitas requisições em pouco tempo. Espere alguns minutos e tente de novo."
+      }
+    })
+  }
+
   dynamic "rule" {
     for_each = local.managed_rule_groups
 
@@ -91,8 +103,19 @@ resource "aws_wafv2_web_acl" "edge" {
     name     = "rate-limit-ip"
     priority = 40
 
+    # 429 instead of the default 403, which CloudFront would turn into the 404 page (ADR 0022).
     action {
-      block {}
+      block {
+        custom_response {
+          response_code            = 429
+          custom_response_body_key = "rate-limited"
+
+          response_header {
+            name  = "retry-after"
+            value = "300"
+          }
+        }
+      }
     }
 
     statement {
@@ -141,6 +164,14 @@ resource "aws_wafv2_web_acl" "edge" {
 
 data "aws_cloudfront_cache_policy" "optimized" {
   name = "Managed-CachingOptimized"
+}
+
+data "aws_cloudfront_cache_policy" "disabled" {
+  name = "Managed-CachingDisabled"
+}
+
+data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
+  name = "Managed-AllViewerExceptHostHeader"
 }
 
 resource "aws_cloudfront_origin_access_control" "site" {
@@ -221,6 +252,24 @@ resource "aws_cloudfront_distribution" "site" {
     origin_access_control_id = aws_cloudfront_origin_access_control.site.id
   }
 
+  # API Gateway answers only requests carrying the secret header (ADR 0022).
+  origin {
+    origin_id   = "api"
+    domain_name = var.api_origin_domain
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+
+    custom_header {
+      name  = "x-origin-verify"
+      value = var.api_origin_verify_secret
+    }
+  }
+
   default_cache_behavior {
     target_origin_id           = "site"
     viewer_protocol_policy     = "redirect-to-https"
@@ -236,16 +285,25 @@ resource "aws_cloudfront_distribution" "site" {
     }
   }
 
-  # Without s3:ListBucket a missing object answers 403; show the site's 404 page.
-  custom_error_response {
-    error_code            = 403
-    response_code         = 404
-    response_page_path    = "/404.html"
-    error_caching_min_ttl = 60
+  # API: never cached; every viewer header except Host reaches API Gateway. No viewer-request
+  # function: it would rewrite paths to index.html.
+  ordered_cache_behavior {
+    path_pattern               = "/api/*"
+    target_origin_id           = "api"
+    viewer_protocol_policy     = "redirect-to-https"
+    allowed_methods            = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods             = ["GET", "HEAD"]
+    compress                   = true
+    cache_policy_id            = data.aws_cloudfront_cache_policy.disabled.id
+    origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
   }
 
+  # Without s3:ListBucket a missing object answers 403; show the site's 404 page. Error pages
+  # apply to the whole distribution, API included, so the API never answers 403 through
+  # CloudFront and its JSON 404s pass untouched (ADR 0022).
   custom_error_response {
-    error_code            = 404
+    error_code            = 403
     response_code         = 404
     response_page_path    = "/404.html"
     error_caching_min_ttl = 60

@@ -146,7 +146,7 @@ Regra: **toda operação termina em PR** (curso, vídeo, calendário social, rel
 3. **Enviar projeto:** `POST /api/projects/{curso}/submissions` → valida cota/elegibilidade → SQS → `grader` busca evidências com proteções (§7) → Claude devolve avaliação estruturada → nota calculada por código → aprovado → aluno vê resultado na área "Eu". O `issuer` é acionado quando o **último** requisito de elegibilidade (§6.1) é cumprido — aprovação do projeto ou verificação do celular, o que vier depois.
 4. **Publicar curso:** skill `novo-curso` → PR com conteúdo → skill `gerar-videos` → HeyGen → `pnpm media:ingest` → PR com IDs de vídeo → merge → CI rebuild + deploy.
 
-### 3.5 Modelo de dados (DynamoDB, tabela única `egt-{env}-main`)
+### 3.5 Modelo de dados (DynamoDB, tabela única `egt-{env}-data-main`)
 
 Chaves genéricas `PK`, `SK`, `GSI1PK`, `GSI1SK`; atributo `ttl` para itens efêmeros. Entidades modeladas com ElectroDB em `packages/db`.
 
@@ -312,6 +312,7 @@ Proteção contra enumeração de usuários ligada; a tela responde igual para c
 
 - WAF: regras gerenciadas da AWS; rate limit por IP de 50 requisições/5 min em `/api/auth/*` e 30 requisições/5 min em `/api/projects/*` (ajustáveis por variável Terraform).
 - Cabeçalhos via response headers policy do CloudFront: CSP estrita (sem scripts inline não-hasheados), HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`.
+- API na mesma distribuição (ADR 0022): só o 403 do S3 vira a página 404, e a API nunca responde 403 pela borda; o rate limit responde 429 em JSON; a origem só aceita o cabeçalho secreto do CloudFront; corpo até 8 KB.
 - IAM de menor privilégio por Lambda; nenhuma chave AWS de longa duração (GitHub → AWS via OIDC).
 - Segredos em SSM SecureString; criptografia em repouso padrão (S3 SSE, DynamoDB) e TLS 1.2+.
 - CloudTrail (eventos de gerenciamento), IAM Access Analyzer, alarmes de segurança básicos.
@@ -600,8 +601,8 @@ pnpm workspaces + Turborepo; TypeScript `strict` (6.0, por compatibilidade com t
 
 `pnpm dev` sobe:
 
-- `docker compose`: DynamoDB Local, `mock-oauth2-server` (emissor OIDC falso), Mailpit (e-mails).
-- Criação da tabela e seed (curso piloto, usuários de teste).
+- `docker compose` (`pnpm db:up`): DynamoDB Local; `mock-oauth2-server` (emissor OIDC falso) e Mailpit (e-mails) entram com as contas (Fase 1C). Sem Docker, a API guarda o progresso na memória.
+- Criação da tabela ao iniciar a API; seed de usuários de teste com as contas (Fase 1C).
 - API Hono como servidor Node em `:3001`; Astro dev em `:4321` com proxy `/api` → `:3001`.
 - Corretor: Claude real se `ANTHROPIC_API_KEY` existir; senão `FakeGrader`.
 - Certificados assinados com chave local; SMS impresso no console; vídeos de exemplo de `fixtures/media`.

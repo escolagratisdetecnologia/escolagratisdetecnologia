@@ -32,13 +32,13 @@ jobs:
       - name: terraform validate (todas as raízes)
         run: |
           # modules/edge uses a provider alias: it is validated via live and tested with mocks below.
-          for root in modules/tags modules/site modules/observability modules/state-bucket bootstrap/account bootstrap/management live; do
+          for root in modules/tags modules/site modules/data modules/api modules/observability modules/state-bucket bootstrap/account bootstrap/management live; do
             terraform -chdir=infra/$root init -backend=false -input=false >/dev/null
             terraform -chdir=infra/$root validate
           done
       - name: terraform test
         run: |
-          for root in modules/tags modules/edge modules/observability bootstrap/management bootstrap/account; do
+          for root in modules/tags modules/edge modules/data modules/api modules/observability bootstrap/management bootstrap/account; do
             terraform -chdir=infra/$root init -backend=false -input=false >/dev/null
             terraform -chdir=infra/$root test
           done
@@ -74,9 +74,14 @@ jobs:
         env: [dev, prod]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The plan zips apps/api/dist into the Lambda package.
+      - run: pnpm --filter @egt/api build
       - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
         with:
           terraform_version: 1.16.5
@@ -89,6 +94,7 @@ jobs:
         run: infra/tf live ${{ matrix.env }} plan -input=false -lock-timeout=5m -out=tfplan
         env:
           TF_VAR_alert_emails: ${{ secrets.ALERT_EMAILS || '[]' }}
+          TF_VAR_app_version: ${{ github.sha }}
       # plan.json holds sensitive values (such as alert_emails) in plain text: never upload it as an artifact.
       - run: terraform -chdir=infra/live show -json tfplan > plan.json
       - name: check-tags
