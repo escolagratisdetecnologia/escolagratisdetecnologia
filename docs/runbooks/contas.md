@@ -44,7 +44,7 @@ Antes do lançamento público (spec §20), peça a saída do sandbox na conta de
 
 ## Depois do deploy: conferir no dev
 
-Alguns comportamentos só a AWS mostra (ADR 0024). Depois do primeiro deploy, confira em https://dev.escolagratisdetecnologia.com, com um e-mail verificado no SES do dev:
+Alguns comportamentos só a AWS mostra (ADR 0024). Depois do primeiro deploy, confira em https://dev.escolagratisdetecnologia.com, com um e-mail verificado no SES do dev. Os itens 4 e 5 usam outros endereços: verifique cada um no SES do dev antes, do mesmo jeito que o seu (seção 3), senão o código não chega. Confira:
 
 1. **E-mail novo:** chega um código de 6 dígitos, com o e-mail em português. Depois do código, a página pede o ano de nascimento e o aceite dos termos, e a aba Eu mostra o seu e-mail.
 2. **Login de novo:** saia e entre com o mesmo e-mail. Desta vez chega um código de 8 dígitos.
@@ -61,7 +61,7 @@ Se algo falhar, veja os problemas comuns abaixo e os logs (CloudWatch, conta do 
 - **O código não chega:** o SES está no sandbox e o e-mail não foi verificado (veja acima). Confira também o spam.
 - **"Não deu para entrar com o Google":** confira a URI de redirecionamento no Google Cloud (exatamente `https://auth.<domínio>/oauth2/idpresponse`), se o app do Google foi publicado e se o Client ID e o secret no GitHub são do ambiente certo (depois de corrigir, rode o deploy de novo). Nos logs da API, procure `google_sign_in_failed`.
 - **"Muitas tentativas em pouco tempo" (429):** o WAF aceita até 50 requisições por IP a cada 5 minutos em `/api/auth/*`. Espere 5 minutos.
-- **O e-mail do código chega em inglês:** o gatilho de mensagem não foi chamado para aquele tipo de código. Abra uma issue; a alternativa é o modelo de mensagem do próprio pool (`email_mfa_configuration` no módulo `auth`).
+- **O e-mail do código chega em inglês:** o gatilho de mensagem não foi chamado para aquele tipo de código. Abra uma issue; a alternativa é o modelo de mensagem do próprio pool (um bloco `email_mfa_configuration`, que hoje não existe, a acrescentar ao pool no módulo `auth`).
 
 ## Trocar o segredo do Google
 

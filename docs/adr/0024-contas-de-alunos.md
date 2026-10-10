@@ -17,7 +17,7 @@ A Fase 1C liga o login de verdade (spec §5): código por e-mail e Google no poo
 
 ## Decisão
 
-- **Uma conta por aluno, sempre por e-mail.** Todo aluno é um usuário nativo do pool: o e-mail é o login e o `sub` identifica o aluno nos dados. O gatilho de pré-cadastro vincula o primeiro login com Google ao usuário com o mesmo e-mail. Se esse usuário não existe, o gatilho o cria, sem senha e com o e-mail já verificado. Em seguida, falha de propósito (`ACCOUNT_LINKED`), e a API refaz o login com Google uma vez, sozinha, em `/api/auth/callback`. Só e-mails confirmados pelo Google (`email_verified`) são vinculados. O gatilho só vincula a uma conta de e-mail confirmada: se a única conta daquele e-mail é um cadastro por e-mail nunca confirmado (sem login e sem dados), o gatilho a apaga e cria uma conta nova, sem senha e com o e-mail verificado, e então vincula o Google, porque a API apaga cadastros não confirmados no próximo login por e-mail, o que levaria junto o vínculo e os dados do aluno (por isso a Lambda dos gatilhos também tem `cognito-idp:AdminDeleteUser`, só no pool).
+- **Uma conta por aluno, sempre por e-mail.** Todo aluno é um usuário nativo do pool: o e-mail é o login e o `sub` identifica o aluno nos dados. O gatilho de pré-cadastro vincula o primeiro login com Google ao usuário com o mesmo e-mail. Se esse usuário não existe, o gatilho o cria, sem senha e com o e-mail já verificado. Em seguida, falha de propósito (`ACCOUNT_LINKED`), e a API refaz o login com Google uma vez, sozinha, em `/api/auth/callback`. Só e-mails confirmados pelo Google (`email_verified`) são vinculados. O gatilho só vincula a uma conta de e-mail confirmada. Se a única conta daquele e-mail é um cadastro por e-mail nunca confirmado (sem login e sem dados), o gatilho a apaga e cria uma conta nova, sem senha e com o e-mail verificado, e então vincula o Google. Isso é preciso porque a API apaga cadastros não confirmados no próximo login por e-mail, o que levaria junto o vínculo e os dados do aluno (por isso a Lambda dos gatilhos também tem `cognito-idp:AdminDeleteUser`, só no pool).
 - **Código por e-mail pela API (BFF).** `POST /api/auth/email/start` tenta o `SignUp` sem senha. Se o e-mail já tem conta, pede o código de login (`AdminInitiateAuth` com `USER_AUTH` e `EMAIL_OTP`). A resposta é a mesma nos dois casos. O estado do passo seguinte fica num cookie HttpOnly (`egt_login`, 15 minutos). Os e-mails com código saem em pt-BR, escritos pelo gatilho de mensagem.
 - **Sessão em cookies** (spec §5.2):
   - `egt_at`: access token, `Path=/api`, 1 hora.
@@ -38,7 +38,7 @@ A Fase 1C liga o login de verdade (spec §5): código por e-mail e Google no poo
   - Um provedor no próprio processo da API faz o papel do Cognito: códigos no Mailpit e no terminal, tokens assinados com uma chave em memória.
   - O mock-oauth2-server faz o papel do Google (`pnpm db:up`).
   - O servidor local se recusa a rodar fora de `APP_ENV=local`.
-- **Ao sair**, o site apaga o progresso do aparelho, e ele continua na conta (decisão do mantenedor, pensando em celulares compartilhados).
+- **Ao sair**, o site apaga o progresso do aparelho, e ele continua na conta (decisão do mantenedor, pensando em celulares compartilhados). Só depois que a API confirma a saída o site apaga o progresso do aparelho; se o pedido falhar, ele mostra o erro e não apaga nada.
 
 ## Alternativas consideradas
 
