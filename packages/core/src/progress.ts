@@ -68,6 +68,50 @@ function update(
   };
 }
 
+/**
+ * What progress may hold: for each course, its lessons and how many quiz questions each one has.
+ * Built from content/ (the API embeds it at build time).
+ */
+export type ProgressCatalog = Record<string, Record<string, number>>;
+
+const ANSWER = /^(.+)#(\d{1,3})$/;
+
+const lessonsOf = (catalog: ProgressCatalog, course: string) =>
+  Object.hasOwn(catalog, course) ? catalog[course] : undefined;
+
+export function isKnownLesson(catalog: ProgressCatalog, course: string, lesson: string): boolean {
+  const lessons = lessonsOf(catalog, course);
+  return lessons !== undefined && Object.hasOwn(lessons, lesson);
+}
+
+/**
+ * Keeps only courses, lessons and quiz answers the catalog knows. Renamed or removed content and
+ * junk sent by a client are dropped, which also bounds how much a learner can store.
+ */
+export function keepKnownProgress(
+  courses: Record<string, CourseProgress>,
+  catalog: ProgressCatalog,
+): Record<string, CourseProgress> {
+  const known: Record<string, CourseProgress> = {};
+  for (const [slug, course] of Object.entries(courses)) {
+    const lessons = lessonsOf(catalog, slug);
+    if (lessons === undefined) continue;
+    const isLesson = (lesson: string) => Object.hasOwn(lessons, lesson);
+    known[slug] = {
+      completedLessons: course.completedLessons.filter(isLesson),
+      correctAnswers: course.correctAnswers.filter((answer) => {
+        const match = ANSWER.exec(answer);
+        return match !== null && isLesson(match[1]!) && Number(match[2]) < lessons[match[1]!]!;
+      }),
+      ...(course.lastLesson !== undefined && isLesson(course.lastLesson)
+        ? { lastLesson: course.lastLesson }
+        : {}),
+      updatedAt: course.updatedAt,
+    };
+  }
+  return known;
+}
+
 export function visitLesson(
   progress: Progress,
   course: string,

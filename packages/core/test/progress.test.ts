@@ -3,11 +3,14 @@ import {
   completeLesson,
   courseStatus,
   emptyProgress,
+  isKnownLesson,
+  keepKnownProgress,
   mostRecentCourse,
   parseProgress,
   recordCorrectAnswer,
   visitLesson,
   type CourseOutline,
+  type ProgressCatalog,
 } from '../src/index.ts';
 
 const NOW = new Date('2026-10-09T12:00:00.000Z');
@@ -166,5 +169,72 @@ describe('mostRecentCourse', () => {
 
     expect(mostRecentCourse(progress, [outline, other])?.slug).toBe('python');
     expect(mostRecentCourse(emptyProgress(), [outline])).toBeUndefined();
+  });
+});
+
+describe('keepKnownProgress', () => {
+  const catalog: ProgressCatalog = { 'site-com-ia': { 'boas-vindas': 1, escolha: 3 } };
+
+  it('drops unknown courses, lessons and answers', () => {
+    const kept = keepKnownProgress(
+      {
+        'site-com-ia': {
+          completedLessons: ['boas-vindas', 'aula-removida'],
+          correctAnswers: ['boas-vindas#0', 'boas-vindas#1', 'escolha#2', 'aula-removida#0'],
+          lastLesson: 'aula-removida',
+          updatedAt: NOW.toISOString(),
+        },
+        'curso-removido': {
+          completedLessons: ['x'],
+          correctAnswers: [],
+          updatedAt: NOW.toISOString(),
+        },
+      },
+      catalog,
+    );
+
+    expect(kept).toEqual({
+      'site-com-ia': {
+        completedLessons: ['boas-vindas'],
+        correctAnswers: ['boas-vindas#0', 'escolha#2'],
+        updatedAt: NOW.toISOString(),
+      },
+    });
+  });
+
+  it('keeps a known last lesson and ignores inherited object keys', () => {
+    const kept = keepKnownProgress(
+      {
+        'site-com-ia': {
+          completedLessons: ['constructor'],
+          correctAnswers: ['toString#0'],
+          lastLesson: 'escolha',
+          updatedAt: NOW.toISOString(),
+        },
+        constructor: { completedLessons: [], correctAnswers: [], updatedAt: NOW.toISOString() },
+      },
+      catalog,
+    );
+
+    expect(kept).toEqual({
+      'site-com-ia': {
+        completedLessons: [],
+        correctAnswers: [],
+        lastLesson: 'escolha',
+        updatedAt: NOW.toISOString(),
+      },
+    });
+  });
+});
+
+describe('isKnownLesson', () => {
+  it('knows only the catalog lessons of each course', () => {
+    const catalog: ProgressCatalog = { 'site-com-ia': { 'boas-vindas': 1 } };
+
+    expect(isKnownLesson(catalog, 'site-com-ia', 'boas-vindas')).toBe(true);
+    expect(isKnownLesson(catalog, 'site-com-ia', 'escolha')).toBe(false);
+    expect(isKnownLesson(catalog, 'python', 'boas-vindas')).toBe(false);
+    expect(isKnownLesson(catalog, 'site-com-ia', 'hasOwnProperty')).toBe(false);
+    expect(isKnownLesson(catalog, '__proto__', 'boas-vindas')).toBe(false);
   });
 });

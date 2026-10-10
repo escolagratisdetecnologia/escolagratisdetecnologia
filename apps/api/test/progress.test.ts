@@ -84,6 +84,42 @@ describe('progress routes', () => {
     });
   });
 
+  it('PUT answers 404 for lessons that are not in the catalog', async () => {
+    const app = testApp();
+
+    for (const path of ['/api/progress/site/lessons/aula-nova', '/api/progress/outro/lessons/a']) {
+      const res = await app.request(path, { method: 'PUT', headers: learner() });
+
+      expect(res.status).toBe(404);
+      expect(await res.json()).toEqual({
+        error: { code: 'not_found', message: 'Aula não encontrada.' },
+      });
+    }
+  });
+
+  it('POST /merge keeps only courses, lessons and answers of the catalog', async () => {
+    const res = await testApp().request('/api/progress/merge', {
+      method: 'POST',
+      headers: learner(),
+      body: JSON.stringify({
+        version: 1,
+        courses: {
+          site: {
+            ...course(['a', 'aula-removida'], NOW.toISOString(), 'aula-removida'),
+            correctAnswers: ['a#0', 'a#1', 'aula-removida#0'],
+          },
+          'curso-removido': course(['x'], NOW.toISOString()),
+        },
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      version: 1,
+      courses: { site: { ...course(['a'], NOW.toISOString()), correctAnswers: ['a#0'] } },
+    });
+  });
+
   it('POST /merge joins the device progress with the account and returns everything', async () => {
     const app = testApp();
     await app.request('/api/progress/site/lessons/a', { method: 'PUT', headers: learner() });

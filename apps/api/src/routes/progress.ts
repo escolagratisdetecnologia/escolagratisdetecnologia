@@ -1,3 +1,4 @@
+import { isKnownLesson, keepKnownProgress, type ProgressCatalog } from '@egt/core';
 import type { ProgressRepository } from '@egt/db';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -36,10 +37,16 @@ const invalidRequest = apiError(
 export interface ProgressDeps {
   progress: ProgressRepository;
   authenticate: Authenticate;
+  catalog: ProgressCatalog;
   now?: () => Date;
 }
 
-export function progressRoutes({ progress, authenticate, now = () => new Date() }: ProgressDeps) {
+export function progressRoutes({
+  progress,
+  authenticate,
+  catalog,
+  now = () => new Date(),
+}: ProgressDeps) {
   return new Hono<AuthEnv>()
     .use(requireIdentity(authenticate))
     .get('/', async (c) => c.json(await progress.get(c.var.identity.sub)))
@@ -47,6 +54,9 @@ export function progressRoutes({ progress, authenticate, now = () => new Date() 
       const params = lessonParams.safeParse(c.req.param());
       if (!params.success) return c.json(invalidRequest, 400);
       const { course, lesson } = params.data;
+      if (!isKnownLesson(catalog, course, lesson)) {
+        return c.json(apiError('not_found', 'Aula não encontrada.'), 404);
+      }
       const at = now();
       const completed = {
         completedLessons: [lesson],
@@ -59,6 +69,9 @@ export function progressRoutes({ progress, authenticate, now = () => new Date() 
     .post('/merge', async (c) => {
       const body = mergeBody.safeParse(await c.req.json().catch(() => undefined));
       if (!body.success) return c.json(invalidRequest, 400);
-      return c.json(await progress.merge(c.var.identity.sub, body.data.courses, now()));
+      // Unknown courses and lessons (renamed content, junk) are dropped, not refused: a device
+      // with old progress must still sync the rest.
+      const courses = keepKnownProgress(body.data.courses, catalog);
+      return c.json(await progress.merge(c.var.identity.sub, courses, now()));
     });
 }

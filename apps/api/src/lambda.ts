@@ -1,9 +1,13 @@
+import type { ProgressCatalog } from '@egt/core';
 import { checkDatabase, connect, createDynamoProgressRepository } from '@egt/db';
 import { handle } from 'hono/aws-lambda';
 import { createApp } from './app.ts';
 import { noAuthentication } from './auth.ts';
 import { loadConfig } from './config.ts';
 import { createLogger } from './logger.ts';
+
+/** Lessons of every course, from content/ (scripts/build.ts). */
+declare const __PROGRESS_CATALOG__: ProgressCatalog;
 
 const config = loadConfig();
 const logger = createLogger(config);
@@ -13,6 +17,7 @@ const handleRequest = handle(
     config,
     logger,
     progress: createDynamoProgressRepository(db),
+    catalog: __PROGRESS_CATALOG__,
     checkDatabase: () => checkDatabase(db),
     authenticate: noAuthentication,
   }),

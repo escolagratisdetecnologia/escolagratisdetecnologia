@@ -1,4 +1,5 @@
 import type { Logger } from '@aws-lambda-powertools/logger';
+import type { ProgressCatalog } from '@egt/core';
 import type { ProgressRepository } from '@egt/db';
 import { Hono } from 'hono';
 import type { Authenticate } from './auth.ts';
@@ -12,6 +13,8 @@ export interface AppDeps {
   config: AppConfig;
   logger: Logger;
   progress: ProgressRepository;
+  /** Courses and lessons the progress may hold (built from content/). */
+  catalog: ProgressCatalog;
   checkDatabase: () => Promise<void>;
   authenticate: Authenticate;
   now?: () => Date;

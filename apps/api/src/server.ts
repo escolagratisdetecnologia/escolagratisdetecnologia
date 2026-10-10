@@ -1,12 +1,17 @@
+import { fileURLToPath } from 'node:url';
 import { serve } from '@hono/node-server';
 import { createApp } from './app.ts';
 import { createDevAuthenticator } from './auth.ts';
+import { loadProgressCatalog } from './catalog.ts';
 import { loadConfig } from './config.ts';
 import { connectLocalStorage } from './local.ts';
 import { createLogger } from './logger.ts';
 
 const config = loadConfig();
 const port = Number(process.env.PORT ?? 3001);
+const catalog = await loadProgressCatalog(
+  fileURLToPath(new URL('../../../content', import.meta.url)),
+);
 const storage = await connectLocalStorage(config);
 if (storage.mode === 'memory') {
   console.warn(
@@ -18,6 +23,7 @@ const app = createApp({
   config,
   logger: createLogger(config),
   progress: storage.progress,
+  catalog,
   checkDatabase: storage.checkDatabase,
   authenticate: createDevAuthenticator(config),
 });
