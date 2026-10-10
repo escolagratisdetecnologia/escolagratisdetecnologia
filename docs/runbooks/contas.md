@@ -51,18 +51,18 @@ Alguns comportamentos só a AWS mostra (ADR 0024). Depois do primeiro deploy, **
 
 Confira:
 
-1. **E-mail novo:** chega um código de 6 dígitos, com o e-mail em português. Depois do código, a página pede o ano de nascimento e o aceite dos termos, e a aba Eu mostra o seu e-mail.
+1. **E-mail novo** (um endereço novo, sem conta, verificado no SES do dev): chega um código de 6 dígitos, com o e-mail em português. Depois do código, a página pede o ano de nascimento e o aceite dos termos, e a aba Eu mostra o seu e-mail.
 2. **Login de novo:** saia e entre com o mesmo e-mail. Desta vez chega um código de 8 dígitos.
 3. **Google com o mesmo e-mail:** entre com o Google usando a conta desse e-mail. Você volta logado na mesma conta, com o mesmo progresso. Na primeira vez, o navegador vai ao Google duas vezes seguidas, sozinho.
 4. **Google primeiro:** com outro e-mail, entre primeiro pelo Google e complete o cadastro. Saia e entre pelo código no e-mail. Deve ser a mesma conta (a aba Eu não pede cadastro de novo).
 5. **Google sobre cadastro não confirmado:** comece o cadastro por e-mail com um terceiro endereço, sem digitar o código. Depois entre com o Google usando esse endereço: o cadastro deve terminar e o próximo código por e-mail deve entrar na mesma conta (a aba Eu não pede cadastro de novo).
 6. **Dois aparelhos:** conclua uma aula num navegador e veja o progresso aparecer em outro (ou numa janela anônima) com a mesma conta.
 7. **Seus dados:** na aba Eu, baixe os dados (JSON) e exclua a conta. Depois disso, entrar com o mesmo e-mail pede o cadastro de novo.
-8. **Reenviar o código:** com um e-mail novo, clique em "Receber código" e, antes de digitar, em "Enviar outro código": chega um código novo.
+8. **Reenviar o código:** com um e-mail novo (sem conta, verificado no SES do dev), clique em "Receber código" e, antes de digitar, em "Enviar outro código": chega um código novo.
 9. **Sessão com mais de 1 hora:** deixe uma aba aberta por mais de uma hora, conclua uma aula nela e veja o progresso salvar, sem pedir login de novo.
 10. **Excluir com Google vinculado:** exclua uma conta que tem o Google vinculado e entre com "Entrar com Google" de novo: a página pede o cadastro outra vez, sem erros.
 11. **Aparelho compartilhado:** entre com o Google, clique em "Sair" e em "Entrar com Google" de novo no mesmo navegador: a escolha de conta do Google deve aparecer, sem entrar sozinho na conta anterior. Se entrar sozinho, abra uma issue antes do lançamento.
-12. **Cadastro incompleto:** entre por e-mail e não termine o cadastro. Na aba Eu e em `/entrar/cadastro/`, "Sair" e "Cancelar cadastro" funcionam, e o progresso do aparelho continua.
+12. **Cadastro incompleto:** com um e-mail novo (sem conta, verificado no SES do dev), entre por e-mail e não termine o cadastro. Na aba Eu e em `/entrar/cadastro/`, "Sair" e "Cancelar cadastro" funcionam, e o progresso do aparelho continua.
 13. **Limite do login e caminhos estranhos:** `curl --path-as-is -s -o /dev/null -w '%{http_code}' -X POST https://dev.escolagratisdetecnologia.com/api/./auth/email/start` responde 404 (vindo da API) e conta para o limite do login.
 
 Se algo falhar, veja os problemas comuns abaixo e os logs (CloudWatch, conta do ambiente): `/aws/lambda/egt-<env>-api-handler` (a API) e `/aws/lambda/egt-<env>-auth-triggers` (os gatilhos do Cognito).
@@ -83,9 +83,9 @@ Se algo falhar, veja os problemas comuns abaixo e os logs (CloudWatch, conta do 
 
 ## Pedido de exclusão fora do site
 
-Se alguém pedir a exclusão sem conseguir entrar (por exemplo, perdeu o acesso ao e-mail), confirme a identidade da pessoa pelo canal de atendimento e então, no console da conta de prod:
+Se alguém pedir a exclusão sem conseguir entrar (por exemplo, perdeu o acesso ao e-mail), confirme a identidade da pessoa pelo canal de atendimento e então, no console da conta de prod (os comandos `aws` abaixo rodam no AWS CloudShell, ou num terminal com o perfil dessa conta, sempre com `--region sa-east-1`):
 
 1. Cognito → User pools → `egt-prod-auth-learners` → **Users** → busque o e-mail → anote o `sub`. Se o atributo `identities` lista o Google, anote também o `userId` dele e desvincule antes de apagar:
-   `aws cognito-idp admin-disable-provider-for-user --user-pool-id <id do pool> --user ProviderName=Google,ProviderAttributeName=Cognito_Subject,ProviderAttributeValue=<userId do Google em identities>`
+   `aws cognito-idp admin-disable-provider-for-user --region sa-east-1 --user-pool-id <id do pool> --user ProviderName=Google,ProviderAttributeName=Cognito_Subject,ProviderAttributeValue=<userId do Google em identities>`
 2. DynamoDB → Tables → `egt-prod-data-main` → **Explore items** → consulta com `PK = USER#<sub>` → selecione todos os itens → **Delete items** (o perfil e o progresso saem primeiro, como na API).
 3. Por último, no Cognito, **Delete user**.

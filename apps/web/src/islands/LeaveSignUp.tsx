@@ -5,7 +5,14 @@ import { leaveSignUp, type SignUpExit } from '../lib/account-actions.ts';
  * "Sair" and "Cancelar cadastro" for someone who signed in but did not finish sign-up. Shared by
  * the Eu tab and the sign-up page; this device's progress stays (it never reached the account).
  */
-export default function LeaveSignUp({ onError }: { onError: (message: string) => void }) {
+export default function LeaveSignUp({
+  onError,
+  disabled = false,
+}: {
+  onError: (message: string) => void;
+  /** The sign-up form is submitting: leaving now could sign out a just-completed account. */
+  disabled?: boolean;
+}) {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const confirmButton = useRef<HTMLButtonElement>(null);
@@ -30,13 +37,18 @@ export default function LeaveSignUp({ onError }: { onError: (message: string) =>
         <button
           type="button"
           class="button button-secondary"
-          disabled={busy}
+          disabled={busy || disabled}
           onClick={() => void leave('sign-out')}
         >
           Sair
         </button>
         {!confirming && (
-          <button type="button" class="button button-secondary" onClick={() => setConfirming(true)}>
+          <button
+            type="button"
+            class="button button-secondary"
+            disabled={disabled}
+            onClick={() => setConfirming(true)}
+          >
             Cancelar cadastro
           </button>
         )}
@@ -52,7 +64,7 @@ export default function LeaveSignUp({ onError }: { onError: (message: string) =>
               type="button"
               class="button button-danger"
               ref={confirmButton}
-              disabled={busy}
+              disabled={busy || disabled}
               onClick={() => void leave('cancel')}
             >
               Cancelar cadastro

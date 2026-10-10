@@ -32,12 +32,12 @@ A Fase 1C liga o login de verdade (spec §5): código por e-mail e Google no poo
   - As rotas de progresso respondem 409 até o cadastro ficar completo.
   - Um cadastro completo nunca é refeito: o pedido responde 409 antes de olhar a idade.
 - **Progresso limitado ao catálogo.** O build da API embute as aulas e o número de perguntas de cada curso de `content/`. A API só guarda o que esse catálogo conhece, o que limita o tamanho dos dados por aluno.
-- **Autoatendimento da LGPD:** `GET /api/me/export` (JSON) e `DELETE /api/me` (progresso, perfil e usuário do Cognito, com o Google desvinculado antes).
+- **Autoatendimento da LGPD:** `GET /api/me/export` (JSON) e `DELETE /api/me`, nesta ordem: primeiro o perfil (isso bloqueia novas gravações de aprendizado), depois o progresso e, por último, o usuário do Cognito (com o Google desvinculado antes).
 - **Domínio de login e limite do WAF.** O domínio de login é `auth.<domínio>`, com certificado em us-east-1 no módulo `edge`. O WAF tem um limite próprio para `/api/auth/*`: 50 requisições por IP a cada 5 minutos, com 429 em JSON. O limite decodifica, normaliza (`./` e `../`) e põe o caminho em minúsculas antes de comparar (o Hono aceita `/api/%61uth/...` e `/api/./auth/...`, que escapariam do limite). Por garantia, a Lambda da API responde 404 a caminhos com `./`, `../` ou `%`. As amostras de pedidos do WAF ficam desligadas, porque guardariam os cookies de sessão por 3 horas; as métricas por regra continuam.
 - **Ambiente local:**
   - Um provedor no próprio processo da API faz o papel do Cognito: códigos no Mailpit e no terminal, tokens assinados com uma chave em memória.
   - O mock-oauth2-server faz o papel do Google (`pnpm db:up`).
-  - O servidor local se recusa a rodar fora de `APP_ENV=local`.
+  - O servidor local se recusa a rodar fora de `APP_ENV=local`, só aceita um DynamoDB nesta máquina e só escuta em loopback (`localhost`).
 - **Ao sair**, o site apaga o progresso do aparelho, e ele continua na conta (decisão do mantenedor, pensando em celulares compartilhados). Só depois que a API confirma a saída o site apaga o progresso do aparelho; se o pedido falhar, ele mostra o erro e não apaga nada.
 
 ## Alternativas consideradas

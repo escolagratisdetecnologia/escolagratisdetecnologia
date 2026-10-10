@@ -95,7 +95,7 @@ export default function CompleteProfile() {
           Concluir cadastro
         </button>
       </form>
-      <LeaveSignUp onError={setError} />
+      <LeaveSignUp onError={setError} disabled={busy} />
       <p class="form-error" role="alert">
         {error}
       </p>
