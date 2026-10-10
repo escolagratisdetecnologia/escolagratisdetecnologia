@@ -8,6 +8,7 @@ export default defineConfig({
       'apps/api',
       'packages/content',
       'packages/core',
+      'packages/db',
       'tools/check-tags',
       'tools/tag-audit',
       { test: { name: 'infra', include: ['infra/**/*.test.ts'] } },
