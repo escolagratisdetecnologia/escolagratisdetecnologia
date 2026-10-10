@@ -1,0 +1,114 @@
+---
+import LegalDraft from '../components/LegalDraft.astro';
+import App from '../layouts/App.astro';
+---
+
+<App
+  title="Política de privacidade · Escola Grátis de Tecnologia"
+  description="Quais dados a Escola Grátis de Tecnologia guarda, por quê, onde e como você baixa ou apaga tudo."
+>
+  <h1>Política de privacidade</h1>
+  <LegalDraft />
+  <div class="prose">
+    <p>
+      A Escola Grátis de Tecnologia é um projeto beneficente e de código aberto. Aqui explicamos,
+      sem juridiquês, quais dados guardamos, por quê e como você controla tudo.
+    </p>
+
+    <h2>Quem cuida dos seus dados</h2>
+    <p>
+      A entidade responsável pelos dados (a controladora, na Lei Geral de Proteção de Dados) será
+      informada aqui antes do lançamento público. Enquanto isso, você baixa e apaga seus dados
+      sozinho, na aba <a href="/eu/">Eu</a>.
+    </p>
+
+    <h2>O que guardamos</h2>
+    <ul>
+      <li>
+        <strong>Seu e-mail</strong>, para você entrar na conta.
+      </li>
+      <li>
+        <strong>O ano em que você nasceu</strong>, só o ano, para cumprir a idade mínima.
+      </li>
+      <li>
+        <strong>Seu progresso</strong>: as aulas que você concluiu e as perguntas que acertou.
+      </li>
+      <li>
+        <strong>A versão destes textos que você aceitou</strong> e a data do aceite.
+      </li>
+    </ul>
+    <p>
+      Se você entra com o Google, ele só confirma o seu e-mail para a gente. Não recebemos sua senha
+      nem acesso à sua conta do Google. Não pedimos CPF, endereço nem telefone.
+    </p>
+    <p>
+      Quando os certificados chegarem, vamos pedir o número de celular para confirmar que cada
+      certificado é de uma pessoa de verdade. Esta política muda antes disso.
+    </p>
+
+    <h2>O que não fazemos</h2>
+    <ul>
+      <li>Não vendemos nem emprestamos seus dados.</li>
+      <li>Não temos anúncios, rastreadores de outras empresas nem perfis de comportamento.</li>
+      <li>
+        Só usamos os cookies necessários para manter você na sua conta. Nenhum deles serve para
+        propaganda.
+      </li>
+    </ul>
+
+    <h2>Por que podemos usar esses dados</h2>
+    <ul>
+      <li>
+        Para entregar o que você pediu: a conta e os cursos (execução de contrato, art. 7º, V, da
+        LGPD).
+      </li>
+      <li>
+        Para proteger o site e as contas: registros técnicos sem e-mail e sem endereço IP (legítimo
+        interesse, art. 7º, IX).
+      </li>
+      <li>Para cumprir a lei, como a regra de idade mínima.</li>
+    </ul>
+
+    <h2>Onde ficam</h2>
+    <p>
+      Na Amazon Web Services (AWS), na região de São Paulo, no Brasil. O login usa o Amazon Cognito,
+      e os e-mails com código saem pelo Amazon SES. Se você entra com o Google, o Google também
+      participa do login.
+    </p>
+
+    <h2>Por quanto tempo</h2>
+    <p>
+      Enquanto sua conta existir. Quando você exclui a conta, apagamos na hora o e-mail, o ano de
+      nascimento e o progresso. As cópias de segurança automáticas do banco de dados somem sozinhas
+      em até 35 dias. Os registros técnicos ficam 30 dias.
+    </p>
+
+    <h2>Seus direitos</h2>
+    <ul>
+      <li>
+        <strong>Ver e baixar seus dados:</strong> na aba <a href="/eu/">Eu</a>, use “Baixar meus
+        dados”.
+      </li>
+      <li>
+        <strong>Apagar tudo:</strong> na aba <a href="/eu/">Eu</a>, use “Excluir conta”.
+      </li>
+      <li>
+        <strong>Corrigir um dado:</strong> por enquanto, exclua a conta e crie de novo. Um canal de
+        atendimento será publicado antes do lançamento.
+      </li>
+    </ul>
+
+    <h2>Crianças e adolescentes</h2>
+    <p>
+      Quem tem menos de 12 anos não pode criar conta, mas pode ver as aulas sem conta. De 12 a 17
+      anos, pode ter conta. A Escola não tem anúncios, perfis de comportamento nem recursos sociais,
+      como pede o ECA Digital (Lei 15.211/2025).
+    </p>
+
+    <h2>Mudanças</h2>
+    <p>
+      Se esta política mudar, avisamos no site. Quando a mudança for importante, pedimos seu aceite
+      de novo.
+    </p>
+  </div>
+</App>

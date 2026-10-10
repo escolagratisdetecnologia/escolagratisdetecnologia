@@ -6,4 +6,6 @@ export const islands: IslandRegistry = {
   'course-progress': () => import('./CourseProgress.tsx'),
   'my-progress': () => import('./MyProgress.tsx'),
   quiz: () => import('./Quiz.tsx'),
+  login: () => import('./Login.tsx'),
+  'complete-profile': () => import('./CompleteProfile.tsx'),
 };

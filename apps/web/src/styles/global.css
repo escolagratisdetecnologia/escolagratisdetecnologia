@@ -815,3 +815,80 @@ progress::-moz-progress-bar {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+
+/* Sign-in, sign-up and the account */
+
+.form {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.form > label {
+  font-weight: 700;
+}
+
+.form input[type='email'],
+.form input[type='text'] {
+  min-height: var(--tap);
+  padding: 0 var(--space-3);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-small);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font: inherit;
+}
+
+.form input[type='email']:focus-visible,
+.form input[type='text']:focus-visible {
+  border-color: var(--color-accent);
+}
+
+.form .button {
+  margin-top: var(--space-2);
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+}
+
+.check input {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--color-accent);
+}
+
+.hint {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+}
+
+.or {
+  margin: var(--space-3) 0;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.form-error {
+  min-height: 1.6em;
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+.draft-notice {
+  padding: var(--space-3);
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}

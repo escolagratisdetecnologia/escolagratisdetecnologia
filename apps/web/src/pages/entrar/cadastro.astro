@@ -1,0 +1,15 @@
+---
+import Island from '../../components/Island.astro';
+import CompleteProfile from '../../islands/CompleteProfile.tsx';
+import App from '../../layouts/App.astro';
+---
+
+<App
+  title="Complete seu cadastro · Escola Grátis de Tecnologia"
+  description="Último passo para criar sua conta na Escola Grátis de Tecnologia."
+  tab="eu"
+>
+  <h1>Complete seu cadastro</h1>
+  <p class="lead">Falta pouco: só mais duas coisas para criar sua conta.</p>
+  <Island name="complete-profile" component={CompleteProfile} props={{}} />
+</App>
